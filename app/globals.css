@@ -81,8 +81,8 @@ h3 { margin: 0 0 12px; font-size: 22px; line-height: 1.15; color: #10203f; }
   nav { gap: 10px; }
   nav a:not(.nav-cta) { display: none; }
   nav a.nav-cta { display: inline-flex; }
-  nav a::before { font-size: 16px; }
-  nav a.nav-cta::before { font-size: 16px; }
+  nav a::before { font-size: 20px; }
+  nav a.nav-cta::before { font-size: 20px; }
   .hero { padding: 62px 0 58px; background-position: 58% center; }
   .section { padding: 50px 0; }
   .grid { grid-template-columns: 1fr; margin-top: 28px; }
