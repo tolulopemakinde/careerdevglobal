@@ -9,7 +9,7 @@ a { color: inherit; text-decoration: none; }
 .brand img { display: block; width: 100%; height: auto; max-width: 100%; object-fit: contain; object-position: center; content: url('/careerdev-global-logo.svg'); }
 nav { display: flex; align-items: center; gap: 28px; font-size: 14px; font-weight: 700; }
 nav a { color: #43516b; display: inline-flex; align-items: center; gap: 6px; transition: color .2s ease, transform .2s ease; }
-nav a::before { content: "✦"; display: inline-block; font-size: 11px; color: #1764df; line-height: 1; transition: transform .2s ease; }
+nav a::before { content: "✦"; display: inline-block; font-size: 11px; color: currentColor; line-height: 1; transition: transform .2s ease; }
 nav a[href="#services"]::before { content: "▦"; }
 nav a[href="#coaching"]::before { content: "♧"; }
 nav a[href="#about"]::before { content: "◉"; }
@@ -59,10 +59,10 @@ h3 { margin: 0 0 12px; font-size: 22px; line-height: 1.15; color: #10203f; }
 .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
 .small-note { font-size: 0; line-height: 1.65; border-left: 4px solid #1764df; padding: 16px 0 16px 20px; margin-top: 22px; color: #10203f; font-weight: 700; }
 .small-note::after { content: "AI assists with analysis and research. Human professionals and industry experts help with high-impact recommendations and client-facing decisions customized to achieve your career goal."; display: block; font-size: 18px; line-height: 1.65; color: #10203f; font-weight: 700; }
-.cta-section { padding: 58px 0; background: linear-gradient(135deg, #10203f, #145bd6); color: white; border-top: 1px solid rgba(255,255,255,.3); }
+.cta-section { position: relative; overflow: hidden; padding: 78px 0; background-image: linear-gradient(90deg, rgba(7,24,54,.88) 0%, rgba(16,32,63,.72) 46%, rgba(16,32,63,.42) 100%), url("https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=85&w=2400"); background-size: cover; background-position: center; color: white; border-top: 1px solid rgba(255,255,255,.3); border-bottom: 1px solid rgba(255,255,255,.18); }
 .cta-inner { display: flex; align-items: center; justify-content: space-between; gap: 40px; }
 .cta-section h2, .cta-section .eyebrow { color: white; }
-.cta-section .eyebrow { opacity: .75; }
+.cta-section .eyebrow { opacity: .9; }
 .footer { padding: 34px 0; background: #fff; color: #10203f; border-top: 1px solid rgba(126, 174, 211, .55); }
 .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .footer-logo { display: block; width: 230px; height: auto; padding: 8px; background: #fff; border-radius: 6px; content: url('/careerdev-global-logo.svg'); }
@@ -76,6 +76,8 @@ h3 { margin: 0 0 12px; font-size: 22px; line-height: 1.15; color: #10203f; }
   nav { gap: 10px; }
   nav a:not(.nav-cta) { display: none; }
   nav a.nav-cta { display: inline-flex; }
+  nav a::before { font-size: 16px; }
+  nav a.nav-cta::before { font-size: 16px; }
   .hero { padding: 62px 0 58px; background-position: 58% center; }
   .section { padding: 50px 0; }
   .grid { grid-template-columns: 1fr; margin-top: 28px; }
@@ -92,6 +94,7 @@ h3 { margin: 0 0 12px; font-size: 22px; line-height: 1.15; color: #10203f; }
   .service-icon { animation: softFloatMobile 4s ease-in-out infinite; }
   .muted .split { padding: 20px; border-radius: 20px; }
   .small-note::after { font-size: 17px; }
+  .cta-section { padding: 64px 0; background-position: center; }
   .footer-inner { flex-direction: column; align-items: flex-start; }
 }
 @media (prefers-reduced-motion: reduce) {
