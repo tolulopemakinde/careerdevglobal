@@ -35,6 +35,8 @@ h3 { margin: 0 0 12px; font-size: 22px; line-height: 1.15; color: #10203f; }
 .trust-row span::before { content: "✓"; color: #fff; margin-right: 6px; }
 .hero-card { padding: 32px; border: 1px solid rgba(255,255,255,.3); border-radius: 28px; background: rgba(255,255,255,.9); color: #10203f; box-shadow: 0 24px 70px rgba(0,0,0,.22); backdrop-filter: blur(8px); }
 .hero-card-top, .panel-label { font-size: 11px; font-weight: 800; letter-spacing: .14em; color: #1764df; }
+.hero-card-top { position: relative; font-size: 0; }
+.hero-card-top::after { content: "CAREER DEVELOPMENT FRAMEWORK™"; display: block; font-size: 11px; font-weight: 800; letter-spacing: .14em; color: #1764df; }
 .journey { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin: 25px 0; font-weight: 800; font-size: 14px; }
 .journey span { padding: 9px 11px; border-radius: 10px; background: #f2f6fd; }
 .journey b { color: #1764df; }
