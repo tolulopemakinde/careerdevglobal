@@ -23,6 +23,9 @@ const services = [
   "Professional Branding Package",
 ];
 
+const allowedTypes = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "text/plain"];
+const maxFileSize = 10 * 1024 * 1024;
+
 export default function CareerIntelligencePage() {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [service, setService] = useState(services[0]);
@@ -37,6 +40,9 @@ export default function CareerIntelligencePage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<any>(null);
+  const [requestId, setRequestId] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const question = useMemo(() => {
     if (service.includes("CV")) return "What role, industry, or career direction should the CV target?";
@@ -67,29 +73,46 @@ export default function CareerIntelligencePage() {
     setMessage("Secure account connection established.");
   };
 
-  const analyzeRequest = async () => {
+  const createRequestAndAnalyze = async () => {
     setLoading(true); setMessage(""); setAnalysis(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) { setMessage("Please create an account or sign in before starting your Career Intelligence request."); setLoading(false); return; }
-      const { data: requestId, error: requestError } = await supabase.rpc("create_client_service_request", {
+      if (!session) throw new Error("Please create an account or sign in before starting your Career Intelligence request.");
+      const { data: newRequestId, error: requestError } = await supabase.rpc("create_client_service_request", {
         p_full_name: fullName || session.user.user_metadata?.full_name || "CareerDev Global Client",
         p_service_name: service,
         p_original_request: request,
         p_objective: request,
       });
       if (requestError) throw requestError;
+      setRequestId(newRequestId);
+      if (selectedFile) await uploadDocument(session.user.id, newRequestId, selectedFile);
       const response = await fetch(`${SUPABASE_URL}/functions/v1/careerdev-intake-engine-v2`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}`, apikey: SUPABASE_KEY },
-        body: JSON.stringify({ request_id: requestId }),
+        body: JSON.stringify({ request_id: newRequestId }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || body.message || "The Career Intelligence engine could not process the request.");
-      setAnalysis(body); setStarted(true); setStep(2); setMessage("Career Intelligence analysis completed. Your next questions are ready.");
+      setAnalysis(body); setStarted(true); setStep(2); setMessage(selectedFile ? "Your request and document were securely submitted for Career Intelligence analysis." : "Career Intelligence analysis completed. Your next questions are ready.");
     } catch (error: any) {
       setMessage(error?.message || "Something went wrong. Please try again.");
     } finally { setLoading(false); }
+  };
+
+  const uploadDocument = async (userId: string, newRequestId: string, file: File) => {
+    if (!allowedTypes.includes(file.type)) throw new Error("Please upload a PDF, DOC, DOCX, or TXT document.");
+    if (file.size > maxFileSize) throw new Error("Documents must be 10 MB or smaller.");
+    setUploading(true);
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const storagePath = `${userId}/${newRequestId}/${crypto.randomUUID()}-${safeName}`;
+    const { error: uploadError } = await supabase.storage.from("client-documents").upload(storagePath, file, { contentType: file.type, upsert: false });
+    if (uploadError) { setUploading(false); throw uploadError; }
+    const { data: client } = await supabase.from("clients").select("id").eq("profile_id", userId).single();
+    if (!client) { setUploading(false); throw new Error("Client profile could not be found."); }
+    const { error: documentError } = await supabase.from("documents").insert({ client_id: client.id, request_id: newRequestId, document_type: "career_document", original_filename: file.name, storage_path: storagePath, file_size: file.size, mime_type: file.type, version: 1, status: "uploaded" });
+    setUploading(false);
+    if (documentError) throw documentError;
   };
 
   return (
@@ -109,11 +132,11 @@ export default function CareerIntelligencePage() {
             {userEmail && <div className="ci-authenticated">✓ Signed in securely as <strong>{userEmail}</strong></div>}
             <label>What service do you need?</label><select value={service} onChange={(e) => setService(e.target.value)}>{services.map((item) => <option key={item}>{item}</option>)}</select>
             <label>Tell us what you want to achieve</label><textarea value={request} onChange={(e) => setRequest(e.target.value)} placeholder="Describe your career need, target opportunity, deadline, or challenge..." />
-            <div className="ci-upload">📎 <strong>Upload career documents</strong><small>CV, LinkedIn export, essays, job descriptions, certificates, portfolio evidence</small></div>
-            <button className="ci-primary full" onClick={analyzeRequest} disabled={loading || !request.trim()}>{loading ? "Career Intelligence is analyzing..." : "Analyze My Request"}</button>
+            <div className="ci-upload"><label htmlFor="career-document">📎 <strong>Upload career documents</strong></label><small>CV, LinkedIn export, essays, job descriptions, certificates or portfolio evidence · PDF, DOC, DOCX, TXT · max 10 MB</small><input id="career-document" type="file" accept=".pdf,.doc,.docx,.txt" onChange={(e) => setSelectedFile(e.target.files?.[0] || null)} />{selectedFile && <small>Selected: {selectedFile.name}</small>}</div>
+            <button className="ci-primary full" onClick={createRequestAndAnalyze} disabled={loading || uploading || !request.trim()}>{loading || uploading ? "Securely processing..." : "Analyze My Request"}</button>
             {message && <div className="ci-message">{message}</div>}
           </div>
-          <div className="ci-card"><div className="ci-mini-label">DYNAMIC QUESTION ENGINE</div><h3>{started ? question : "What happens next?"}</h3>{!started ? <ol className="ci-list"><li>Securely create or access your client account</li><li>Understand your service request</li><li>Check information already available</li><li>Analyze uploaded evidence</li><li>Ask only necessary follow-up questions</li><li>Build your Career Intelligence Profile</li></ol> : <div className="ci-question"><p>{question}</p><input placeholder="Your answer..." /><button className="ci-secondary" onClick={() => setStep(Math.min(step + 1, 5))}>Save & Continue</button></div>}{analysis && <div className="ci-result"><strong>AI intake run created</strong><small>{analysis.intake_session_id ? `Session: ${analysis.intake_session_id}` : "Your request has entered the CareerDev workflow."}</small></div>}<div className="ci-progress"><span style={{ width: `${step * 20}%` }} /></div><small>Step {step} of 5 · AI analyzes first; human expertise validates consequential decisions.</small></div>
+          <div className="ci-card"><div className="ci-mini-label">DYNAMIC QUESTION ENGINE</div><h3>{started ? question : "What happens next?"}</h3>{!started ? <ol className="ci-list"><li>Securely create or access your client account</li><li>Understand your service request</li><li>Upload and securely store career evidence</li><li>Analyze documents and identify information gaps</li><li>Ask only necessary follow-up questions</li><li>Build your Career Intelligence Profile</li></ol> : <div className="ci-question"><p>{question}</p><input placeholder="Your answer..." /><button className="ci-secondary" onClick={() => setStep(Math.min(step + 1, 5))}>Save & Continue</button></div>}{analysis && <div className="ci-result"><strong>AI intake run created</strong><small>{analysis.intake_session_id ? `Session: ${analysis.intake_session_id}` : "Your request has entered the CareerDev workflow."}</small></div>}<div className="ci-progress"><span style={{ width: `${step * 20}%` }} /></div><small>Step {step} of 5 · AI analyzes first; human expertise validates consequential decisions.</small></div>
         </div>
       </div></section>
 
