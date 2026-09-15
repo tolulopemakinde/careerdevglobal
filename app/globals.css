@@ -55,7 +55,7 @@ h3 { margin: 0 0 12px; font-size: 22px; line-height: 1.15; color: #10203f; }
 #coaching .split p { color: rgba(255,255,255,.92); }
 #coaching .split { position: relative; z-index: 1; }
 #coaching .muted .split { background: rgba(7,24,54,.32); border-color: rgba(255,255,255,.28); }
-.muted .split { padding: 28px; border: 1px solid rgba(150, 204, 235, .8); border-radius: 26px; background: rgba(255,255,255,.58); box-shadow: 0 18px 48px rgba(16,32,63,.06); }
+.muted .split { padding: 28px; border: 1px solid rgba(150, 204, 235, .8); border-radius: 26px; background: transparent; box-shadow: none; }
 .muted h2 { margin-bottom: 18px; }
 .split { display: grid; grid-template-columns: 1.25fr .75fr; gap: 64px; align-items: center; }
 .panel { min-height: 230px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 18px 45px rgba(16,32,63,.06); }
