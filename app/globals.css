@@ -58,7 +58,7 @@ h3 { margin: 0 0 12px; font-size: 22px; line-height: 1.15; color: #10203f; }
 .split p, .about-grid p { color: #59657a; }
 .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: start; }
 .small-note { font-size: 0; line-height: 1.65; border-left: 4px solid #1764df; padding: 16px 0 16px 20px; margin-top: 22px; color: #10203f; font-weight: 700; }
-.small-note::after { content: "AI assists with analysis and research. Human professionals and industry experts help with high-impact recommendations and client-facing decisions customized to achieve your career goal."; display: block; font-size: 18px; line-height: 1.65; color: #10203f; font-weight: 700; }
+.small-note::after { content: "AI assists with analysis and research. Human professionals and industry experts help with high-impact recommendations and client-facing decisions customized to achieve your career goal."; display: block; font-size: 17px; line-height: 1.65; color: #10203f; font-weight: 700; }
 .cta-section { position: relative; overflow: hidden; padding: 78px 0; background-image: linear-gradient(90deg, rgba(7,24,54,.88) 0%, rgba(16,32,63,.72) 46%, rgba(16,32,63,.42) 100%), url("https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=85&w=2400"); background-size: cover; background-position: center; color: white; border-top: 1px solid rgba(255,255,255,.3); border-bottom: 1px solid rgba(255,255,255,.18); }
 .cta-inner { display: flex; align-items: center; justify-content: space-between; gap: 40px; }
 .cta-section h2, .cta-section .eyebrow { color: white; }
@@ -93,7 +93,7 @@ h3 { margin: 0 0 12px; font-size: 22px; line-height: 1.15; color: #10203f; }
   .actions .button:nth-child(2) { animation-delay: .12s; }
   .service-icon { animation: softFloatMobile 4s ease-in-out infinite; }
   .muted .split { padding: 20px; border-radius: 20px; }
-  .small-note::after { font-size: 17px; }
+  .small-note::after { font-size: 16px; }
   .cta-section { padding: 64px 0; background-position: center; }
   .footer-inner { flex-direction: column; align-items: flex-start; }
 }
