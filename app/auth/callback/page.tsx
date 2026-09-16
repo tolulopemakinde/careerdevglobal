@@ -13,7 +13,9 @@ export default function AuthCallbackPage() {
     const supabase = createSupabaseBrowserClient();
 
     async function completeVerification() {
-      const code = new URLSearchParams(window.location.search).get('code');
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      const account = params.get('account');
       if (!code) {
         if (mounted) setError('The verification link is missing or invalid. Please request a new verification email.');
         return;
@@ -25,7 +27,8 @@ export default function AuthCallbackPage() {
         return;
       }
 
-      router.replace('/client-dashboard');
+      const destination = account === 'coach' ? '/coach-registration' : account === 'admin' ? '/admin/login' : '/client-dashboard';
+      router.replace(destination);
       router.refresh();
     }
 
@@ -39,7 +42,7 @@ export default function AuthCallbackPage() {
         {!error ? (
           <><h1 style={{color:'#063b5c'}}>Verifying your account…</h1><p style={{color:'#527085'}}>Please wait while we securely complete your email verification.</p></>
         ) : (
-          <><h1 style={{color:'#063b5c'}}>Verification link issue</h1><p style={{color:'#527085'}}>{error}</p><a href="/login" style={{display:'inline-block',marginTop:12,padding:'12px 18px',borderRadius:10,background:'#0879ad',color:'#fff',textDecoration:'none',fontWeight:800}}>Go to Login</a></>
+          <><h1 style={{color:'#063b5c'}}>Verification link issue</h1><p style={{color:'#527085'}}>{error}</p><a href="/client/login" style={{display:'inline-block',marginTop:12,padding:'12px 18px',borderRadius:10,background:'#0879ad',color:'#fff',textDecoration:'none',fontWeight:800}}>Go to Login</a></>
         )}
       </section>
     </main>
