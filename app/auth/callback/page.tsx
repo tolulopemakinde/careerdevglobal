@@ -1,12 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { createSupabaseBrowserClient } from '../../../lib/supabase-browser';
 
 export default function AuthCallbackPage() {
   const router = useRouter();
-  const params = useSearchParams();
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -14,7 +13,7 @@ export default function AuthCallbackPage() {
     const supabase = createSupabaseBrowserClient();
 
     async function completeVerification() {
-      const code = params.get('code');
+      const code = new URLSearchParams(window.location.search).get('code');
       if (!code) {
         if (mounted) setError('The verification link is missing or invalid. Please request a new verification email.');
         return;
@@ -32,7 +31,7 @@ export default function AuthCallbackPage() {
 
     completeVerification();
     return () => { mounted = false; };
-  }, [params, router]);
+  }, [router]);
 
   return (
     <main style={{minHeight:'100vh',display:'grid',placeItems:'center',padding:24,background:'#eef8fd'}}>
