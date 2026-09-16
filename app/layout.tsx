@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./auth.css";
+import AuthLinks from "./auth-links";
 
 export const metadata: Metadata = {
   title: "CareerDev Global | Unleashing Your Potential",
@@ -11,6 +13,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body>
+        <AuthLinks />
         {children}
         <a href="/career-intelligence" style={{position:"fixed",right:20,bottom:20,zIndex:50,padding:"13px 17px",borderRadius:999,background:"#0879ad",color:"#fff",textDecoration:"none",fontWeight:800,fontSize:13,boxShadow:"0 10px 30px rgba(0,70,110,.25)"}}>
           ✦ AI Career Intelligence
