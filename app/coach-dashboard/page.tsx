@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import "./styles.css";
 import { createSupabaseBrowserClient } from '../../lib/supabase-browser';
 
 const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
