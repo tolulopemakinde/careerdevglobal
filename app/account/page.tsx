@@ -15,12 +15,6 @@ const accountTypes = [
     login: '/coach/login',
     signup: '/coach/signup',
   },
-  {
-    title: 'Staff / Admin',
-    description: 'Access CareerDev Global administration and operational management tools.',
-    login: '/admin/login',
-    signup: '/admin/signup',
-  },
 ];
 
 export default function AccountPage() {
@@ -36,7 +30,7 @@ export default function AccountPage() {
       <section className="cdg-account-grid" aria-label="Account types">
         {accountTypes.map((account) => (
           <article className="cdg-account-card" key={account.title}>
-            <div className="cdg-account-icon" aria-hidden="true">{account.title === 'Client' ? 'C' : account.title === 'Coach' ? 'Co' : 'A'}</div>
+            <div className="cdg-account-icon" aria-hidden="true">{account.title === 'Client' ? 'C' : 'Co'}</div>
             <h2>{account.title}</h2>
             <p>{account.description}</p>
             <div className="cdg-account-actions">
