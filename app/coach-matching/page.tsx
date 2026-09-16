@@ -4,75 +4,15 @@ import { useState } from "react";
 import "./styles.css";
 import { createSupabaseBrowserClient } from "../../lib/supabase-browser";
 
-type Match = {
-  coach_id: string;
-  display_name: string;
-  headline: string | null;
-  bio: string | null;
-  specializations: string[] | null;
-  coaching_formats: string[] | null;
-  languages: string[] | null;
-  timezone: string | null;
-  country: string | null;
-  years_coaching: number | null;
-  semantic_score: number;
-  combined_score: number;
-  match_reasons: string[] | null;
-  mismatch_flags: string[] | null;
-};
-
-const signalsCatalog = ["Career transition", "Product management", "Interview storytelling", "Leadership", "Confidence"];
-
-export default function CoachMatching() {
-  const [goal, setGoal] = useState("I’m moving from operations into product management and need help telling a stronger career story for interviews.");
-  const [mode, setMode] = useState("Any format");
-  const [signals, setSignals] = useState(["Career transition", "Product management", "Interview storytelling"]);
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [searched, setSearched] = useState(false);
-
-  const toggle = (signal: string) => setSignals(current => current.includes(signal) ? current.filter(item => item !== signal) : [...current, signal]);
-
-  const findMatches = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const supabase = createSupabaseBrowserClient();
-      const { data, error: invokeError } = await supabase.functions.invoke("careerdev-coach-matching", {
-        body: { goal, mode, signals }
-      });
-      if (invokeError) throw new Error(invokeError.message);
-      if (data?.error) throw new Error(data.error);
-      setMatches((data?.matches ?? []) as Match[]);
-      setSearched(true);
-    } catch (err) {
-      setMatches([]);
-      setSearched(true);
-      setError(err instanceof Error ? err.message : "Coach matching is temporarily unavailable.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return <main className="matching-page">
-    <header className="matching-header"><a href="/" className="back-link">← CareerDev Global</a></header>
-    <section className="matching-hero"><div className="hero-overlay" aria-hidden="true" /><div className="hero-content"><p className="eyebrow">CAREER COACHING &amp; MENTORING</p><h1>Find a coach who fits your next move.</h1><p>Describe what you want to achieve. Semantic matching surfaces relevant coaches, while eligibility rules and human choice stay in control.</p></div></section>
-    <section className="matching-grid">
-      <aside className="intent-card"><h2>Candidate intent</h2><label htmlFor="goal">What do you want help with?</label><textarea id="goal" value={goal} onChange={event => setGoal(event.target.value)} />
-        <label>Signals we detected</label><div className="signal-list">{signalsCatalog.map(signal => <button type="button" key={signal} className={signals.includes(signal) ? "signal active" : "signal"} onClick={() => toggle(signal)}>{signal}</button>)}</div>
-        <label htmlFor="mode">Preferred coaching mode</label><select id="mode" value={mode} onChange={event => setMode(event.target.value)}><option>Any format</option><option>Structured</option><option>Conversational</option></select>
-        <p className="gate-note"><span>✓</span> Eligibility gate · approved, active and available coaches only</p>
-        <button type="button" className="match-button" onClick={findMatches} disabled={loading || !goal.trim()}>{loading ? "Finding matches…" : "Find matching coaches"}</button>
-      </aside>
-      <div className="results"><div className="results-head"><div><p className="eyebrow">RECOMMENDED COACHES</p><h2>{searched ? `${matches.length} matches ranked by fit` : "Ready to find your matches"}</h2></div><span className="advisory">AI advisory · people decide</span></div>
-        {error && <div className="error-card">{error}</div>}
-        {!searched && !loading && !error && <div className="empty-card"><strong>Start with your goal.</strong><p>Our matching engine will turn your goal and selected signals into a semantic query, apply marketplace eligibility rules, and return explainable matches.</p></div>}
-        {loading && <div className="empty-card"><strong>Analysing your career goal…</strong><p>Generating a semantic profile and checking eligible marketplace coaches.</p></div>}
-        {searched && !loading && !error && matches.length === 0 && <div className="empty-card"><strong>No eligible matches found.</strong><p>Try broadening your goal or changing the preferred coaching mode.</p></div>}
-        {matches.map((coach, index) => <article className={index === 0 ? "coach-card top" : "coach-card"} key={coach.coach_id}><div className="coach-line"><div className="person"><span className="avatar">{coach.display_name?.split(/\s+/).map(part => part[0]).slice(0,2).join("").toUpperCase()}</span><div><h3>{coach.display_name}</h3><p>{coach.headline || "Career coach"}</p></div></div><strong className="score">{Math.round(Number(coach.combined_score) || 0)}<small>/100</small></strong></div><p className="reason"><b>{index === 0 ? "Highest-fit result · " : ""}</b>{coach.match_reasons?.[0] || "Relevant expertise and practical fit identified."}</p><div className="tag-row">{(coach.specializations || []).slice(0,3).map((tag, tagIndex) => <span className={tagIndex === 0 ? "tag good" : "tag"} key={tag}>{tag}</span>)}{(coach.mismatch_flags || []).slice(0,1).map(flag => <span className="tag tradeoff" key={flag}>{flag}</span>)}</div><footer><span>{coach.years_coaching ? `${coach.years_coaching} years coaching` : "Verified coach"}{coach.country ? ` · ${coach.country}` : ""}{coach.timezone ? ` · ${coach.timezone}` : ""}</span><button type="button" onClick={() => alert("Coach profile and booking are human-led. The next marketplace release will connect this action to the live profile.")}>View profile →</button></footer></article>)}
-      </div>
-    </section>
-    <section className="explain"><h2>How the recommendation is formed</h2><p>Your goal is converted into an embedding. Retrieval then searches eligible marketplace coaches, while the ranking combines semantic relevance with the selected coaching format. The recommendation is advisory; people remain in control.</p><div className="weights"><span><b>75%</b> Semantic goal &amp; expertise fit</span><span><b>25%</b> Coaching format fit</span><span><b>100%</b> Human choice remains final</span></div></section>
-  </main>;
+type Match = { coach_id:string; display_name:string; headline:string|null; bio:string|null; specializations:string[]|null; coaching_formats:string[]|null; languages:string[]|null; timezone:string|null; country:string|null; years_coaching:number|null; semantic_score:number; combined_score:number; match_reasons:string[]|null; mismatch_flags:string[]|null };
+const signalsCatalog=["Career transition","Product management","Interview storytelling","Leadership","Confidence"];
+export default function CoachMatching(){
+ const [goal,setGoal]=useState("I’m moving from operations into product management and need help telling a stronger career story for interviews."),[mode,setMode]=useState("Any format"),[signals,setSignals]=useState(["Career transition","Product management","Interview storytelling"]),[matches,setMatches]=useState<Match[]>([]),[loading,setLoading]=useState(false),[error,setError]=useState(""),[searched,setSearched]=useState(false);
+ const toggle=(s:string)=>setSignals(c=>c.includes(s)?c.filter(x=>x!==s):[...c,s]);
+ const findMatches=async()=>{setLoading(true);setError("");try{const supabase=createSupabaseBrowserClient();const {data,error:invokeError}=await supabase.functions.invoke("careerdev-coach-matching",{body:{goal,mode,signals}});if(invokeError)throw new Error(invokeError.message);if(data?.error)throw new Error(data.error);setMatches((data?.matches??[]) as Match[]);setSearched(true)}catch(err){setMatches([]);setSearched(true);setError(err instanceof Error?err.message:"Coach matching is temporarily unavailable.")}finally{setLoading(false)}};
+ return <main className="matching-page"><header className="matching-header"><a href="/" className="back-link">← CareerDev Global</a><a href="/coach-registration" className="coach-apply">Become a CareerDev coach →</a></header>
+ <section className="matching-hero"><div className="hero-overlay" aria-hidden="true"/><div className="hero-content"><p className="eyebrow">CAREER COACHING &amp; MENTORING</p><h1>Find a coach who fits your next move.</h1><p>Describe what you want to achieve. Semantic matching surfaces relevant coaches, while eligibility rules and human choice stay in control.</p></div></section>
+ <section className="matching-grid"><aside className="intent-card"><h2>Candidate intent</h2><label htmlFor="goal">What do you want help with?</label><textarea id="goal" value={goal} onChange={e=>setGoal(e.target.value)}/><label>Signals we detected</label><div className="signal-list">{signalsCatalog.map(s=><button type="button" key={s} className={signals.includes(s)?"signal active":"signal"} onClick={()=>toggle(s)}>{s}</button>)}</div><label htmlFor="mode">Preferred coaching mode</label><select id="mode" value={mode} onChange={e=>setMode(e.target.value)}><option>Any format</option><option>Structured</option><option>Conversational</option></select><p className="gate-note"><span>✓</span> Eligibility gate · approved, active and available coaches only</p><button type="button" className="match-button" onClick={findMatches} disabled={loading||!goal.trim()}>{loading?"Finding matches…":"Find matching coaches"}</button></aside>
+ <div className="results"><div className="results-head"><div><p className="eyebrow">RECOMMENDED COACHES</p><h2>{searched?`${matches.length} matches ranked by fit`:"Ready to find your matches"}</h2></div><span className="advisory">AI advisory · people decide</span></div>{error&&<div className="error-card">{error}</div>}{!searched&&!loading&&!error&&<div className="empty-card"><strong>Start with your goal.</strong><p>Our matching engine will turn your goal and selected signals into a semantic query, apply marketplace eligibility rules, and return explainable matches.</p></div>}{loading&&<div className="empty-card"><strong>Analysing your career goal…</strong><p>Generating a semantic profile and checking eligible marketplace coaches.</p></div>}{searched&&!loading&&!error&&matches.length===0&&<div className="empty-card"><strong>No eligible matches found yet.</strong><p>The marketplace only shows approved, active and available coaches. You can also <a href="/coach-registration">apply to become a coach</a> if you are a qualified professional.</p></div>}{matches.map((coach,index)=><article className={index===0?"coach-card top":"coach-card"} key={coach.coach_id}><div className="coach-line"><div className="person"><span className="avatar">{coach.display_name?.split(/\s+/).map(p=>p[0]).slice(0,2).join("").toUpperCase()}</span><div><h3>{coach.display_name}</h3><p>{coach.headline||"Career coach"}</p></div></div><strong className="score">{Math.round(Number(coach.combined_score)||0)}<small>/100</small></strong></div><p className="reason"><b>{index===0?"Highest-fit result · ":""}</b>{coach.match_reasons?.[0]||"Relevant expertise and practical fit identified."}</p><div className="tag-row">{(coach.specializations||[]).slice(0,3).map((tag,i)=><span className={i===0?"tag good":"tag"} key={tag}>{tag}</span>)}{(coach.mismatch_flags||[]).slice(0,1).map(flag=><span className="tag tradeoff" key={flag}>{flag}</span>)}</div><footer><span>{coach.years_coaching?`${coach.years_coaching} years coaching`:"Verified coach"}{coach.country?` · ${coach.country}`:""}{coach.timezone?` · ${coach.timezone}`:""}</span><button type="button" onClick={()=>alert("Coach profile and booking are human-led. The marketplace profile connection will be added when live coach profiles are activated.")}>View profile →</button></footer></article>)}</div></section>
+ <section className="explain"><h2>How the recommendation is formed</h2><p>Your goal is converted into an embedding. Retrieval searches eligible marketplace coaches, while ranking combines semantic relevance with the selected coaching format. The recommendation is advisory; people remain in control.</p><div className="weights"><span><b>75%</b> Semantic goal &amp; expertise fit</span><span><b>25%</b> Coaching format fit</span><span><b>100%</b> Human choice remains final</span></div></section></main>;
 }
