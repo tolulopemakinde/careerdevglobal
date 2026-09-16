@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { createSupabaseBrowserClient } from '../../../lib/supabase-browser';
-import '../styles.css';
+import './styles.css';
 
 const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 export default function CoachProfilePage(){
