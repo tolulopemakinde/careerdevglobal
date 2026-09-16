@@ -2,10 +2,12 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { createSupabaseBrowserClient } from '../lib/supabase-browser';
 
 export default function AuthLinks() {
   const [signedIn, setSignedIn] = useState(false);
+  const pathname = usePathname();
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
@@ -15,6 +17,8 @@ export default function AuthLinks() {
     });
     return () => listener.subscription.unsubscribe();
   }, [supabase]);
+
+  if (pathname !== '/') return null;
 
   return (
     <div className="cdg-user-nav" aria-label="Account navigation">
