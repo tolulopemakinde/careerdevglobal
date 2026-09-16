@@ -19,14 +19,17 @@ export default function SignupPage() {
     setBusy(true); setMessage(''); setError('');
     if (password.length < 8) { setError('Password must be at least 8 characters.'); setBusy(false); return; }
     if (password !== confirm) { setError('Passwords do not match.'); setBusy(false); return; }
+
+    const redirectUrl = `${window.location.origin}/auth/callback`;
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${window.location.origin}/login` }
+      options: { emailRedirectTo: redirectUrl }
     });
+
     if (error) setError(error.message);
     else if (data.session) window.location.href = '/client-dashboard';
-    else setMessage('Account created. Please check your email and verify your address before logging in.');
+    else setMessage('Registration successful! Please check your email and click the verification link to activate your CareerDev Global account.');
     setBusy(false);
   }
 
