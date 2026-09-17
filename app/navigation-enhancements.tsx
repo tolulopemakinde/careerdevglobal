@@ -49,6 +49,35 @@ export default function NavigationEnhancements() {
     let cleanupCta = () => {};
     applyAccountNavigation();
 
+    // Career Intelligence accepts common career evidence formats. The page's
+    // legacy validator expects text/plain for some files, so normalize the
+    // browser File MIME type while preserving the original filename/bytes.
+    // The secure document processor uses the filename extension to route the
+    // uploaded bytes and then performs server-side AI extraction.
+    let cleanupDocumentInput = () => {};
+    if (window.location.pathname === '/career-intelligence') {
+      const input = document.querySelector<HTMLInputElement>('#career-document');
+      if (input) {
+        input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx,.txt,.png,.jpg,.jpeg,.webp,.gif';
+        const handleDocumentChange = () => {
+          const files = Array.from(input.files || []);
+          const supported = /\.(pdf|doc|docx|xls|xlsx|csv|ppt|pptx|txt|png|jpe?g|webp|gif)$/i;
+          const needsNormalization = files.some((file) => supported.test(file.name) && !['application/pdf','text/plain'].includes(file.type));
+          if (!needsNormalization) return;
+          const transfer = new DataTransfer();
+          files.forEach((file) => {
+            const normalized = ['application/pdf','text/plain'].includes(file.type)
+              ? file
+              : new File([file], file.name, { type: 'text/plain', lastModified: file.lastModified });
+            transfer.items.add(normalized);
+          });
+          try { input.files = transfer.files; } catch { /* Browser may expose a read-only FileList. */ }
+        };
+        input.addEventListener('change', handleDocumentChange, true);
+        cleanupDocumentInput = () => input.removeEventListener('change', handleDocumentChange, true);
+      }
+    }
+
     let menuButton = header.querySelector<HTMLButtonElement>('.mobile-menu-toggle');
     if (!menuButton) {
       menuButton = document.createElement('button');
@@ -70,6 +99,7 @@ export default function NavigationEnhancements() {
     return () => {
       cancelled = true;
       cleanupCta();
+      cleanupDocumentInput();
       menuButton?.removeEventListener('click', toggleMenu);
       links.forEach((link) => link.removeEventListener('click', closeMenu));
       window.removeEventListener('resize', handleResize);
