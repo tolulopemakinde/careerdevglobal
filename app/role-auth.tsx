@@ -5,7 +5,6 @@ import { FormEvent, useState } from 'react';
 import { createSupabaseBrowserClient } from '../lib/supabase-browser';
 
 export type AccountType = 'client' | 'coach' | 'admin';
-
 type Props = { mode: 'login' | 'signup'; accountType: AccountType };
 
 const config = {
@@ -46,15 +45,26 @@ export default function RoleAuth({ mode, accountType }: Props) {
           : 'Account created. Please check your email and click the verification link to activate your CareerDev Global account.');
     } else {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setError(error.message);
-      else {
-        if (accountType === 'client') window.location.href = c.dashboard;
-        else {
-          const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).maybeSingle();
-          const role = profile?.role;
-          if (accountType === 'coach' && role !== 'coach') setError('This account is not currently registered as a Coach. Complete the coach application and approval process first.');
-          else if (accountType === 'admin' && role !== 'admin' && role !== 'staff') setError('This account does not yet have Staff/Admin permissions. Please have a platform administrator assign the appropriate role.');
-          else window.location.href = c.dashboard;
+      if (error) {
+        setError(error.message);
+      } else {
+        const { data: roleData, error: roleError } = await supabase.rpc('get_my_role');
+        const role = roleData?.role;
+        const status = roleData?.status;
+        if (roleError) {
+          setError(`Signed in, but CareerDev Global could not verify your account permissions. ${roleError.message}`);
+        } else if (status && status !== 'active') {
+          setError('Your CareerDev Global account is not active. Please contact an administrator.');
+        } else if (accountType === 'client') {
+          window.location.href = c.dashboard;
+          return;
+        } else if (accountType === 'coach' && role !== 'coach') {
+          setError('This account is not currently registered as a Coach. Complete the coach application and approval process first.');
+        } else if (accountType === 'admin' && role !== 'admin' && role !== 'staff') {
+          setError('This account does not yet have Staff/Admin permissions. Please have a platform administrator assign the appropriate role.');
+        } else {
+          window.location.href = c.dashboard;
+          return;
         }
       }
     }
