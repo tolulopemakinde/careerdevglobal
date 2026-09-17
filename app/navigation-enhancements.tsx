@@ -14,9 +14,9 @@ export default function NavigationEnhancements() {
     const cta = document.querySelector<HTMLAnchorElement>('.site-header nav a.nav-cta');
     if (!cta) return;
 
-    cta.textContent = 'Log in / Create Account';
+    cta.textContent = 'Get Started';
     cta.setAttribute('href', '/account');
-    cta.setAttribute('aria-label', 'Log in or create a CareerDev Global account');
+    cta.setAttribute('aria-label', 'Get started with a CareerDev Global account');
 
     const handleClick = (event: MouseEvent) => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
