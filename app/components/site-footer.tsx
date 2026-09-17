@@ -76,7 +76,7 @@ export default function SiteFooter() {
 
         <div className="site-footer-bottom">
           <p>© {new Date().getFullYear()} CareerDev Global. All rights reserved.</p>
-          <p>Practice informed by relevant professional competency and ethical frameworks. Framework alignment does not by itself imply membership, accreditation, certification, endorsement or formal affiliation.</p>
+          <p><strong>Disclaimer:</strong> Practice informed by relevant professional competency and ethical frameworks. Framework alignment does not by itself imply membership, accreditation, certification, endorsement or formal affiliation.</p>
         </div>
       </div>
     </footer>
