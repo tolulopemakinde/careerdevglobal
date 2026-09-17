@@ -11,7 +11,6 @@ html { scroll-padding-top: 100px; }
 body { overflow-x: hidden; }
 section[id], footer[id] { scroll-margin-top: 100px; }
 
-/* One consistent navigation typography system. */
 .site-header nav,
 .site-header nav a,
 .site-header nav .nav-cta {
@@ -31,7 +30,8 @@ section[id], footer[id] { scroll-margin-top: 100px; }
 .site-header nav a:focus-visible,
 .site-header .brand:focus-visible,
 .button:focus-visible,
-.footer a:focus-visible {
+.footer a:focus-visible,
+.mobile-menu-toggle:focus-visible {
   outline: 3px solid var(--cdg-focus);
   outline-offset: 4px;
   border-radius: 10px;
@@ -39,10 +39,8 @@ section[id], footer[id] { scroll-margin-top: 100px; }
 
 .site-header nav a,
 .button,
-.ai-career-intelligence-fab {
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
+.ai-career-intelligence-fab,
+.mobile-menu-toggle { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 
 .skip-link {
   position: fixed;
@@ -69,6 +67,8 @@ section[id], footer[id] { scroll-margin-top: 100px; }
   justify-content: center;
 }
 
+.mobile-menu-toggle { display: none; }
+
 @media (max-width: 1000px) {
   .nav-wrap { gap: 16px; }
   .brand { width: 220px; }
@@ -81,49 +81,76 @@ section[id], footer[id] { scroll-margin-top: 100px; }
 
 @media (max-width: 700px) {
   .site-header { position: sticky; }
-  .nav-wrap {
-    min-height: 70px;
-    padding-top: 8px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-
+  .nav-wrap { min-height: 70px; padding-top: 8px; align-items: center; }
   .brand { width: 185px; }
 
-  /* Keep the complete primary navigation available on phones instead of hiding it. */
+  .mobile-menu-toggle {
+    margin-left: auto;
+    width: 46px;
+    height: 46px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: 1px solid #d9e7ef;
+    border-radius: 12px;
+    background: #fff;
+    color: #10203f;
+    cursor: pointer;
+    flex: 0 0 auto;
+  }
+
+  .mobile-menu-toggle span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    border-radius: 99px;
+    background: currentColor;
+    transition: transform .2s ease, opacity .2s ease;
+  }
+
   .site-header nav {
+    display: none;
     order: 3;
     width: 100%;
-    justify-content: flex-start;
-    gap: 2px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 2px 2px 10px;
-    margin: 0;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+    margin: 8px 0 0;
+    padding: 12px 0 14px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    overflow: visible;
+    border-top: 1px solid #e7ebf2;
   }
 
-  .site-header nav::-webkit-scrollbar { display: none; }
-  .site-header nav a:not(.nav-cta) { display: inline-flex; }
-  .site-header nav a {
-    flex: 0 0 auto;
-    min-height: 42px;
-    padding: 9px 8px;
+  .site-header.mobile-menu-open nav { display: flex; }
+
+  .site-header nav a,
+  .site-header nav a:not(.nav-cta) {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 46px;
+    padding: 11px 14px;
     border-radius: 10px;
-    white-space: nowrap;
-    font-size: 12px;
-    letter-spacing: 0;
+    white-space: normal;
+    font-size: 14px;
   }
 
-  .site-header nav a:hover { transform: none; }
+  .site-header nav a:hover { transform: none; background: #f4f9fc; }
   .site-header nav a.nav-cta {
-    padding: 10px 12px;
-    min-width: 100px;
+    width: 100%;
+    min-width: 0;
     justify-content: center;
-    text-align: center;
-    font-size: 12px;
+    margin-top: 4px;
+    padding: 12px 14px;
+    font-size: 14px;
   }
+
+  .site-header.mobile-menu-open .mobile-menu-toggle span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+  .site-header.mobile-menu-open .mobile-menu-toggle span:nth-child(2) { opacity: 0; }
+  .site-header.mobile-menu-open .mobile-menu-toggle span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
   .container { width: min(100% - 28px, 1160px); }
   .hero { padding: 52px 0 48px; }
@@ -154,8 +181,6 @@ section[id], footer[id] { scroll-margin-top: 100px; }
 
 @media (max-width: 420px) {
   .brand { width: 165px; }
-  .site-header nav a { font-size: 11px; padding-inline: 6px; }
-  .site-header nav a.nav-cta { padding-inline: 10px; min-width: 94px; font-size: 11px; }
   .hero { padding-top: 44px; }
   .hero-card { padding: 18px; }
   .journey { font-size: 13px; }
@@ -163,4 +188,5 @@ section[id], footer[id] { scroll-margin-top: 100px; }
 
 @media (prefers-reduced-motion: reduce) {
   .skip-link { transition: none; }
+  .mobile-menu-toggle span { transition: none; }
 }
