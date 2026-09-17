@@ -92,12 +92,14 @@ export default function CareerInsightsPage() {
             or connect with a coach for human-guided support.
           </p>
         </div>
-        <div className="site-page-actions">
-          <Link href="/career-intelligence" className="site-page-button">
+        <div className="site-page-actions career-insights-actions">
+          <Link href="/career-intelligence" className="site-page-button career-intelligence-action">
             Explore Career Intelligence
           </Link>
-          <Link href="/coach-matching" className="site-page-button secondary">
+          <Link href="/coach-matching" className="site-page-button career-coach-action">
+            <span className="career-coach-action-icon" aria-hidden="true">♙</span>
             Find a Coach
+            <span className="career-coach-action-arrow" aria-hidden="true">→</span>
           </Link>
         </div>
       </section>
