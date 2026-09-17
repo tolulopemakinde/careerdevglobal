@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+
 const standards = [
   { short: "ICF", name: "International Coaching Federation", href: "https://coachingfederation.org/" },
   { short: "IAEVG", name: "International Association for Educational and Vocational Guidance", href: "https://iaevg.com/" },
@@ -7,10 +11,24 @@ const standards = [
 ];
 
 export default function ProfessionalStandardsCarousel() {
+  const sectionRef = useRef<HTMLElement | null>(null);
   const items = [...standards, ...standards];
 
+  useEffect(() => {
+    const section = sectionRef.current;
+    const footer = document.querySelector("footer.footer");
+
+    if (section && footer && footer.parentNode) {
+      footer.parentNode.insertBefore(section, footer);
+    }
+  }, []);
+
   return (
-    <section className="professional-standards" aria-labelledby="professional-standards-title">
+    <section
+      ref={sectionRef}
+      className="professional-standards"
+      aria-labelledby="professional-standards-title"
+    >
       <div className="professional-standards-inner">
         <p className="professional-standards-eyebrow">OUR PROFESSIONAL STANDARDS</p>
         <h2 id="professional-standards-title">Guided by globally recognised professional frameworks</h2>
