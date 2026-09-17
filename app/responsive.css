@@ -115,7 +115,12 @@ section[id], footer[id] { scroll-margin-top: 100px; }
   }
 
   .site-header nav a:hover { transform: none; }
-  .site-header nav a.nav-cta { padding: 11px 15px; }
+  .site-header nav a.nav-cta {
+    padding: 11px 15px;
+    min-width: 112px;
+    justify-content: center;
+    text-align: center;
+  }
 
   .container { width: min(100% - 28px, 1160px); }
   .hero { padding: 52px 0 48px; }
@@ -147,7 +152,7 @@ section[id], footer[id] { scroll-margin-top: 100px; }
 @media (max-width: 420px) {
   .brand { width: 165px; }
   .site-header nav a { font-size: 13px; padding-inline: 9px; }
-  .site-header nav a.nav-cta { padding-inline: 12px; }
+  .site-header nav a.nav-cta { padding-inline: 12px; min-width: 104px; }
   .hero { padding-top: 44px; }
   .hero-card { padding: 18px; }
   .journey { font-size: 13px; }
