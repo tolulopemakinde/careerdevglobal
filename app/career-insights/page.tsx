@@ -1,4 +1,5 @@
 import Link from "next/link";
+import styles from "./career-insights.module.css";
 
 const insights = [
   {
@@ -96,10 +97,10 @@ export default function CareerInsightsPage() {
           <Link href="/career-intelligence" className="site-page-button career-intelligence-action">
             Explore Career Intelligence
           </Link>
-          <Link href="/coach-matching" className="site-page-button career-coach-action">
-            <span className="career-coach-action-icon" aria-hidden="true">♙</span>
+          <Link href="/coach-matching" className={`${styles.coachAction} career-coach-action`}>
+            <span className={styles.icon} aria-hidden="true">♙</span>
             Find a Coach
-            <span className="career-coach-action-arrow" aria-hidden="true">→</span>
+            <span className={styles.arrow} aria-hidden="true">→</span>
           </Link>
         </div>
       </section>
