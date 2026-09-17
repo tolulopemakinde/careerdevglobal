@@ -23,22 +23,6 @@ export default function NavigationEnhancements() {
       brand.setAttribute('aria-label', 'CareerDev Global home');
     }
 
-    // Keep the two marketplace actions available from every marketing page.
-    const ensureLink = (href: string, label: string, className: string) => {
-      let link = nav.querySelector<HTMLAnchorElement>(`a[data-cdg-booking="${className}"]`);
-      if (!link) {
-        link = document.createElement('a');
-        link.dataset.cdgBooking = className;
-        link.className = className;
-        link.textContent = label;
-        link.href = href;
-        cta?.before(link);
-      }
-      return link;
-    };
-    ensureLink('/book-coaching', 'Book a Coaching Session', 'nav-book-coaching');
-    ensureLink('/book-service', 'Book a Service', 'nav-book-service');
-
     const applyAccountNavigation = async () => {
       let destination = '/account';
       let label = 'Get Started';
