@@ -1,31 +1,117 @@
 import Link from "next/link";
 
-export const metadata = { title: "Help Center | CareerDev Global", description: "Learn how clients and coaches can use CareerDev Global." };
+export const metadata = {
+  title: "Help Center | CareerDev Global",
+  description: "Learn how clients and coaches can use CareerDev Global, its features and responsible AI tools.",
+};
 
-const clientSteps = [
-  ["Create your account", "Start with the information needed to access your chosen CareerDev Global service. Keep your details accurate so recommendations and communications remain useful."],
-  ["Build your career profile", "Add your goals, interests, experience, skills and preferences gradually. Share only information that is relevant to the service you want."],
-  ["Explore Career Intelligence", "Use guided career exploration, skills and goal prompts, opportunity research and action planning to turn uncertainty into a structured next step."],
-  ["Find the right support", "Where coaching is available, review coach information and choose a professional whose services and expertise fit your needs."],
-  ["Work on your documents", "Use CV, LinkedIn and career-positioning services to improve clarity, evidence, relevance and alignment with your target direction."],
-  ["Track progress", "Return to your goals, actions and career insights so your plan can evolve as your experience and priorities change."],
-];
-const coachSteps = [
-  ["Create your professional profile", "Present your qualifications, experience, coaching approach, areas of practice and relevant professional credentials accurately."],
-  ["Define your services", "Make your scope, audience, session format and expectations clear so clients can make informed choices."],
-  ["Manage client work", "Use agreed goals, boundaries, confidentiality practices and appropriate records. Keep client information limited to what you need."],
-  ["Use AI responsibly", "Treat AI as an assistant for preparation and workflow support, not as a replacement for professional judgment or the coaching relationship."],
-  ["Stay within competence", "Refer or escalate matters outside your competence, especially where clinical, legal, safeguarding or other specialist intervention is required."],
-];
-const features = [
-  ["Career Intelligence", "Structured career exploration, direction-setting, skills reflection, opportunity research and action planning."],
-  ["Coach Discovery", "A pathway for clients to identify and engage with appropriate coaching support where available."],
-  ["Professional Documents", "Career-focused support for CVs, LinkedIn profiles, cover letters and professional positioning."],
-  ["Opportunity Research", "Evidence-aware research workflows designed to help users investigate roles, programmes, employers and career pathways."],
-  ["Responsible AI", "AI-assisted support with human oversight, uncertainty flags, evidence provenance, privacy safeguards and professional boundaries."],
-  ["Resources & Learning", "Guides, insights, FAQs and practical resources that help users make informed career decisions."],
+const helpGroups = [
+  {
+    id: "getting-started",
+    title: "Getting Started",
+    items: [
+      ["What is CareerDev Global?", "CareerDev Global combines career development, coaching, professional services and AI-enabled Career Intelligence to help people understand their options and take practical next steps."],
+      ["Who can use CareerDev Global?", "The platform is designed for clients seeking career development support and for qualified coaches and professionals who provide relevant services. Specific features may have eligibility or availability requirements."],
+      ["How do I get started as a client?", "Start with the service or feature that matches your need. Build your career profile gradually, explore Career Intelligence, review available support and use the resources that are relevant to your goals."],
+      ["What information should I provide?", "Share information that is relevant to the service you are using, such as career goals, interests, experience, skills and preferences. Keep important details accurate and review AI-generated content before relying on it."],
+    ],
+  },
+  {
+    id: "features",
+    title: "Platform Features",
+    items: [
+      ["What is Career Intelligence?", "Career Intelligence is a structured approach to understanding your goals, interests, capabilities, experience and opportunities, then translating that information into practical career options and actions."],
+      ["What can Career Intelligence help me do?", "It can support career exploration, direction-setting, skills reflection, opportunity research, goal setting and action planning. It is designed to support—not make—your career decisions."],
+      ["What can the CV & LinkedIn service do?", "It can help improve structure, clarity, evidence, relevance, positioning and alignment with a target role or career direction. You should review the final content and confirm that every claim is accurate."],
+      ["What is Opportunity Research?", "Opportunity Research helps users investigate roles, programmes, employers and career pathways using evidence-aware workflows. Important requirements, deadlines and eligibility information should always be checked against authoritative sources."],
+      ["Where can I find career resources?", "Use the Career Insights, Help Center and FAQ resources for practical guidance. Additional resources may become available as CareerDev Global expands its learning and career-support ecosystem."],
+    ],
+  },
+  {
+    id: "clients",
+    title: "For Clients",
+    items: [
+      ["How do I find a coach?", "Use the coach-discovery pathway when available, review the coach's profile and scope, and choose a professional whose expertise and approach fit your needs. Ask questions before starting if you need clarification."],
+      ["What should I look for in a coach?", "Consider the coach's relevant experience, training, credentials, areas of practice, approach, availability and the type of support you want. Credentials should be verified through the relevant issuing body where appropriate."],
+      ["How should I use AI-generated career information?", "Treat AI outputs as assistance rather than guaranteed facts. Check important information against current, authoritative sources, especially for deadlines, requirements, compensation, immigration, education or regulated professions."],
+      ["Does CareerDev Global guarantee a job?", "No. Career outcomes depend on many factors outside the platform's control. CareerDev Global provides tools and support, not a guaranteed employment, admission, promotion or salary outcome."],
+      ["What if I need help outside career coaching?", "Career coaching is not a substitute for clinical, legal, medical, financial or other specialist services. Issues outside a professional's competence should be referred to an appropriately qualified specialist."],
+    ],
+  },
+  {
+    id: "coaches",
+    title: "For Coaches",
+    items: [
+      ["How do I become a coach on the platform?", "Start with the coach pathway when available. Be prepared to provide accurate professional information, qualifications, areas of practice and other information required for profile review or onboarding."],
+      ["What should my coach profile include?", "Present your qualifications, experience, coaching approach, areas of practice, relevant credentials, availability and service scope accurately so clients can make informed choices."],
+      ["How should coaches use AI?", "AI may support preparation, organisation, drafting or research. Coaches remain responsible for professional judgment, client confidentiality, accuracy, boundaries and the quality of the service they provide."],
+      ["How should coaches manage client information?", "Use only information necessary for the service, protect confidentiality, follow applicable privacy requirements and avoid entering unnecessary sensitive client information into AI tools or other systems."],
+      ["What should I do when an issue is outside my competence?", "Recognise the boundary, explain it appropriately and refer or escalate to a suitably qualified professional when the client's needs require specialist intervention."],
+    ],
+  },
+  {
+    id: "ai-trust",
+    title: "AI, Privacy & Trust",
+    items: [
+      ["How does CareerDev Global use AI?", "AI can support career exploration, drafting, organisation, research and other workflows. AI is intended to augment human expertise and client decision-making, not replace professional judgment."],
+      ["Can AI choose a career for me?", "No. AI can help explore possibilities, identify patterns, organise information and generate questions or options. Your goals, values, context and judgment remain central to the decision."],
+      ["What professional standards guide CareerDev Global?", "Relevant practices are informed by frameworks including ICF, IAEVG, NCDA, EMCC Global and NACE, with Mindler ICCC treated as a specialised career-coaching practice reference. Framework alignment does not by itself imply membership, accreditation, certification or endorsement."],
+      ["Why is ICF prioritised?", "ICF provides a primary coaching ethics and competency reference for coaching-related workflows. Other frameworks are applied according to the type of service, so career guidance, employability and coaching needs can receive appropriate safeguards."],
+      ["How does CareerDev Global protect my information?", "We aim to collect information that is relevant to the service, use reasonable security measures and provide privacy information about how data is used. See the Privacy Policy for the detailed approach and available rights."],
+      ["Can I delete or correct my information?", "Privacy rights depend on applicable law and the type of information. Contact hello@careerdevglobal.com with your request and we will direct it to the appropriate process."],
+    ],
+  },
+  {
+    id: "accessibility-support",
+    title: "Accessibility & Support",
+    items: [
+      ["Is CareerDev Global designed for mobile devices?", "We aim to provide a responsive experience across phones, tablets and computers, with clear navigation, readable content and accessible interaction patterns."],
+      ["What if I encounter an accessibility barrier?", "Tell us what happened, what you were trying to do and the device or browser you were using at hello@careerdevglobal.com so the team can investigate and improve the experience."],
+      ["What if I cannot find the answer I need?", "Review the FAQ for common questions or contact CareerDev Global at hello@careerdevglobal.com with enough context for the team to direct you to the appropriate support."],
+    ],
+  },
 ];
 
 export default function HelpCenterPage() {
-  return <main className="help-page"><section className="help-hero"><div><span>CAREERDEV GLOBAL HELP CENTER</span><h1>Find your next step with confidence.</h1><p>Everything you need to understand the platform, use its features and get the most from your CareerDev Global experience.</p><div className="help-search" role="search"><span aria-hidden="true">⌕</span><input aria-label="Search help" placeholder="Search help topics..." /><span className="search-hint">Try “coach”, “CV”, or “AI”</span></div></div></section><section className="feature-section"><div className="section-heading"><span>THE PLATFORM</span><h2>What you can do here</h2><p>CareerDev Global brings career development, coaching, professional positioning and career intelligence into one connected experience.</p></div><div className="feature-grid">{features.map(([title, text], i) => <article className="feature-card" key={title}><div className="feature-number">0{i + 1}</div><h3>{title}</h3><p>{text}</p></article>)}</div></section><section id="clients" className="journey-section"><div className="section-heading"><span>FOR CLIENTS</span><h2>Your CareerDev journey</h2><p>Start with a question, build clarity, then turn insight into practical action.</p></div><div className="journey-grid">{clientSteps.map(([title, text], i) => <article key={title}><div className="step-dot">{i + 1}</div><div><h3>{title}</h3><p>{text}</p></div></article>)}</div></section><section id="coaches" className="journey-section coach-section"><div className="section-heading"><span>FOR COACHES</span><h2>Build a trusted coaching presence</h2><p>CareerDev Global is designed to support professional coaches while preserving client autonomy, confidentiality and ethical boundaries.</p></div><div className="journey-grid">{coachSteps.map(([title, text], i) => <article key={title}><div className="step-dot">{i + 1}</div><div><h3>{title}</h3><p>{text}</p></div></article>)}</div></section><section id="ai" className="trust-section"><div><span>RESPONSIBLE AI</span><h2>AI that supports people — not the other way around.</h2><p>Our AI-enabled workflows are designed around professional standards, evidence provenance, privacy, client autonomy, role boundaries and human oversight. AI outputs can be wrong, so important decisions should always receive appropriate human review.</p></div><div className="trust-points"><strong>ICF-prioritised ethics</strong><strong>Evidence & provenance</strong><strong>Human oversight</strong><strong>Privacy by design</strong></div></section><section id="accessibility" className="accessibility-section"><h2>Accessibility & support</h2><p>We aim to make CareerDev Global clear, keyboard-friendly, responsive and understandable across devices. If you encounter an accessibility barrier, tell us what happened and what you were trying to do at <a href="mailto:hello@careerdevglobal.com">hello@careerdevglobal.com</a>.</p><Link href="/faq">Browse frequently asked questions →</Link></section></main>;
+  return (
+    <main className="faq-page">
+      <section className="faq-hero help-hero">
+        <span>CAREERDEV GLOBAL HELP CENTER</span>
+        <h1>How can we help?</h1>
+        <p>Clear, practical guidance for clients and coaches using CareerDev Global, its features and AI-enabled career intelligence.</p>
+        <div className="help-search" role="search" aria-label="Help Center search">
+          <span aria-hidden="true">⌕</span>
+          <input aria-label="Search help topics" placeholder="Search help topics..." />
+          <span className="search-hint">Try “coach”, “CV”, or “AI”</span>
+        </div>
+      </section>
+
+      <div className="faq-layout">
+        <aside className="faq-nav" aria-label="Help Center sections">
+          {helpGroups.map((group) => <a key={group.id} href={`#${group.id}`}>{group.title}</a>)}
+        </aside>
+
+        <div className="faq-list">
+          {helpGroups.map((group) => (
+            <section id={group.id} className="faq-group" key={group.id}>
+              <h2>{group.title}</h2>
+              {group.items.map(([question, answer]) => (
+                <details key={question}>
+                  <summary>{question}<span>+</span></summary>
+                  <p>{answer}</p>
+                </details>
+              ))}
+            </section>
+          ))}
+
+          <div className="faq-cta">
+            <h2>Still need help?</h2>
+            <p>We are happy to help you find the right information or direct your question to the appropriate support.</p>
+            <a href="mailto:hello@careerdevglobal.com">Contact CareerDev Global →</a>
+            <Link href="/faq">Browse FAQs →</Link>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
 }
