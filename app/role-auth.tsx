@@ -67,15 +67,16 @@ export default function RoleAuth({ mode, accountType }: Props) {
         if (roleError) {
           setError(`Signed in, but CareerDev Global could not verify your account permissions. ${roleError.message}`);
         } else if (accountType === 'coach' && (requestedAccountType === 'coach' || role === 'coach') && (!role || role !== 'coach' || status !== 'active')) {
-          // A newly verified coach account is an applicant until the marketplace
-          // application is submitted and approved. Do not block the applicant
-          // at login merely because the permanent coach role does not exist yet.
           window.location.href = '/coach-registration';
           return;
         } else if (status && status !== 'active') {
           setError('Your CareerDev Global account is not active. Please contact an administrator.');
         } else if (accountType === 'client') {
-          window.location.href = c.dashboard;
+          // Preserve an internal destination such as a coach profile when a
+          // client was asked to log in while completing a booking.
+          const next = new URLSearchParams(window.location.search).get('next');
+          const destination = next && next.startsWith('/') && !next.startsWith('//') ? next : c.dashboard;
+          window.location.href = destination;
           return;
         } else if (accountType === 'coach' && role !== 'coach') {
           setError('This account is not currently registered as a Coach. Complete the coach application and approval process first.');
