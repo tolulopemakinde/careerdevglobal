@@ -42,6 +42,13 @@ export default function RoleAuth({ mode, accountType }: Props) {
         window.location.href = c.dashboard;
         return;
       } else {
+        // Keep only the email address locally so the callback can offer a
+        // fresh verification email if an email security scanner consumes the
+        // original one-time confirmation link before the user clicks it.
+        try {
+          window.localStorage.setItem('careerdev_signup_email', email);
+          window.localStorage.setItem('careerdev_signup_account', accountType);
+        } catch {}
         setMessage(accountType === 'admin'
           ? 'Account created successfully. Please check your email and click the verification link. Staff/Admin permissions are granted separately by CareerDev Global administration.'
           : accountType === 'coach'
