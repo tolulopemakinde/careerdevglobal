@@ -16,7 +16,7 @@ export default function ProfileAvatarUploader({userId,avatarUrl,name,size='lg'}:
   const {error}=await supabase.storage.from('avatars').upload(path,file,{contentType:file.type,upsert:false});
   if(error){setMessage(`Upload failed: ${error.message}`);setBusy(false);return}
   const {data:{publicUrl}}=supabase.storage.from('avatars').getPublicUrl(path);
-  const {data:saved,error:pe}=await supabase.from('profiles').update({avatar_url:publicUrl}).eq('id',userId).select('avatar_url').single();
+  const {data:saved,error:pe}=await supabase.from('profiles').upsert({id:userId,avatar_url:publicUrl},{onConflict:'id'}).select('avatar_url').single();
   if(pe||!saved){await supabase.storage.from('avatars').remove([path]);setMessage(`Could not save your profile picture${pe?`: ${pe.message}`:''}.`);setBusy(false);return}
   setUrl(`${saved.avatar_url}?v=${Date.now()}`);setFile(null);setMessage('Profile picture saved successfully.');setBusy(false);
  }
