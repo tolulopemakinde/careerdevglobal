@@ -3,10 +3,10 @@ import "./styles.css";
 
 export const metadata = {
   title: "Coach Agreement | CareerDev Global",
-  description: "Coach marketplace agreement and 70:30 payment terms for CareerDev Global coaches.",
+  description: "Coach marketplace agreement and payment terms for CareerDev Global coaches.",
 };
 
-const VERSION = "1.0";
+const VERSION = "1.1";
 
 export default function CoachAgreementPage() {
   return (
@@ -16,23 +16,22 @@ export default function CoachAgreementPage() {
         <header className="coach-agreement-hero">
           <p className="coach-agreement-eyebrow">CAREERDEV GLOBAL · COACH MARKETPLACE</p>
           <h1>Coach Agreement</h1>
-          <p>This agreement sets out the terms that apply when a coach provides services through the CareerDev Global marketplace.</p>
+          <p>This agreement sets out the terms that apply when a coach provides coaching and other bookable services through the CareerDev Global marketplace.</p>
           <div className="coach-agreement-meta"><span>Version {VERSION}</span><span>Effective September 2026</span></div>
         </header>
 
         <section className="coach-agreement-card coach-agreement-highlight">
-          <span className="coach-agreement-badge">70:30 COACH PAYMENT TERMS</span>
-          <h2>Coaches receive 70% of the applicable coaching fee.</h2>
+          <h2>Coaches receive 70% of the applicable coaching and service fee.</h2>
           <p>CareerDev Global retains 30% as its marketplace platform share for client discovery and matching, technology, payment administration, communications, marketplace operations, service support, professional-standard processes and related business operations.</p>
-          <div className="coach-agreement-example"><div><strong>Example</strong><span>US$100 coaching fee</span></div><div><strong>US$70</strong><span>Coach share</span></div><div><strong>US$30</strong><span>CareerDev Global share</span></div></div>
+          <div className="coach-agreement-example"><div><strong>Example</strong><span>US$100 applicable fee</span></div><div><strong>US$70</strong><span>Coach share</span></div><div><strong>US$30</strong><span>CareerDev Global share</span></div></div>
           <p className="coach-agreement-small">The example is before any separately applicable processor charges, taxes, refunds, chargebacks, currency conversion or other transaction adjustments that are expressly disclosed or required by law.</p>
         </section>
 
         <div className="coach-agreement-grid">
           <section className="coach-agreement-card"><h2>1. Marketplace relationship</h2><p>CareerDev Global operates a marketplace that can connect clients with coaches. A coach remains responsible for the services they provide, their professional conduct, qualifications, availability and the accuracy of information submitted to the platform.</p></section>
           <section className="coach-agreement-card"><h2>2. Coach profile and eligibility</h2><p>Coaches must provide accurate information about experience, credentials, specializations, services and availability. CareerDev Global may review profiles, request supporting information, pause visibility or decline activation where eligibility or marketplace requirements are not met.</p></section>
-          <section className="coach-agreement-card"><h2>3. Payments and payouts</h2><p>For marketplace bookings, the standard revenue share is 70% to the coach and 30% to CareerDev Global. The applicable coaching fee, transaction adjustments and payout information should be shown or communicated through the relevant booking or payout process.</p><p>Refunds, cancellations, chargebacks and other reversals may require an adjustment to a coach payout. Coaches are responsible for their own tax obligations unless applicable law requires otherwise.</p></section>
-          <section className="coach-agreement-card"><h2>4. No circumvention</h2><p>Coaches must not intentionally move a marketplace client off-platform to avoid the applicable platform share or transaction process. Any exception to the standard 70:30 arrangement must be expressly agreed in writing by CareerDev Global.</p></section>
+          <section className="coach-agreement-card"><h2>3. Payments and payouts</h2><p>For marketplace bookings, coaches receive 70% of the applicable coaching and service fee and CareerDev Global retains 30% as its marketplace platform share. The applicable fee, transaction adjustments and payout information should be shown or communicated through the relevant booking or payout process.</p><p>Refunds, cancellations, chargebacks and other reversals may require an adjustment to a coach payout. Coaches are responsible for their own tax obligations unless applicable law requires otherwise.</p></section>
+          <section className="coach-agreement-card"><h2>4. No circumvention</h2><p>Coaches must not intentionally move a marketplace client off-platform to avoid the applicable platform share or transaction process. Any exception to the standard revenue-share arrangement must be expressly agreed in writing by CareerDev Global.</p></section>
           <section className="coach-agreement-card"><h2>5. Professional standards</h2><p>Coaches are expected to act ethically, respect client autonomy and confidentiality, avoid discrimination and conflicts of interest, represent credentials accurately, and work within their competence. CareerDev Global may apply professional-standard and safeguarding requirements appropriate to the service.</p></section>
           <section className="coach-agreement-card"><h2>6. Client relationship and confidentiality</h2><p>Coaches must protect client information and use it only for legitimate service delivery, administration and legal or safety purposes. Coaches should not make guarantees about employment, promotion, immigration, income or other outcomes that they cannot reasonably control.</p></section>
           <section className="coach-agreement-card"><h2>7. AI-enabled services</h2><p>Where CareerDev Global tools or coaches use AI-enabled features, outputs should be reviewed appropriately and should not be presented as infallible. Coaches remain responsible for professional judgment and for correcting material inaccuracies before relying on AI-assisted content.</p></section>
