@@ -13,7 +13,7 @@ const footerGroups = [
   {
     title: "For Coaches",
     links: [
-      ["Coach With Us", "/coach-matching"],
+      ["Coach With Us", "https://careerdevglobal-nine.vercel.app/coach-registration"],
       ["Coach Guidance", "/help-center#coaches"],
       ["Professional Standards", "/#professional-standards"],
       ["Coach FAQs", "/faq#coaches"],
@@ -61,6 +61,8 @@ export default function SiteFooter() {
               <nav aria-label={group.title}>
                 {group.links.map(([label, href]) =>
                   href.startsWith("mailto:") ? (
+                    <a key={label} href={href}>{label}</a>
+                  ) : href.startsWith("http") ? (
                     <a key={label} href={href}>{label}</a>
                   ) : (
                     <Link key={label} href={href}>{label}</Link>
