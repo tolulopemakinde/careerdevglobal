@@ -1,0 +1,158 @@
+/* CareerDev Global responsive/accessibility polish */
+
+:root {
+  --cdg-nav-text: #43516b;
+  --cdg-nav-hover: #145bd6;
+  --cdg-nav-cta: #10203f;
+  --cdg-focus: #1764df;
+}
+
+html { scroll-padding-top: 100px; }
+body { overflow-x: hidden; }
+section[id], footer[id] { scroll-margin-top: 100px; }
+
+/* One consistent navigation typography system. */
+.site-header nav,
+.site-header nav a,
+.site-header nav .nav-cta {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: .01em;
+}
+
+.site-header nav { gap: 22px; }
+.site-header nav a { min-height: 44px; color: var(--cdg-nav-text); }
+.site-header nav a::before,
+.site-header nav a.nav-cta::before { font-size: 16px; }
+.site-header nav a.nav-cta { padding: 12px 18px; }
+
+.site-header nav a:focus-visible,
+.site-header .brand:focus-visible,
+.button:focus-visible,
+.footer a:focus-visible {
+  outline: 3px solid var(--cdg-focus);
+  outline-offset: 4px;
+  border-radius: 10px;
+}
+
+.site-header nav a,
+.button,
+.ai-career-intelligence-fab {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.skip-link {
+  position: fixed;
+  left: 16px;
+  top: 12px;
+  z-index: 100;
+  transform: translateY(-150%);
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #10203f;
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 10px 30px rgba(16,32,63,.22);
+  transition: transform .2s ease;
+}
+
+.skip-link:focus { transform: translateY(0); }
+
+.ai-career-intelligence-fab {
+  font-family: Arial, Helvetica, sans-serif !important;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 1000px) {
+  .nav-wrap { gap: 16px; }
+  .brand { width: 220px; }
+  .site-header nav { gap: 10px; }
+  .site-header nav a { font-size: 14px; }
+  .site-header nav a::before,
+  .site-header nav a.nav-cta::before { font-size: 15px; }
+}
+
+@media (max-width: 700px) {
+  .site-header { position: sticky; }
+  .nav-wrap {
+    min-height: 70px;
+    padding-top: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .brand { width: 185px; }
+
+  /* Keep the complete primary navigation available on phones instead of hiding it. */
+  .site-header nav {
+    order: 3;
+    width: 100%;
+    justify-content: flex-start;
+    gap: 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 2px 2px 10px;
+    margin: 0;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .site-header nav::-webkit-scrollbar { display: none; }
+  .site-header nav a:not(.nav-cta) { display: inline-flex; }
+  .site-header nav a {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding: 10px 11px;
+    border-radius: 12px;
+    white-space: nowrap;
+    font-size: 14px;
+  }
+
+  .site-header nav a:hover { transform: none; }
+  .site-header nav a.nav-cta { padding: 11px 15px; }
+
+  .container { width: min(100% - 28px, 1160px); }
+  .hero { padding: 52px 0 48px; }
+  .hero-grid { gap: 32px; }
+  .lead { font-size: 18px; }
+  h1 { font-size: clamp(42px, 13vw, 66px); }
+  h2 { font-size: clamp(32px, 9vw, 48px); }
+  .hero-card { padding: 22px; border-radius: 22px; }
+  .section { padding: 48px 0; }
+  .grid { gap: 14px; }
+  .card, .panel { padding: 22px; border-radius: 18px; }
+  .split { gap: 34px; }
+  .about-grid { gap: 40px; }
+  .cta-inner { gap: 26px; }
+  .cta-inner .actions { width: 100%; }
+  .cta-inner .button { width: 100%; }
+
+  .ai-career-intelligence-fab {
+    right: 12px !important;
+    bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+    padding: 11px 14px !important;
+    font-size: 12px !important;
+    box-shadow: 0 8px 24px rgba(0,70,110,.24) !important;
+  }
+
+  .footer { padding-bottom: calc(34px + env(safe-area-inset-bottom)); }
+}
+
+@media (max-width: 420px) {
+  .brand { width: 165px; }
+  .site-header nav a { font-size: 13px; padding-inline: 9px; }
+  .site-header nav a.nav-cta { padding-inline: 12px; }
+  .hero { padding-top: 44px; }
+  .hero-card { padding: 18px; }
+  .journey { font-size: 13px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skip-link { transition: none; }
+}
