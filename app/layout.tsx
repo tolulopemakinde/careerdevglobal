@@ -3,6 +3,7 @@ import "./globals.css";
 import "./auth.css";
 import "./responsive.css";
 import NavigationEnhancements from "./navigation-enhancements";
+import ProfessionalStandardsCarousel from "./professional-standards-carousel";
 
 export const metadata: Metadata = {
   title: "CareerDev Global | Unleashing Your Potential",
@@ -17,6 +18,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <a className="skip-link" href="#services">Skip to content</a>
         <NavigationEnhancements />
         {children}
+        <ProfessionalStandardsCarousel />
         <a
           className="ai-career-intelligence-fab"
           href="/career-intelligence"
