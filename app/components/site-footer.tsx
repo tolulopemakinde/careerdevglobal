@@ -14,6 +14,7 @@ const footerGroups = [
     title: "For Coaches",
     links: [
       ["Coach With Us", "https://careerdevglobal-nine.vercel.app/coach-registration"],
+      ["Coach Agreement", "/coach-agreement"],
       ["Coach Guidance", "/help-center#coaches"],
       ["Professional Standards", "/#professional-standards"],
       ["Coach FAQs", "/faq#coaches"],
