@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 /**
  * Keeps the existing marketing-page header markup stable while making the
@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
  */
 export default function NavigationEnhancements() {
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const cta = document.querySelector<HTMLAnchorElement>('.site-header nav a.nav-cta');
@@ -31,6 +32,37 @@ export default function NavigationEnhancements() {
     cta.addEventListener('click', handleClick);
     return () => cta.removeEventListener('click', handleClick);
   }, [router]);
+
+  useEffect(() => {
+    if (pathname !== '/career-intelligence') return;
+
+    const syncGuidedPath = () => {
+      const items = document.querySelectorAll<HTMLElement>('.ci-next-card .ci-list li');
+      if (items.length !== 5) return;
+
+      const labels = [
+        ['Understand', 'Your service and desired outcome.'],
+        ['Gather', 'Your evidence and career history.'],
+        ['Identify', 'Missing information and priorities.'],
+        ['Personalize', 'Questions relevant to your goal.'],
+        ['Prepare', 'A clear next step for delivery.'],
+      ];
+
+      items.forEach((item, index) => {
+        const label = item.querySelector('b');
+        const description = item.querySelector('span');
+        if (label && description) {
+          label.textContent = labels[index][0];
+          description.textContent = labels[index][1];
+        }
+      });
+    };
+
+    syncGuidedPath();
+    const observer = new MutationObserver(syncGuidedPath);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [pathname]);
 
   return null;
 }
