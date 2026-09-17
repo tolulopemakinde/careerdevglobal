@@ -16,45 +16,22 @@ export default function ProfessionalStandardsCarousel() {
 
   useEffect(() => {
     const section = sectionRef.current;
-    const footer = document.querySelector("footer.footer");
-
-    if (section && footer && footer.parentNode) {
-      footer.parentNode.insertBefore(section, footer);
-    }
+    const footer = document.querySelector("footer.site-footer");
+    if (section && footer && footer.parentNode) footer.parentNode.insertBefore(section, footer);
   }, []);
 
   return (
-    <section
-      ref={sectionRef}
-      className="professional-standards"
-      aria-labelledby="professional-standards-title"
-    >
+    <section ref={sectionRef} className="professional-standards" aria-labelledby="professional-standards-title">
       <div className="professional-standards-inner">
         <p className="professional-standards-eyebrow">OUR PROFESSIONAL STANDARDS</p>
         <h2 id="professional-standards-title">Guided by globally recognised professional frameworks</h2>
-        <p className="professional-standards-copy">
-          CareerDev Global aligns its career development, coaching, employability and talent practices with relevant professional competency and ethical frameworks.
-        </p>
+        <p className="professional-standards-copy">CareerDev Global aligns its career development, coaching, employability and talent practices with relevant professional competency and ethical frameworks.</p>
         <div className="standards-viewport" aria-label="Professional bodies CareerDev Global aligns its practice with">
           <div className="standards-track">
-            {items.map((standard, index) => (
-              <a
-                className="standard-logo"
-                href={standard.href}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={`${standard.name} — official website`}
-                key={`${standard.short}-${index}`}
-              >
-                <span className="standard-mark" aria-hidden="true">{standard.short}</span>
-                <span className="standard-name">{standard.name}</span>
-              </a>
-            ))}
+            {items.map((standard, index) => <a className="standard-logo" href={standard.href} target="_blank" rel="noreferrer" aria-label={`${standard.name} — official website`} key={`${standard.short}-${index}`}><span className="standard-mark" aria-hidden="true">{standard.short}</span><span className="standard-name">{standard.name}</span></a>)}
           </div>
         </div>
-        <p className="professional-standards-note">
-          Alignment with these frameworks does not by itself imply membership, accreditation, certification, endorsement or formal affiliation.
-        </p>
+        <p className="professional-standards-note">Alignment with these frameworks does not by itself imply membership, accreditation, certification, endorsement or formal affiliation.</p>
       </div>
     </section>
   );
