@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./auth.css";
 import "./responsive.css";
+import "./site-pages.css";
 import NavigationEnhancements from "./navigation-enhancements";
 import ProfessionalStandardsCarousel from "./professional-standards-carousel";
+import SiteFooter from "./components/site-footer";
 
 export const metadata: Metadata = {
   title: "CareerDev Global | Unleashing Your Potential",
@@ -19,6 +21,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <NavigationEnhancements />
         {children}
         <ProfessionalStandardsCarousel />
+        <SiteFooter />
         <a
           className="ai-career-intelligence-fab"
           href="/career-intelligence"
