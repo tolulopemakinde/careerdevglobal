@@ -12,6 +12,25 @@ export default function AdminPayoutsPage() {
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [transfersEnabled, setTransfersEnabled] = useState(false);
+  const [transferConfigLoaded, setTransferConfigLoaded] = useState(false);
+
+  async function loadTransferConfig(accessToken: string) {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/careerdev-paystack-payout-transfer`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+        },
+      });
+      const result = await response.json().catch(() => ({}));
+      setTransfersEnabled(response.ok && result?.enabled === true);
+    } catch {
+      setTransfersEnabled(false);
+    } finally {
+      setTransferConfigLoaded(true);
+    }
+  }
 
   async function load() {
     setLoading(true);
@@ -21,6 +40,8 @@ export default function AdminPayoutsPage() {
       window.location.href = '/admin/login';
       return;
     }
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (sessionData.session?.access_token) await loadTransferConfig(sessionData.session.access_token);
     const { data: roleData, error: roleError } = await supabase.rpc('get_my_role');
     if (roleError || roleData?.role !== 'admin') {
       setMessage('Administrator access is required.');
@@ -132,7 +153,7 @@ export default function AdminPayoutsPage() {
                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                           <button disabled={checkBusy || approveBusy || transferBusy || approved} onClick={() => review(p.id, 'check')} style={button(checkBusy || approveBusy || transferBusy || approved)}>{checkBusy ? 'Checking…' : 'Run check'}</button>
                           <button disabled={approveBusy || transferBusy || !ready || approved} onClick={() => review(p.id, 'approve')} style={button(approveBusy || transferBusy || !ready || approved)}>{approved ? 'Approved' : approveBusy ? 'Approving…' : 'Approve'}</button>
-                          <button disabled={transferBusy || !transfersEnabled || !approved || !ready || transferred} onClick={() => transfer(p.id)} style={button(transferBusy || !transfersEnabled || !approved || !ready || transferred)}>{transferred ? 'Transfer submitted' : transferBusy ? 'Releasing…' : transfersEnabled ? 'Release / Transfer' : 'Transfers disabled'}</button>
+                          <button disabled={transferBusy || !transferConfigLoaded || !transfersEnabled || !approved || !ready || transferred} onClick={() => transfer(p.id)} style={button(transferBusy || !transferConfigLoaded || !transfersEnabled || !approved || !ready || transferred)}>{transferred ? 'Transfer submitted' : transferBusy ? 'Releasing…' : !transferConfigLoaded ? 'Checking transfer status…' : transfersEnabled ? 'Release / Transfer' : 'Transfers disabled'}</button>
                         </div>
                       </td>
                     </tr>;
@@ -144,7 +165,7 @@ export default function AdminPayoutsPage() {
         </section>
 
         <section style={{ marginTop: 18, padding: 16, borderRadius: 14, background: '#fff8e8', border: '1px solid #ead6a1', color: '#624b14' }}>
-          <strong>Safety gate:</strong> The Release / Transfer control remains disabled until the server-side Paystack transfer feature flag is explicitly enabled. Approval alone never transfers funds.
+          <strong>Safety gate:</strong> Transfer availability is read from the server-side Paystack configuration. Approval alone never transfers funds. Keep the transfer flag disabled until Paystack transfer access, business verification, webhook configuration, and internal launch approval are complete.
         </section>
       </div>
     </main>
