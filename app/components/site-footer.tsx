@@ -17,7 +17,6 @@ const footerGroups = [
       ["Coach Agreement", "/coach-agreement"],
       ["Coach Guidance", "/help-center#coaches"],
       ["Professional Standards", "/#professional-standards"],
-      ["Coach FAQs", "/faq#coaches"],
     ],
   },
   {
