@@ -1,0 +1,67 @@
+.coachAction {
+  min-height: 50px;
+  padding: 13px 20px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #b7ebff, #70d2f0);
+  color: #043754;
+  border: 2px solid #d9f7ff;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, .16);
+  font-weight: 850;
+  line-height: 1.2;
+  text-decoration: none;
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+}
+
+.coachAction:hover {
+  transform: translateY(-3px);
+  background: linear-gradient(135deg, #c9f2ff, #84ddf5);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, .22);
+}
+
+.icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.arrow {
+  font-size: 18px;
+  line-height: 1;
+  transition: transform .2s ease;
+}
+
+.coachAction:hover .arrow {
+  transform: translateX(3px);
+}
+
+@media (max-width: 850px) {
+  .coachAction {
+    flex: 1 1 210px;
+  }
+}
+
+@media (max-width: 520px) {
+  .coachAction {
+    width: 100%;
+    min-height: 54px;
+    font-size: 16px;
+  }
+
+  .icon {
+    font-size: 21px;
+  }
+
+  .arrow {
+    margin-left: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coachAction,
+  .arrow {
+    transition: none;
+  }
+}
