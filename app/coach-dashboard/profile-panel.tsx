@@ -56,7 +56,19 @@ export default function CoachProfilePanel({userId,coachId}:Props){
   setCredentialName('');setIssuingBody('');setCredentialReference('');setVerificationInfo('');setFile(null);const input=document.getElementById('coach-credential-file') as HTMLInputElement|null;if(input)input.value='';setMessage('Credential submitted for CareerDev Global review. It is not marked verified until an authorized reviewer confirms the evidence.');setUploading(false);await load();
  }
 
- async function removeCredential(id:string,path:string|null){if(!window.confirm('Remove this credential submission?'))return;setError('');if(path)await supabase.storage.from('coach-credentials').remove([path]);const {error:e}=await supabase.from('coach_verification_records').delete().eq('id',id);if(e)setError(e.message);else{setMessage('Credential submission removed.');await load()}}
+ async function removeCredential(id:string,path:string|null){
+  if(!window.confirm('Remove this credential submission?'))return;
+  setUploading(true);setMessage('');setError('');
+  if(path){
+   const {error:storageError}=await supabase.storage.from('coach-credentials').remove([path]);
+   if(storageError){setError(`Could not remove the credential document: ${storageError.message}`);setUploading(false);return}
+  }
+  const {error:docError}=await supabase.from('coach_credential_documents').delete().eq('verification_record_id',id);
+  if(docError){setError(`Could not remove the credential document record: ${docError.message}`);setUploading(false);return}
+  const {error:recordError}=await supabase.from('coach_verification_records').delete().eq('id',id).eq('status','pending');
+  if(recordError){setError(`Could not remove the credential submission: ${recordError.message}`);setUploading(false);return}
+  setMessage('Credential submission removed.');setUploading(false);await load();
+ }
 
  return <>
   <section className="dash-card"><h2>Edit coach account</h2><p className="note">Update your personal information and professional marketplace profile. Changes to verification status remain administrator-controlled.</p><div className="form-grid offering-form">
@@ -85,7 +97,7 @@ export default function CoachProfilePanel({userId,coachId}:Props){
    <label>Verification information<input value={verificationInfo} onChange={e=>setVerificationInfo(e.target.value)} placeholder="Verification URL or other information"/></label>
    <label className="wide">Supporting document<input id="coach-credential-file" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" onChange={e=>setFile(e.target.files?.[0]??null)}/></label>
   </div><button onClick={submitCredential} disabled={uploading}>{uploading?'Submitting…':'Submit credential for review'}</button>
-  <div className="credential-list">{credentials.length===0?<p>No credential submissions yet.</p>:credentials.map(v=><article className="offering-card" key={v.id}><div><strong>{v.credential_name||'Professional credential'}</strong><p>{v.issuing_body||'Issuing body not provided'}{v.credential_reference?` · ${v.credential_reference}`:''}</p>{v.evidence_file_name&&<small>Evidence: {v.evidence_file_name}</small>}{v.notes&&<p>{v.notes}</p>}</div><div><span className="status">{v.status}</span>{v.status==='pending'&&<button className="secondary" onClick={()=>removeCredential(v.id,v.evidence_file_path)}>Remove</button>}</div></article>)}</div>
+  <div className="credential-list">{credentials.length===0?<p>No credential submissions yet.</p>:credentials.map(v=><article className="offering-card" key={v.id}><div><strong>{v.credential_name||'Professional credential'}</strong><p>{v.issuing_body||'Issuing body not provided'}{v.credential_reference?` · ${v.credential_reference}`:''}</p>{v.evidence_file_name&&<small>Evidence: {v.evidence_file_name}</small>}{v.notes&&<p>{v.notes}</p>}</div><div><span className="status">{v.status}</span>{v.status==='pending'&&<button className="secondary" onClick={()=>removeCredential(v.id,v.evidence_file_path)} disabled={uploading}>{uploading?'Removing…':'Remove'}</button>}</div></article>)}</div>
   </section>
  </>
 }
