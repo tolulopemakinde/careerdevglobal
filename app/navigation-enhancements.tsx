@@ -2,37 +2,65 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { createSupabaseBrowserClient } from '../lib/supabase-browser';
 
 /**
- * Enhances the existing marketing header with a compact mobile hamburger menu
- * while preserving the desktop navigation and existing account CTA behavior.
+ * Enhances the existing marketing header with responsive navigation and
+ * role-aware account navigation for signed-in clients and coaches.
  */
 export default function NavigationEnhancements() {
   const router = useRouter();
 
   useEffect(() => {
+    let cancelled = false;
+    const supabase = createSupabaseBrowserClient();
     const nav = document.querySelector<HTMLElement>('.site-header nav');
     const header = document.querySelector<HTMLElement>('.site-header');
-    const cta = document.querySelector<HTMLAnchorElement>('.site-header nav a.nav-cta');
     if (!nav || !header) return;
 
-    if (cta) {
-      cta.textContent = 'Get Started';
-      cta.setAttribute('href', '/account');
-      cta.setAttribute('aria-label', 'Get started with a CareerDev Global account');
+    const cta = header.querySelector<HTMLAnchorElement>('nav a.nav-cta');
+    const brand = header.querySelector<HTMLAnchorElement>('.brand');
+
+    // The brand always returns to the public homepage.
+    if (brand) {
+      brand.setAttribute('href', '/');
+      brand.setAttribute('aria-label', 'CareerDev Global home');
     }
 
-    let handleCtaClick: ((event: MouseEvent) => void) | null = null;
-    if (cta) {
-      handleCtaClick = (event: MouseEvent) => {
-        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
-          return;
+    const applyAccountNavigation = async () => {
+      let destination = '/account';
+      let label = 'Get Started';
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: roleData } = await supabase.rpc('get_my_role');
+        const role = Array.isArray(roleData) ? roleData[0]?.role : roleData?.role;
+        if (role === 'coach') {
+          destination = '/coach-dashboard';
+          label = 'Coach Dashboard';
+        } else if (role === 'client') {
+          destination = '/client-dashboard';
+          label = 'Client Dashboard';
         }
+      }
+
+      if (cancelled || !cta) return;
+      cta.textContent = label;
+      cta.setAttribute('href', destination);
+      cta.setAttribute('aria-label', label);
+
+      // Replace any previous handler installed by this component.
+      const handleCtaClick = (event: MouseEvent) => {
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
         event.preventDefault();
-        router.push('/account');
+        router.push(destination);
       };
       cta.addEventListener('click', handleCtaClick);
-    }
+      cleanupCta = () => cta.removeEventListener('click', handleCtaClick);
+    };
+
+    let cleanupCta = () => {};
+    applyAccountNavigation();
 
     let menuButton = header.querySelector<HTMLButtonElement>('.mobile-menu-toggle');
     if (!menuButton) {
@@ -59,7 +87,6 @@ export default function NavigationEnhancements() {
     };
 
     menuButton.addEventListener('click', toggleMenu);
-
     const links = Array.from(nav.querySelectorAll<HTMLAnchorElement>('a'));
     links.forEach((link) => link.addEventListener('click', closeMenu));
 
@@ -69,7 +96,8 @@ export default function NavigationEnhancements() {
     window.addEventListener('resize', handleResize);
 
     return () => {
-      if (cta && handleCtaClick) cta.removeEventListener('click', handleCtaClick);
+      cancelled = true;
+      cleanupCta();
       menuButton?.removeEventListener('click', toggleMenu);
       links.forEach((link) => link.removeEventListener('click', closeMenu));
       window.removeEventListener('resize', handleResize);
