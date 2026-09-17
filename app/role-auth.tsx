@@ -36,13 +36,20 @@ export default function RoleAuth({ mode, accountType }: Props) {
         password,
         options: { emailRedirectTo: redirectUrl, data: { requested_account_type: accountType } }
       });
-      if (error) setError(error.message);
-      else if (data.session) window.location.href = c.dashboard;
-      else setMessage(accountType === 'admin'
-        ? 'Account created. Please verify your email. Staff/Admin permissions are granted separately by CareerDev Global administration.'
-        : accountType === 'coach'
-          ? 'Account created. Please verify your email. After verification, complete the coach application and onboarding process.'
-          : 'Account created. Please check your email and click the verification link to activate your CareerDev Global account.');
+      if (error) {
+        setError(error.message);
+      } else if (data.session) {
+        window.location.href = c.dashboard;
+        return;
+      } else {
+        setMessage(accountType === 'admin'
+          ? 'Account created successfully. Please check your email and click the verification link. Staff/Admin permissions are granted separately by CareerDev Global administration.'
+          : accountType === 'coach'
+            ? 'Account created successfully. Please check your email and click the verification link. After verification, complete the coach application and onboarding process.'
+            : 'Account created successfully. Please check your email and click the verification link to activate your CareerDev Global account.');
+        setPassword('');
+        setConfirm('');
+      }
     } else {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
@@ -71,6 +78,8 @@ export default function RoleAuth({ mode, accountType }: Props) {
     setBusy(false);
   }
 
+  const signupComplete = mode === 'signup' && !!message && !error;
+
   return <main className="cdg-auth-shell"><section className="cdg-auth-card">
     <Link className="cdg-auth-back" href="/">← CareerDev Global</Link>
     <div className="cdg-auth-role">{c.name} Account</div>
@@ -80,14 +89,26 @@ export default function RoleAuth({ mode, accountType }: Props) {
       : accountType === 'coach'
         ? 'Access coach tools, availability, service offerings, bookings, and marketplace onboarding.'
         : 'Secure access for CareerDev Global staff and administrators. Permissions are role-controlled.'}</p>
-    <form onSubmit={submit}>
-      <label htmlFor="role-email">Email address</label><input id="role-email" type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)} />
-      <label htmlFor="role-password">Password</label><input id="role-password" type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={8} required value={password} onChange={e=>setPassword(e.target.value)} />
-      {mode === 'signup' && <><label htmlFor="role-confirm">Confirm password</label><input id="role-confirm" type="password" autoComplete="new-password" minLength={8} required value={confirm} onChange={e=>setConfirm(e.target.value)} /></>}
-      <button disabled={busy}>{busy ? (mode === 'login' ? 'Logging in…' : 'Creating account…') : (mode === 'login' ? 'Log In' : 'Create Account')}</button>
-    </form>
-    {message && <div className="cdg-auth-message">{message}</div>}
-    {error && <div className="cdg-auth-message cdg-auth-error">{error}</div>}
-    <div className="cdg-auth-footer">{mode === 'login' ? <>Need an account? <Link href={c.signup}>Create one</Link></> : <>Already have an account? <Link href={c.login}>Log in</Link></>}</div>
+
+    {signupComplete ? (
+      <div className="cdg-auth-success" role="status" aria-live="polite">
+        <div className="cdg-auth-success-icon" aria-hidden="true">✓</div>
+        <h2>Account created successfully</h2>
+        <p>{message}</p>
+        <p><strong>Next step:</strong> Open your email inbox, find the CareerDev Global verification email, and click the verification link.</p>
+        <p>If you do not see it shortly, check your spam or junk folder.</p>
+        <Link className="cdg-auth-success-button" href={c.login}>Go to Log In</Link>
+      </div>
+    ) : (
+      <form onSubmit={submit}>
+        <label htmlFor="role-email">Email address</label><input id="role-email" type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)} />
+        <label htmlFor="role-password">Password</label><input id="role-password" type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={8} required value={password} onChange={e=>setPassword(e.target.value)} />
+        {mode === 'signup' && <><label htmlFor="role-confirm">Confirm password</label><input id="role-confirm" type="password" autoComplete="new-password" minLength={8} required value={confirm} onChange={e=>setConfirm(e.target.value)} /></>}
+        <button disabled={busy}>{busy ? (mode === 'login' ? 'Logging in…' : 'Creating account…') : (mode === 'login' ? 'Log In' : 'Create Account')}</button>
+      </form>
+    )}
+
+    {error && <div className="cdg-auth-message cdg-auth-error" role="alert">{error}</div>}
+    {!signupComplete && <div className="cdg-auth-footer">{mode === 'login' ? <>Need an account? <Link href={c.signup}>Create one</Link></> : <>Already have an account? <Link href={c.login}>Log in</Link></>}</div>}
   </section></main>;
 }
