@@ -14,22 +14,54 @@ export default function AuthCallbackPage() {
 
     async function completeVerification() {
       const params = new URLSearchParams(window.location.search);
+      const tokenHash = params.get('token_hash');
+      const type = params.get('type') || 'email';
       const code = params.get('code');
-      const account = params.get('account');
-      if (!code) {
-        if (mounted) setError('The verification link is missing or invalid. Please request a new verification email.');
+
+      let verificationError: string | null = null;
+
+      // Preferred flow: verify the one-time token hash directly. This avoids
+      // PKCE browser/device coupling when the user opens the email on another
+      // browser or device.
+      if (tokenHash) {
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type: type as 'email',
+        });
+        if (verifyError) verificationError = verifyError.message;
+      } else if (code) {
+        // Backward-compatible support for confirmation emails already sent
+        // using the PKCE authorization-code flow.
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError) verificationError = exchangeError.message;
+      } else {
+        // Some client-side Supabase flows return the session in the URL hash.
+        // Give the browser client a chance to process it before declaring an error.
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData.session) {
+          verificationError = 'The verification link is missing or invalid.';
+        }
+      }
+
+      if (verificationError) {
+        if (mounted) {
+          setError('We could not complete this verification link. It may have expired or already been used. Please request a new verification email.');
+        }
         return;
       }
 
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-      if (exchangeError) {
-        if (mounted) setError('This verification link has expired or has already been used. Please request a new verification email.');
-        return;
-      }
+      const { data: userData } = await supabase.auth.getUser();
+      const account = userData.user?.user_metadata?.requested_account_type;
+      const destination = account === 'coach'
+        ? '/coach-registration'
+        : account === 'admin'
+          ? '/admin/login'
+          : '/client-dashboard';
 
-      const destination = account === 'coach' ? '/coach-registration' : account === 'admin' ? '/admin/login' : '/client-dashboard';
-      router.replace(destination);
-      router.refresh();
+      if (mounted) {
+        router.replace(destination);
+        router.refresh();
+      }
     }
 
     completeVerification();
