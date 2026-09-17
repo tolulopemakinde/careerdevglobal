@@ -4,9 +4,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 /**
- * Keeps the existing marketing-page header markup stable while upgrading
- * navigation behavior and the Get Started destination without duplicating
- * the header component.
+ * Keeps the existing marketing-page header markup stable while making the
+ * main navigation the single public entry point for login and account creation.
  */
 export default function NavigationEnhancements() {
   const router = useRouter();
@@ -15,9 +14,10 @@ export default function NavigationEnhancements() {
     const cta = document.querySelector<HTMLAnchorElement>('.site-header nav a.nav-cta');
     if (!cta) return;
 
-    // Account is the single entry point for login and account creation.
+    // Login / Create Account is intentionally part of the main menu.
+    cta.textContent = 'Log in / Create Account';
     cta.setAttribute('href', '/account');
-    cta.setAttribute('aria-label', 'Get started with CareerDev Global');
+    cta.setAttribute('aria-label', 'Log in or create a CareerDev Global account');
 
     const handleClick = (event: MouseEvent) => {
       // Preserve normal browser behaviors such as Cmd/Ctrl-click and middle-click.
