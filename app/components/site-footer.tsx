@@ -24,7 +24,7 @@ const footerGroups = [
     links: [
       ["Help Center", "/help-center"],
       ["FAQ", "/faq"],
-      ["Career Insights", "/#insights"],
+      ["Career Insights", "/career-insights"],
       ["Contact Us", "mailto:hello@careerdevglobal.com"],
     ],
   },
