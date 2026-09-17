@@ -42,9 +42,6 @@ export default function RoleAuth({ mode, accountType }: Props) {
         window.location.href = c.dashboard;
         return;
       } else {
-        // Keep only the email address locally so the callback can offer a
-        // fresh verification email if an email security scanner consumes the
-        // original one-time confirmation link before the user clicks it.
         try {
           window.localStorage.setItem('careerdev_signup_email', email);
           window.localStorage.setItem('careerdev_signup_account', accountType);
@@ -65,8 +62,16 @@ export default function RoleAuth({ mode, accountType }: Props) {
         const { data: roleData, error: roleError } = await supabase.rpc('get_my_role');
         const role = roleData?.role;
         const status = roleData?.status;
+        const requestedAccountType = data.user?.user_metadata?.requested_account_type;
+
         if (roleError) {
           setError(`Signed in, but CareerDev Global could not verify your account permissions. ${roleError.message}`);
+        } else if (accountType === 'coach' && (requestedAccountType === 'coach' || role === 'coach') && (!role || role !== 'coach' || status !== 'active')) {
+          // A newly verified coach account is an applicant until the marketplace
+          // application is submitted and approved. Do not block the applicant
+          // at login merely because the permanent coach role does not exist yet.
+          window.location.href = '/coach-registration';
+          return;
         } else if (status && status !== 'active') {
           setError('Your CareerDev Global account is not active. Please contact an administrator.');
         } else if (accountType === 'client') {
