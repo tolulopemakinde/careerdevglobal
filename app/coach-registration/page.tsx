@@ -6,6 +6,7 @@ import { createSupabaseBrowserClient } from "../../lib/supabase-browser";
 
 type Category = { id: string; name: string; description: string | null; sort_order: number };
 type Specialization = { id: string; category_id: string; name: string; description: string | null; sort_order: number };
+type Option = { id: string; name: string; description?: string | null };
 
 const formats = ["Structured", "Conversational", "Goal-based", "Group coaching", "Team coaching", "Virtual coaching"];
 const clientGroups = ["Students", "Graduates", "Early-career professionals", "Mid-career professionals", "Senior professionals", "Executives", "Entrepreneurs", "Founders", "Managers", "Leaders", "Career changers", "Job seekers", "International professionals", "Migrants", "Youth"];
@@ -21,8 +22,6 @@ export default function CoachRegistration() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
   const [loadingTaxonomy, setLoadingTaxonomy] = useState(true);
-  const [expertiseSearch, setExpertiseSearch] = useState("");
-  const [specializationSearch, setSpecializationSearch] = useState("");
   const [form, setForm] = useState({
     display_name: "", headline: "", bio: "", professional_title: "", professional_bio: "",
     expertise_category_ids: [] as string[], expertise_specialization_ids: [] as string[], coaching_formats: ["Structured"] as string[],
@@ -52,15 +51,6 @@ export default function CoachRegistration() {
   const toggleCategory = (categoryId: string) => setForm(current => ({ ...current, expertise_category_ids: current.expertise_category_ids.includes(categoryId) ? current.expertise_category_ids.filter(id => id !== categoryId) : [...current.expertise_category_ids, categoryId] }));
   const toggleSpecialization = (specializationId: string) => setForm(current => ({ ...current, expertise_specialization_ids: current.expertise_specialization_ids.includes(specializationId) ? current.expertise_specialization_ids.filter(id => id !== specializationId) : [...current.expertise_specialization_ids, specializationId] }));
 
-  const filteredCategories = useMemo(() => {
-    const query = expertiseSearch.trim().toLowerCase();
-    return query ? categories.filter(c => `${c.name} ${c.description ?? ""}`.toLowerCase().includes(query)) : categories;
-  }, [categories, expertiseSearch]);
-  const filteredSpecializations = useMemo(() => {
-    const query = specializationSearch.trim().toLowerCase();
-    return query ? specializations.filter(s => `${s.name} ${s.description ?? ""}`.toLowerCase().includes(query)) : specializations;
-  }, [specializations, specializationSearch]);
-
   const submit = async (event: FormEvent) => {
     event.preventDefault(); setError("");
     if (!userId) return setError("Please sign in to submit a coach application.");
@@ -89,20 +79,20 @@ export default function CoachRegistration() {
     {submitted ? <section className="success"><h2>Application submitted</h2><p>Your application is now in review. Marketplace visibility is not automatic: approval, onboarding, eligibility and active availability are required before you can appear in coach matching.</p><a href="/coach-matching">Return to coach matching →</a></section> : <form className="registration-card" onSubmit={submit}>
       <div className="section"><h2>Professional profile</h2><p className="hint">Keep this concise. These details form the foundation of your public marketplace profile.</p><div className="two"><Field label="Display name *" value={form.display_name} onChange={v => update("display_name", v)} /><Field label="Professional headline *" value={form.headline} onChange={v => update("headline", v)} /></div><Field label="Short coach bio *" value={form.bio} onChange={v => update("bio", v)} area /><div className="two"><Field label="Professional title" value={form.professional_title} onChange={v => update("professional_title", v)} /><Field label="Country" value={form.country} onChange={v => update("country", v)} /></div><div className="two"><Field label="Timezone" value={form.timezone} onChange={v => update("timezone", v)} /><Field label="Languages (comma separated)" value={form.languages} onChange={v => update("languages", v)} /></div></div>
 
-      <div className="section"><h2>Coaching expertise</h2><p className="hint">Use the searchable selectors instead of scanning a long list.</p>
-        <SearchSelect label="Primary expertise categories *" placeholder="Search expertise…" query={expertiseSearch} setQuery={setExpertiseSearch} options={filteredCategories.map(c => ({ id: c.id, name: c.name, description: c.description }))} selected={form.expertise_category_ids} onToggle={toggleCategory} loading={loadingTaxonomy} />
-        <SearchSelect label="Specializations *" placeholder="Search specializations…" query={specializationSearch} setQuery={setSpecializationSearch} options={filteredSpecializations.map(s => ({ id: s.id, name: s.name, description: s.description }))} selected={form.expertise_specialization_ids} onToggle={toggleSpecialization} loading={loadingTaxonomy} />
+      <div className="section"><h2>Coaching expertise</h2><p className="hint">Select from compact dropdowns. Start typing to filter the options.</p>
+        <DropdownMulti label="Primary expertise categories *" placeholder="Select expertise categories" options={categories.map(c => ({ id: c.id, name: c.name, description: c.description }))} selected={form.expertise_category_ids} onToggle={toggleCategory} loading={loadingTaxonomy} />
+        <DropdownMulti label="Specializations *" placeholder="Select specializations" options={specializations.map(s => ({ id: s.id, name: s.name, description: s.description }))} selected={form.expertise_specialization_ids} onToggle={toggleSpecialization} loading={loadingTaxonomy} />
         <SelectedSummary count={form.expertise_category_ids.length + form.expertise_specialization_ids.length} text="expertise selections" />
-        <label>Coaching formats *</label><div className="chips compact">{formats.map(x => <button type="button" className={form.coaching_formats.includes(x) ? "chip active" : "chip"} onClick={() => toggleArray("coaching_formats", x)} key={x}>{x}</button>)}</div>
+        <DropdownTextMulti label="Coaching formats *" placeholder="Select coaching formats" items={formats} selected={form.coaching_formats} onToggle={v => toggleArray("coaching_formats", v)} />
         <Field label="Coaching methodology" value={form.methodology} onChange={v => update("methodology", v)} area />
         <div className="two"><Field label="Years of professional experience" value={form.years_experience} onChange={v => update("years_experience", v)} type="number" /><Field label="Years of coaching experience" value={form.coaching_experience_years} onChange={v => update("coaching_experience_years", v)} type="number" /></div><Field label="Credentials / certifications (comma separated)" value={form.credentials} onChange={v => update("credentials", v)} />
       </div>
 
-      <div className="section"><h2>Who and what you coach</h2><p className="hint">Search and select only what applies to your practice.</p>
-        <SearchMulti label="Target client groups" items={clientGroups} selected={form.target_client_groups} onToggle={v => toggleArray("target_client_groups", v)} />
-        <SearchMulti label="Career stages" items={careerStages} selected={form.career_stages} onToggle={v => toggleArray("career_stages", v)} />
-        <SearchMulti label="Industries / sectors" items={industries} selected={form.industries} onToggle={v => toggleArray("industries", v)} />
-        <SearchMulti label="Coaching approaches" items={approaches} selected={form.coaching_approaches} onToggle={v => toggleArray("coaching_approaches", v)} />
+      <div className="section"><h2>Who and what you coach</h2><p className="hint">Use the dropdowns to choose only what applies to your practice.</p>
+        <DropdownTextMulti label="Target client groups" placeholder="Select client groups" items={clientGroups} selected={form.target_client_groups} onToggle={v => toggleArray("target_client_groups", v)} />
+        <DropdownTextMulti label="Career stages" placeholder="Select career stages" items={careerStages} selected={form.career_stages} onToggle={v => toggleArray("career_stages", v)} />
+        <DropdownTextMulti label="Industries / sectors" placeholder="Select industries or sectors" items={industries} selected={form.industries} onToggle={v => toggleArray("industries", v)} />
+        <DropdownTextMulti label="Coaching approaches" placeholder="Select coaching approaches" items={approaches} selected={form.coaching_approaches} onToggle={v => toggleArray("coaching_approaches", v)} />
       </div>
 
       <div className="section"><h2>Professional links & availability</h2><div className="two"><Field label="LinkedIn URL" value={form.linkedin_url} onChange={v => update("linkedin_url", v)} /><Field label="Website URL" value={form.website_url} onChange={v => update("website_url", v)} /></div><Field label="Availability summary" value={form.availability_summary} onChange={v => update("availability_summary", v)} area placeholder="Example: Weekdays, 17:00–21:00 WAT; Saturday mornings." /></div>
@@ -114,20 +104,53 @@ export default function CoachRegistration() {
   </main>;
 }
 
-function SearchSelect({ label, placeholder, query, setQuery, options, selected, onToggle, loading }: { label: string; placeholder: string; query: string; setQuery: (v: string) => void; options: { id: string; name: string; description: string | null }[]; selected: string[]; onToggle: (id: string) => void; loading: boolean }) {
-  return <div className="search-select"><label>{label}</label><input className="search-input" value={query} onChange={e => setQuery(e.target.value)} placeholder={placeholder} aria-label={label} />
-    {loading ? <p className="hint">Loading…</p> : <div className="option-list" role="listbox" aria-label={label} aria-multiselectable="true">{options.slice(0, 12).map(option => <button type="button" role="option" aria-selected={selected.includes(option.id)} className={selected.includes(option.id) ? "select-option selected" : "select-option"} onClick={() => onToggle(option.id)} key={option.id}><span>{option.name}</span><b>{selected.includes(option.id) ? "✓" : "+"}</b></button>)}{!options.length && <p className="no-results">No matches found. Try another search.</p>}</div>}
+function DropdownMulti({ label, placeholder, options, selected, onToggle, loading }: { label: string; placeholder: string; options: Option[]; selected: string[]; onToggle: (id: string) => void; loading: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return options.filter(option => !q || `${option.name} ${option.description ?? ""}`.toLowerCase().includes(q));
+  }, [options, query]);
+  const selectedOptions = selected.map(id => options.find(option => option.id === id)).filter((option): option is Option => Boolean(option));
+
+  return <div className="dropdown-field">
+    <label>{label}</label>
+    <button type="button" className={open ? "dropdown-trigger open" : "dropdown-trigger"} onClick={() => setOpen(value => !value)} aria-expanded={open}>
+      <span>{selectedOptions.length ? `${selectedOptions.length} selected` : placeholder}</span><span className="dropdown-chevron">⌄</span>
+    </button>
+    {open && <div className="dropdown-menu" role="dialog" aria-label={label}>
+      <input autoFocus className="dropdown-search" value={query} onChange={e => setQuery(e.target.value)} placeholder={`Search ${label.toLowerCase()}…`} />
+      {loading ? <p className="hint dropdown-status">Loading…</p> : <div className="dropdown-options" role="listbox" aria-multiselectable="true">
+        {filtered.slice(0, 15).map(option => <button type="button" role="option" aria-selected={selected.includes(option.id)} className={selected.includes(option.id) ? "dropdown-option selected" : "dropdown-option"} onClick={() => onToggle(option.id)} key={option.id}><span>{option.name}</span><b>{selected.includes(option.id) ? "✓" : ""}</b></button>)}
+        {!filtered.length && <p className="no-results">No matches found.</p>}
+      </div>}
+    </div>}
     <SelectedPills options={options} selected={selected} onRemove={onToggle} />
   </div>;
 }
 
-function SearchMulti({ label, items, selected, onToggle }: { label: string; items: string[]; selected: string[]; onToggle: (value: string) => void }) {
+function DropdownTextMulti({ label, placeholder, items, selected, onToggle }: { label: string; placeholder: string; items: string[]; selected: string[]; onToggle: (value: string) => void }) {
+  const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const filtered = useMemo(() => items.filter(item => item.toLowerCase().includes(query.trim().toLowerCase())), [items, query]);
-  return <div className="search-multi"><label>{label}</label><input className="search-input" value={query} onChange={e => setQuery(e.target.value)} placeholder={`Search ${label.toLowerCase()}…`} /><div className="option-list">{filtered.slice(0, 10).map(item => <button type="button" className={selected.includes(item) ? "select-option selected" : "select-option"} onClick={() => onToggle(item)} key={item}><span>{item}</span><b>{selected.includes(item) ? "✓" : "+"}</b></button>)}{!filtered.length && <p className="no-results">No matches found.</p>}</div><SelectedTextPills values={selected} onRemove={onToggle} /></div>;
+
+  return <div className="dropdown-field">
+    <label>{label}</label>
+    <button type="button" className={open ? "dropdown-trigger open" : "dropdown-trigger"} onClick={() => setOpen(value => !value)} aria-expanded={open}>
+      <span>{selected.length ? `${selected.length} selected` : placeholder}</span><span className="dropdown-chevron">⌄</span>
+    </button>
+    {open && <div className="dropdown-menu" role="dialog" aria-label={label}>
+      <input autoFocus className="dropdown-search" value={query} onChange={e => setQuery(e.target.value)} placeholder={`Search ${label.toLowerCase()}…`} />
+      <div className="dropdown-options" role="listbox" aria-multiselectable="true">
+        {filtered.map(item => <button type="button" role="option" aria-selected={selected.includes(item)} className={selected.includes(item) ? "dropdown-option selected" : "dropdown-option"} onClick={() => onToggle(item)} key={item}><span>{item}</span><b>{selected.includes(item) ? "✓" : ""}</b></button>)}
+        {!filtered.length && <p className="no-results">No matches found.</p>}
+      </div>
+    </div>}
+    <SelectedTextPills values={selected} onRemove={onToggle} />
+  </div>;
 }
 
-function SelectedPills({ options, selected, onRemove }: { options: { id: string; name: string }[]; selected: string[]; onRemove: (id: string) => void }) { return <div className="selected-pills">{selected.map(id => { const option = options.find(o => o.id === id); return option ? <button type="button" key={id} onClick={() => onRemove(id)}>{option.name} ×</button> : null; })}</div>; }
+function SelectedPills({ options, selected, onRemove }: { options: Option[]; selected: string[]; onRemove: (id: string) => void }) { return <div className="selected-pills">{selected.map(id => { const option = options.find(o => o.id === id); return option ? <button type="button" key={id} onClick={() => onRemove(id)}>{option.name} ×</button> : null; })}</div>; }
 function SelectedTextPills({ values, onRemove }: { values: string[]; onRemove: (value: string) => void }) { return <div className="selected-pills">{values.map(value => <button type="button" key={value} onClick={() => onRemove(value)}>{value} ×</button>)}</div>; }
 function SelectedSummary({ count, text }: { count: number; text: string }) { return count ? <p className="selection-summary">{count} {text} selected</p> : null; }
 function Field({ label, value, onChange, area = false, type = "text", placeholder = "" }: { label: string; value: string; onChange: (value: string) => void; area?: boolean; type?: string; placeholder?: string }) { return <label className="field">{label}{area ? <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} /> : <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} />}</label>; }
