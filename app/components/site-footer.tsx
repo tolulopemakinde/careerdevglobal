@@ -33,8 +33,8 @@ const footerGroups = [
     links: [
       ["Privacy Policy", "/privacy-policy"],
       ["Conditions of Use", "/conditions-of-use"],
-      ["AI & Professional Standards", "/help-center#ai"],
-      ["Accessibility", "/help-center#accessibility"],
+      ["AI & Professional Standards", "/help-center#ai-trust"],
+      ["Accessibility", "/help-center#accessibility-support"],
     ],
   },
 ];
