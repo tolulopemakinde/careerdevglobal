@@ -27,11 +27,11 @@ export default function AdminPage(){
   if(de||oe){setMessage((de||oe)?.message||'Administration data is unavailable.');setLoading(false);return;}
   setDashboard(d as Dashboard);setOps((o||{}) as Ops);setLoading(false);
  }
- useEffect(()=>{load()},[]);
+ useEffect(()=>{load();setMessage('Admin client is ready. AI Governance controls are interactive.');},[]);
  async function call(name:string,args:Record<string,any>,success:string){setBusy(name);setMessage('');const {error}=await supabase.rpc(name,args);setMessage(error?error.message:success);setBusy(null);await load();}
 
  async function runGovernedCareerDiscoveryTest(){
-  setBusy('run-career-discovery-test');setMessage('');setAiResult(null);
+  setBusy('run-career-discovery-test');setMessage('Step 1/5: starting governed test…');setAiResult(null);
   const testCaseId='b294be94-b7c8-4cd1-ad80-c0cdf17794d0';
   const outputSchema={
    type:'object',
@@ -75,14 +75,18 @@ export default function AdminPage(){
    output_schema:outputSchema
   };
   try{
+   setMessage('Step 2/5: creating governed execution request…');
    const {data:requestId,error:requestError}=await supabase.rpc('request_ai_agent_execution',{p_agent_key:'career_discovery_ai',p_workflow_key:'career_profile_analysis',p_trigger_source:'test_governed',p_input_payload:inputPayload});
    if(requestError||!requestId) throw new Error(requestError?.message||'Could not create governed execution request.');
+   setMessage('Step 3/5: preparing governed execution…');
    const {data:executionId,error:prepareError}=await supabase.rpc('prepare_ai_agent_execution',{p_request_id:requestId});
    if(prepareError||!executionId) throw new Error(prepareError?.message||'Could not prepare governed execution.');
+   setMessage('Step 4/5: validating authenticated Staff/Admin session…');
    const {data:sessionData,error:sessionError}=await supabase.auth.getSession();
    const token=sessionData.session?.access_token;
    if(sessionError||!token) throw new Error('A valid Staff/Admin session is required to invoke the governed runtime.');
    const runtimeUrl=(process.env.NEXT_PUBLIC_SUPABASE_URL||'https://ufmhrmzumqkjvaezrmxf.supabase.co')+'/functions/v1/careerdev-ai-agent-runtime';
+   setMessage('Step 5/5: invoking authenticated AI runtime…');
    const response=await fetch(runtimeUrl,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({request_id:requestId})});
    const body=await response.json();
    if(!response.ok) throw new Error(body?.error||'Governed runtime execution failed.');
@@ -109,7 +113,7 @@ export default function AdminPage(){
   {loading?<p style={{marginTop:28,textAlign:'center',color:'#527085'}}>Loading administration data…</p>:!dashboard?<p style={{marginTop:28,textAlign:'center',color:'#527085'}}>Administration data is unavailable.</p>:<>
    {pendingApplications.length>0&&<section style={{marginTop:18,padding:'18px 20px',borderRadius:16,border:'1px solid #f0c36a',background:'#fff8e8',display:'flex',justifyContent:'space-between',alignItems:'center',gap:16,flexWrap:'wrap',boxShadow:'0 8px 24px rgba(120,80,0,.06)'}}><div><div style={{fontSize:12,fontWeight:900,textTransform:'uppercase',letterSpacing:'.06em',color:'#8a5a00'}}>Coach applications awaiting review</div><div style={{fontSize:16,fontWeight:800,marginTop:4}}>{pendingApplications.length} application{pendingApplications.length===1?'':'s'} require{pendingApplications.length===1?'s':''} your review.</div><div style={{fontSize:13,color:'#6d5a35',marginTop:4}}>Review the application before granting marketplace approval.</div></div><button onClick={()=>setTab('Applications')} style={{...btn(true),background:'#9a6500',borderColor:'#9a6500'}}>Review applications</button></section>}
    <div style={{display:'flex',gap:8,overflowX:'auto',padding:'20px 0 8px',position:'sticky',top:0,zIndex:5,background:'rgba(238,247,255,.94)',backdropFilter:'blur(8px)'}}>{tabs.map(t=><button key={t} onClick={()=>setTab(t)} style={{...btn(tab===t),whiteSpace:'nowrap',position:'relative'}}>{t}{t==='Applications'&&pendingApplications.length>0&&<span style={{marginLeft:6,display:'inline-flex',minWidth:20,height:20,padding:'0 6px',alignItems:'center',justifyContent:'center',borderRadius:999,background:tab===t?'#fff':'#c47a00',color:tab===t?'#0b5d9b':'#fff',fontSize:11,fontWeight:900}}>{pendingApplications.length}</span>}</button>)}</div>
-   {tab==='AI Governance'&&<Section title="AI Governance — Career Discovery AI" tools={<button type="button" onClick={() => { setMessage('Starting governed Career Discovery AI test…'); void runGovernedCareerDiscoveryTest(); }} disabled={busy==='run-career-discovery-test'} style={btn(true)}>{busy==='run-career-discovery-test'?'Running governed test…':'Run governed test'}</button>}>
+   {tab==='AI Governance'&&<Section title="AI Governance — Career Discovery AI" tools={<button type="button" onPointerUp={() => { if (busy!=='run-career-discovery-test') void runGovernedCareerDiscoveryTest(); }} onClick={() => { if (busy!=='run-career-discovery-test') void runGovernedCareerDiscoveryTest(); }} disabled={busy==='run-career-discovery-test'} style={btn(true)}>{busy==='run-career-discovery-test'?'Running governed test…':'Run governed test'}</button>}>
     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14}}>
      <div style={{padding:16,border:'1px solid #d8e6f1',borderRadius:12}}>
       <strong>Current release gate</strong>
