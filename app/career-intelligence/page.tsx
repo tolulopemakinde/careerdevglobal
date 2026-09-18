@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import "./styles.css";
+// Keep the 16-agent Career Intelligence layer deployment-visible.
 import { createSupabaseBrowserClient } from "../../lib/supabase-browser";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ufmhrmzumqkjvaezrmxf.supabase.co";
