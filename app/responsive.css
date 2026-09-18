@@ -31,6 +31,7 @@ section[id], footer[id] { scroll-margin-top: 100px; }
 .site-header .brand:focus-visible,
 .button:focus-visible,
 .footer a:focus-visible,
+.site-footer a:focus-visible,
 .mobile-menu-toggle:focus-visible {
   outline: 3px solid var(--cdg-focus);
   outline-offset: 4px;
@@ -56,7 +57,6 @@ section[id], footer[id] { scroll-margin-top: 100px; }
   box-shadow: 0 10px 30px rgba(16,32,63,.22);
   transition: transform .2s ease;
 }
-
 .skip-link:focus { transform: translateY(0); }
 
 .ai-career-intelligence-fab {
@@ -69,9 +69,40 @@ section[id], footer[id] { scroll-margin-top: 100px; }
 
 .mobile-menu-toggle { display: none; }
 
+/* Shared header: the homepage contains its legacy header markup, so hide only that
+   duplicate instance while the layout-level header is present on every route. */
+body > main > .site-header { display: none; }
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-logo-mark {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: #10203f;
+  color: #fff;
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: -.04em;
+}
+.brand-logo-text {
+  color: #10203f;
+  font-weight: 900;
+  font-size: 18px;
+  line-height: 1;
+  white-space: nowrap;
+}
+body > main > .footer { display: none; }
+
 @media (max-width: 1000px) {
   .nav-wrap { gap: 16px; }
-  .brand { width: 220px; }
+  .brand-logo-mark { width: 44px; height: 44px; }
+  .brand-logo-text { font-size: 16px; }
   .site-header nav { gap: 8px; }
   .site-header nav a { font-size: 13px; padding-inline: 8px; }
   .site-header nav a::before,
@@ -81,8 +112,14 @@ section[id], footer[id] { scroll-margin-top: 100px; }
 
 @media (max-width: 700px) {
   .site-header { position: sticky; }
-  .nav-wrap { min-height: 70px; padding-top: 8px; align-items: center; }
-  .brand { width: 185px; }
+  .nav-wrap {
+    min-height: 70px;
+    padding-top: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .brand-logo-mark { width: 40px; height: 40px; border-radius: 10px; font-size: 16px; }
+  .brand-logo-text { font-size: 15px; }
 
   .mobile-menu-toggle {
     margin-left: auto;
@@ -101,7 +138,6 @@ section[id], footer[id] { scroll-margin-top: 100px; }
     cursor: pointer;
     flex: 0 0 auto;
   }
-
   .mobile-menu-toggle span {
     display: block;
     width: 22px;
@@ -123,9 +159,7 @@ section[id], footer[id] { scroll-margin-top: 100px; }
     overflow: visible;
     border-top: 1px solid #e7ebf2;
   }
-
   .site-header.mobile-menu-open nav { display: flex; }
-
   .site-header nav a,
   .site-header nav a:not(.nav-cta) {
     display: flex;
@@ -137,7 +171,6 @@ section[id], footer[id] { scroll-margin-top: 100px; }
     white-space: normal;
     font-size: 14px;
   }
-
   .site-header nav a:hover { transform: none; background: #f4f9fc; }
   .site-header nav a.nav-cta {
     width: 100%;
@@ -180,7 +213,8 @@ section[id], footer[id] { scroll-margin-top: 100px; }
 }
 
 @media (max-width: 420px) {
-  .brand { width: 165px; }
+  .brand-logo-text { font-size: 14px; }
+  .brand-logo-mark { width: 38px; height: 38px; }
   .hero { padding-top: 44px; }
   .hero-card { padding: 18px; }
   .journey { font-size: 13px; }
