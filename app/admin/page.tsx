@@ -7,12 +7,12 @@ type AnyRow=Record<string,any>;
 type Ops=Record<string,AnyRow[]>;
 type Dashboard={counts:Record<string,number>;profiles:AnyRow[];permissions:Record<string,string[]>};
 const roleLabels:{[key:string]:string}={admin:'Administrator',staff:'Staff',coach:'Coach',client:'Client'};
-const tabs=['Overview','Users','Clients','Coaches','Applications','Services','Offerings','Bookings','Finance','Payments','Risk & Disputes','Providers'];
+const tabs=['Overview','AI Governance','Users','Clients','Coaches','Applications','Services','Offerings','Bookings','Finance','Payments','Risk & Disputes','Providers'];
 
 export default function AdminPage(){
  const supabase=useMemo(()=>createSupabaseBrowserClient(),[]);
  const [dashboard,setDashboard]=useState<Dashboard|null>(null),[ops,setOps]=useState<Ops>({}),[tab,setTab]=useState('Overview');
- const [loading,setLoading]=useState(true),[message,setMessage]=useState(''),[busy,setBusy]=useState<string|null>(null),[search,setSearch]=useState(''),[currentUserId,setCurrentUserId]=useState('');
+ const [loading,setLoading]=useState(true),[message,setMessage]=useState(''),[busy,setBusy]=useState<string|null>(null),[search,setSearch]=useState(''),[currentUserId,setCurrentUserId]=useState('');\n const [aiResult,setAiResult]=useState<any|null>(null);
  async function load(){
   setLoading(true);setMessage('');
   const {data:userData,error:userError}=await supabase.auth.getUser();
@@ -28,6 +28,70 @@ export default function AdminPage(){
  }
  useEffect(()=>{load()},[]);
  async function call(name:string,args:Record<string,any>,success:string){setBusy(name);setMessage('');const {error}=await supabase.rpc(name,args);setMessage(error?error.message:success);setBusy(null);await load();}
+
+ async function runGovernedCareerDiscoveryTest(){
+  setBusy('run-career-discovery-test');setMessage('');setAiResult(null);
+  const testCaseId='b294be94-b7c8-4cd1-ad80-c0cdf17794d0';
+  const outputSchema={
+   type:'object',
+   additionalProperties:false,
+   properties:{
+    career_direction:{type:'string'},
+    target_roles:{type:'array',items:{type:'string'}},
+    recommendations:{type:'array',items:{type:'string'}},
+    gaps:{type:'array',items:{type:'string'}},
+    evidence_grounding:{type:'number',minimum:0,maximum:1},
+    no_fabrication:{type:'number',minimum:0,maximum:1},
+    source_traceability:{type:'number',minimum:0,maximum:1},
+    verification_gate:{type:'boolean'},
+    mapping_accuracy:{type:'number',minimum:0,maximum:1},
+    profile_consistency:{type:'number',minimum:0,maximum:1},
+    service_relevance:{type:'number',minimum:0,maximum:1},
+    end_to_end_integrity:{type:'number',minimum:0,maximum:1},
+    human_review_gate:{type:'boolean'},
+    uncertainty_flags:{type:'array',items:{type:'string'}},
+    source_refs:{type:'array',items:{type:'string'}},
+    unsupported_claims:{type:'integer',minimum:0},
+    unverified_applied:{type:'integer',minimum:0},
+    fact_classifications:{type:'array',items:{type:'string'}},
+    human_approved:{type:'boolean'}
+   },
+   required:['career_direction','target_roles','recommendations','gaps','evidence_grounding','no_fabrication','source_traceability','verification_gate','mapping_accuracy','profile_consistency','service_relevance','end_to_end_integrity','human_review_gate','uncertainty_flags','source_refs','unsupported_claims','unverified_applied','fact_classifications','human_approved']
+  };
+  const inputPayload={
+   test_class:'grounding',
+   test_case:testCaseId,
+   purpose:'release_candidate',
+   synthetic:true,
+   career_profile:{
+    education:[{degree:'BSc Economics',institution:'Synthetic University',year:2022}],
+    experience:[{role:'Programme Assistant',employer:'Synthetic NGO',years:2,responsibilities:['youth employability programmes','stakeholder coordination']}],
+    skills:['project coordination','data analysis','facilitation'],
+    target_preferences:{interests:['youth development','workforce development'],work_mode:'hybrid',location:'Abuja'}
+   },
+   service_request:{type:'Career Intelligence Assessment',goal:'Identify evidence-grounded career directions.'},
+   evidence:{source_refs:['synthetic-test-profile'],verification_status:'unverified'},
+   output_schema:outputSchema
+  };
+  try{
+   const {data:requestId,error:requestError}=await supabase.rpc('request_ai_agent_execution',{p_agent_key:'career_discovery_ai',p_workflow_key:'career_profile_analysis',p_trigger_source:'test_governed',p_input_payload:inputPayload});
+   if(requestError||!requestId) throw new Error(requestError?.message||'Could not create governed execution request.');
+   const {data:executionId,error:prepareError}=await supabase.rpc('prepare_ai_agent_execution',{p_request_id:requestId});
+   if(prepareError||!executionId) throw new Error(prepareError?.message||'Could not prepare governed execution.');
+   const {data:sessionData,error:sessionError}=await supabase.auth.getSession();
+   const token=sessionData.session?.access_token;
+   if(sessionError||!token) throw new Error('A valid Staff/Admin session is required to invoke the governed runtime.');
+   const runtimeUrl=(process.env.NEXT_PUBLIC_SUPABASE_URL||'https://ufmhrmzumqkjvaezrmxf.supabase.co')+'/functions/v1/careerdev-ai-agent-runtime';
+   const response=await fetch(runtimeUrl,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({request_id:requestId})});
+   const body=await response.json();
+   if(!response.ok) throw new Error(body?.error||'Governed runtime execution failed.');
+   setAiResult({request_id:requestId,execution_id:executionId,...body});
+   setMessage('Career Discovery AI governed execution completed through the authenticated runtime. The result is held at the human-review gate and has not activated the agent.');
+  }catch(error:any){
+   setMessage(error?.message||'Governed AI test failed.');
+  }finally{setBusy(null);}
+ }
+
  async function signOut(){await supabase.auth.signOut();window.location.href='/admin/login';}
  const c=dashboard?.counts||{};
  const applications=ops.applications||[];
@@ -44,6 +108,35 @@ export default function AdminPage(){
   {loading?<p style={{marginTop:28,textAlign:'center',color:'#527085'}}>Loading administration data…</p>:!dashboard?<p style={{marginTop:28,textAlign:'center',color:'#527085'}}>Administration data is unavailable.</p>:<>
    {pendingApplications.length>0&&<section style={{marginTop:18,padding:'18px 20px',borderRadius:16,border:'1px solid #f0c36a',background:'#fff8e8',display:'flex',justifyContent:'space-between',alignItems:'center',gap:16,flexWrap:'wrap',boxShadow:'0 8px 24px rgba(120,80,0,.06)'}}><div><div style={{fontSize:12,fontWeight:900,textTransform:'uppercase',letterSpacing:'.06em',color:'#8a5a00'}}>Coach applications awaiting review</div><div style={{fontSize:16,fontWeight:800,marginTop:4}}>{pendingApplications.length} application{pendingApplications.length===1?'':'s'} require{pendingApplications.length===1?'s':''} your review.</div><div style={{fontSize:13,color:'#6d5a35',marginTop:4}}>Review the application before granting marketplace approval.</div></div><button onClick={()=>setTab('Applications')} style={{...btn(true),background:'#9a6500',borderColor:'#9a6500'}}>Review applications</button></section>}
    <div style={{display:'flex',gap:8,overflowX:'auto',padding:'20px 0 8px',position:'sticky',top:0,zIndex:5,background:'rgba(238,247,255,.94)',backdropFilter:'blur(8px)'}}>{tabs.map(t=><button key={t} onClick={()=>setTab(t)} style={{...btn(tab===t),whiteSpace:'nowrap',position:'relative'}}>{t}{t==='Applications'&&pendingApplications.length>0&&<span style={{marginLeft:6,display:'inline-flex',minWidth:20,height:20,padding:'0 6px',alignItems:'center',justifyContent:'center',borderRadius:999,background:tab===t?'#fff':'#c47a00',color:tab===t?'#0b5d9b':'#fff',fontSize:11,fontWeight:900}}>{pendingApplications.length}</span>}</button>)}</div>
+   {tab==='AI Governance'&&<Section title="AI Governance — Career Discovery AI" tools={<button onClick={runGovernedCareerDiscoveryTest} disabled={busy==='run-career-discovery-test'} style={btn(true)}>{busy==='run-career-discovery-test'?'Running governed test…':'Run governed test'}</button>}>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14}}>
+     <div style={{padding:16,border:'1px solid #d8e6f1',borderRadius:12}}>
+      <strong>Current release gate</strong>
+      <p style={{margin:'8px 0',lineHeight:1.6,color:'#527085'}}>Coming next / Planned. This test uses a synthetic profile, authenticated Staff/Admin execution, configuration snapshots, structured output, quality evaluation and the human-review gate.</p>
+      <div style={{fontSize:13,lineHeight:1.7}}>
+       <div>Test case: <code>{'b294be94-b7c8-4cd1-ad80-c0cdf17794d0'}</code></div>
+       <div>Agent: <strong>Career Discovery AI</strong></div>
+       <div>Workflow: <strong>career_profile_analysis</strong></div>
+       <div>Approval: <strong>Human approval required</strong></div>
+      </div>
+     </div>
+     <div style={{padding:16,border:'1px solid #d8e6f1',borderRadius:12,background:'#f8fcff'}}>
+      <strong>Governance controls</strong>
+      <ul style={{lineHeight:1.7,paddingLeft:20,color:'#527085'}}>
+       <li>Authenticated runtime only; no auth bypass.</li>
+       <li>Evidence grounding and fabrication controls are evaluated.</li>
+       <li>Human approval is not self-asserted by the model.</li>
+       <li>Test results are persisted to the AI test-run and quality-gate records.</li>
+       <li>Production activation remains separate from test execution.</li>
+      </ul>
+     </div>
+    </div>
+    {aiResult&&<div style={{marginTop:16,padding:16,border:'1px solid #c8d9e8',borderRadius:12,background:'#fff'}}>
+     <strong>Latest governed execution</strong>
+     <pre style={{marginTop:10,whiteSpace:'pre-wrap',overflowX:'auto',fontSize:12,lineHeight:1.5}}>{JSON.stringify(aiResult,null,2)}</pre>
+    </div>}
+   </Section>}
+
    {tab==='Overview'&&<><section style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(140px,1fr))',gap:10,marginTop:12}}>{cards.map(([label,value])=><div key={String(label)} style={{background:'#fff',borderRadius:14,padding:16,border:'1px solid #d8e6f1',boxShadow:'0 8px 24px rgba(0,60,100,.05)'}}><div style={{fontSize:11,color:'#607487'}}>{label}</div><strong style={{fontSize:26}}>{value??0}</strong></div>)}</section><Section title="Role permissions"><div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:14}}>{Object.entries(dashboard.permissions).map(([r,ps])=><div key={r} style={{padding:15,border:'1px solid #e1ebf3',borderRadius:12}}><strong>{roleLabels[r]||r}</strong><ul style={{lineHeight:1.7,paddingLeft:18}}>{ps.map(x=><li key={x}>{x.replaceAll('_',' ')}</li>)}</ul></div>)}</div></Section></>}
    {tab==='Users'&&<Section title="User & access management" tools={<input placeholder="Search users…" value={search} onChange={e=>setSearch(e.target.value)} style={{padding:9,border:'1px solid #c8d9e8',borderRadius:9}}/>}><Table rows={ops.profiles||[]} columns={['full_name','email','role','status','country','timezone','created_at']} actions={p=><div style={{display:'flex',gap:6,flexWrap:'wrap'}}><select disabled={p.id===currentUserId||busy==='admin_set_user_role'} value={p.role} onChange={e=>call('admin_set_user_role',{p_user_id:p.id,p_role:e.target.value},'User role updated.')} style={{padding:7,borderRadius:7,border:'1px solid #c8d9e8'}}><option value="client">Client</option><option value="coach">Coach</option><option value="staff">Staff</option><option value="admin">Administrator</option></select><select disabled={busy==='admin_update_profile_status'} value={p.status||'active'} onChange={e=>call('admin_update_profile_status',{p_user_id:p.id,p_status:e.target.value},'User status updated.')} style={{padding:7,borderRadius:7,border:'1px solid #c8d9e8'}}><option value="active">Active</option><option value="inactive">Inactive</option><option value="suspended">Suspended</option></select></div>}/></Section>}
    {tab==='Clients'&&<Section title="Client management"><Table rows={ops.clients||[]} columns={['name','email','status','created_at']} actions={p=><select disabled={busy==='admin_update_client_status'} value={p.status||'active'} onChange={e=>call('admin_update_client_status',{p_client_id:p.id,p_status:e.target.value},'Client status updated.')} style={{padding:7,borderRadius:7,border:'1px solid #c8d9e8'}}><option value="active">Active</option><option value="inactive">Inactive</option><option value="suspended">Suspended</option></select>}/></Section>}
