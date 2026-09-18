@@ -1,4 +1,5 @@
 'use client';
+// AI governance production verification gate.
 
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createSupabaseBrowserClient } from '../../lib/supabase-browser';
