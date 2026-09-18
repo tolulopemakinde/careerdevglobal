@@ -4,7 +4,6 @@ import "./auth.css";
 import "./responsive.css";
 import "./site-pages.css";
 import NavigationEnhancements from "./navigation-enhancements";
-import ProfessionalStandardsCarousel from "./professional-standards-carousel";
 import SiteHeader from "./components/site-header";
 import SiteFooter from "./components/site-footer";
 
@@ -22,7 +21,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <SiteHeader />
         <NavigationEnhancements />
         {children}
-        <ProfessionalStandardsCarousel />
         <SiteFooter />
         <a
           className="ai-career-intelligence-fab"
