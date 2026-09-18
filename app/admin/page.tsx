@@ -25,7 +25,12 @@ export default function AdminPage(){
   if(roleData?.role!=='admin' && roleData?.role!=='staff'){setMessage('This account does not have Staff/Admin permissions.');setLoading(false);return;}
   const [{data:d,error:de},{data:o,error:oe},agentResult,approvalResult]=await Promise.all([supabase.rpc('admin_get_platform_dashboard'),supabase.rpc('admin_get_platform_operations'),supabase.from('ai_agent_registry').select('id,name,agent_key,description,status,autonomy_level,human_approval_required,active,owner_role').in('owner_role',['staff','admin']).order('created_at'),supabase.from('ai_human_approval_requests').select('id,request_id,execution_id,requested_by,status,requested_at,approved_by,approved_at,decision_notes').in('status',['pending','approved']).order('requested_at',{ascending:false})]);
   if(de||oe){setMessage((de||oe)?.message||'Administration data is unavailable.');setLoading(false);return;}
-  setDashboard(d as Dashboard);setOps((o||{}) as Ops);setAdminAgents((agentResult.data||[]) as any[]);setApprovalQueue((approvalResult.data||[]) as any[]);setLoading(false);
+  const approvals=approvalResult.data||[]; const approvedIds=approvals.filter((a:any)=>a.status==='approved'&&a.execution_id).map((a:any)=>a.execution_id);
+  const {data:approvedExecutions,error:approvedExecutionsError}=approvedIds.length?await supabase.from('ai_agent_executions').select('id,status,completed_at').in('id',approvedIds):{data:[],error:null};
+  if(approvedExecutionsError){setMessage(`Approval status could not be loaded. ${approvedExecutionsError.message}`);setLoading(false);return;}
+  const executionById=new Map((approvedExecutions||[]).map((e:any)=>[e.id,e]));
+  const visibleApprovals=approvals.filter((a:any)=>a.status==='pending'||executionById.get(a.execution_id)?.status==='awaiting_human_review');
+  setDashboard(d as Dashboard);setOps((o||{}) as Ops);setAdminAgents((agentResult.data||[]) as any[]);setApprovalQueue(visibleApprovals as any[]);setLoading(false);
  }
  useEffect(()=>{load();setMessage('Admin client is ready. AI Governance controls are interactive.');},[]);
  async function call(name:string,args:Record<string,any>,success:string){setBusy(name);setMessage('');const {error}=await supabase.rpc(name,args);setMessage(error?error.message:success);setBusy(null);await load();}
