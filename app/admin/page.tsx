@@ -13,7 +13,7 @@ export default function AdminPage(){
  const supabase=useMemo(()=>createSupabaseBrowserClient(),[]);
  const [dashboard,setDashboard]=useState<Dashboard|null>(null),[ops,setOps]=useState<Ops>({}),[tab,setTab]=useState('Overview');
  const [loading,setLoading]=useState(true),[message,setMessage]=useState(''),[busy,setBusy]=useState<string|null>(null),[search,setSearch]=useState(''),[currentUserId,setCurrentUserId]=useState('');
- const [aiResult,setAiResult]=useState<any|null>(null),[adminAgents,setAdminAgents]=useState<any[]>([]);
+ const [aiResult,setAiResult]=useState<any|null>(null),[adminAgents,setAdminAgents]=useState<any[]>([]),[approvalQueue,setApprovalQueue]=useState<any[]>([]);
  async function load(){
   setLoading(true);setMessage('');
   const {data:userData,error:userError}=await supabase.auth.getUser();
@@ -23,13 +23,15 @@ export default function AdminPage(){
   if(roleError){setMessage(`Account verification failed. ${roleError.message}`);setLoading(false);return;}
   if(roleData?.status && roleData.status!=='active'){setMessage('Your Staff/Admin account is not active.');setLoading(false);return;}
   if(roleData?.role!=='admin' && roleData?.role!=='staff'){setMessage('This account does not have Staff/Admin permissions.');setLoading(false);return;}
-  const [{data:d,error:de},{data:o,error:oe},agentResult]=await Promise.all([supabase.rpc('admin_get_platform_dashboard'),supabase.rpc('admin_get_platform_operations'),supabase.from('ai_agent_registry').select('id,name,agent_key,description,status,autonomy_level,human_approval_required,active,owner_role').in('owner_role',['staff','admin']).order('created_at')]);
+  const [{data:d,error:de},{data:o,error:oe},agentResult]=await Promise.all([supabase.rpc('admin_get_platform_dashboard'),supabase.rpc('admin_get_platform_operations'),supabase.from('ai_agent_registry').select('id,name,agent_key,description,status,autonomy_level,human_approval_required,active,owner_role').in('owner_role',['staff','admin']).order('created_at'),supabase.from('ai_human_approval_requests').select('id,request_id,execution_id,requested_by,status,requested_at,approved_by,approved_at,decision_notes').eq('status','pending').order('requested_at',{ascending:false})]);
   if(de||oe){setMessage((de||oe)?.message||'Administration data is unavailable.');setLoading(false);return;}
-  setDashboard(d as Dashboard);setOps((o||{}) as Ops);setAdminAgents((agentResult.data||[]) as any[]);setLoading(false);
+  setDashboard(d as Dashboard);setOps((o||{}) as Ops);setAdminAgents((agentResult.data||[]) as any[]);setApprovalQueue((approvalResult.data||[]) as any[]);setLoading(false);
  }
  useEffect(()=>{load();setMessage('Admin client is ready. AI Governance controls are interactive.');},[]);
  async function call(name:string,args:Record<string,any>,success:string){setBusy(name);setMessage('');const {error}=await supabase.rpc(name,args);setMessage(error?error.message:success);setBusy(null);await load();}
 
+ async function requestIndependentApproval(requestId:string,executionId:string){setBusy('request-approval-'+requestId);setMessage('Creating independent human-approval request…');const {data,error}=await supabase.rpc('request_ai_human_approval',{p_request_id:requestId,p_execution_id:executionId});setMessage(error?error.message:`Independent approval requested. Approval ID: ${data}`);setBusy(null);await load();}
+ async function approveIndependentApproval(approvalId:string){setBusy('approve-approval-'+approvalId);setMessage('Recording independent approval…');const {error}=await supabase.rpc('approve_ai_human_approval',{p_approval_id:approvalId,p_decision_notes:'Reviewed through CareerDev Global AI Governance.'});setMessage(error?error.message:'Independent human approval recorded. The execution can now proceed through the governed completion transition.');setBusy(null);await load();}
  async function runGovernedCareerDiscoveryTest(){
   setBusy('run-career-discovery-test');setMessage('Step 1/5: starting governed test…');setAiResult(null);
   const testCaseId='b294be94-b7c8-4cd1-ad80-c0cdf17794d0';
@@ -91,7 +93,7 @@ export default function AdminPage(){
    const body=await response.json();
    if(!response.ok) throw new Error(body?.error||'Governed runtime execution failed.');
    setAiResult({request_id:requestId,execution_id:executionId,...body});
-   setMessage('Career Discovery AI governed execution completed through the authenticated runtime. The result is held at the human-review gate and has not activated the agent.');
+   setMessage('Career Discovery AI governed execution completed through the authenticated runtime. The result is held at the human-review gate. Request independent approval for a second Admin/Staff reviewer.');
   }catch(error:any){
    setMessage(error?.message||'Governed AI test failed.');
   }finally{setBusy(null);}
@@ -114,6 +116,7 @@ export default function AdminPage(){
    {pendingApplications.length>0&&<section style={{marginTop:18,padding:'18px 20px',borderRadius:16,border:'1px solid #f0c36a',background:'#fff8e8',display:'flex',justifyContent:'space-between',alignItems:'center',gap:16,flexWrap:'wrap',boxShadow:'0 8px 24px rgba(120,80,0,.06)'}}><div><div style={{fontSize:12,fontWeight:900,textTransform:'uppercase',letterSpacing:'.06em',color:'#8a5a00'}}>Coach applications awaiting review</div><div style={{fontSize:16,fontWeight:800,marginTop:4}}>{pendingApplications.length} application{pendingApplications.length===1?'':'s'} require{pendingApplications.length===1?'s':''} your review.</div><div style={{fontSize:13,color:'#6d5a35',marginTop:4}}>Review the application before granting marketplace approval.</div></div><button onClick={()=>setTab('Applications')} style={{...btn(true),background:'#9a6500',borderColor:'#9a6500'}}>Review applications</button></section>}
    <div style={{display:'flex',gap:8,overflowX:'auto',padding:'20px 0 8px',position:'sticky',top:0,zIndex:5,background:'rgba(238,247,255,.94)',backdropFilter:'blur(8px)'}}>{tabs.map(t=><button key={t} onClick={()=>setTab(t)} style={{...btn(tab===t),whiteSpace:'nowrap',position:'relative'}}>{t}{t==='Applications'&&pendingApplications.length>0&&<span style={{marginLeft:6,display:'inline-flex',minWidth:20,height:20,padding:'0 6px',alignItems:'center',justifyContent:'center',borderRadius:999,background:tab===t?'#fff':'#c47a00',color:tab===t?'#0b5d9b':'#fff',fontSize:11,fontWeight:900}}>{pendingApplications.length}</span>}</button>)}</div>
    {tab==='Admin AI Agents'&&<Section title="Admin AI Agents"><div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14}}>{adminAgents.map((a:any)=><article key={a.id} style={{padding:18,border:'1px solid #d8e6f1',borderRadius:14,background:'#f8fcff'}}><div style={{display:'flex',justifyContent:'space-between',gap:8,alignItems:'center'}}><strong>{a.name}</strong><span style={{fontSize:11,fontWeight:900,padding:'4px 8px',borderRadius:999,background:'#e8eef5',color:'#36566f'}}>{a.status}</span></div><p style={{fontSize:13,lineHeight:1.55,color:'#527085'}}>{a.description}</p><div style={{fontSize:12,lineHeight:1.7}}><div>Audience: <strong>{a.owner_role==='admin'?'Admin':'Staff/Admin'}</strong></div><div>Autonomy: {a.autonomy_level}</div><div>Human approval: {a.human_approval_required?'Required':'Not required'}</div></div></article>)}</div><p style={{fontSize:12,color:'#607487',marginTop:16}}>These internal agents are not exposed through the public/client/coach agent hub. Production activation remains subject to the same governed testing and human-approval gates.</p></Section>}
+   {approvalQueue.length>0&&<section style={{marginTop:18,padding:'18px 20px',borderRadius:16,border:'1px solid #9ec7e6',background:'#eef8ff'}}><strong>Pending independent AI approvals</strong><div style={{marginTop:8}}>{approvalQueue.length} approval request{approvalQueue.length===1?'':'s'} awaiting review. A requester cannot approve their own execution.</div><button onClick={()=>setTab('AI Governance')} style={{...btn(true),marginTop:10}}>Open AI Governance</button></section>}
    {tab==='AI Governance'&&<Section title="AI Governance — Career Discovery AI" tools={<button type="button" onPointerUp={() => { if (busy!=='run-career-discovery-test') void runGovernedCareerDiscoveryTest(); }} onClick={() => { if (busy!=='run-career-discovery-test') void runGovernedCareerDiscoveryTest(); }} disabled={busy==='run-career-discovery-test'} style={btn(true)}>{busy==='run-career-discovery-test'?'Running governed test…':'Run governed test'}</button>}>
     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14}}>
      <div style={{padding:16,border:'1px solid #d8e6f1',borderRadius:12}}>
@@ -137,8 +140,9 @@ export default function AdminPage(){
       </ul>
      </div>
     </div>
+    {approvalQueue.length>0&&<div style={{marginTop:16,padding:16,border:'1px solid #9ec7e6',borderRadius:12,background:'#eef8ff'}}><strong>Pending independent approvals</strong>{approvalQueue.map(a=><div key={a.id} style={{marginTop:10,padding:12,border:'1px solid #c8d9e8',borderRadius:10,background:'#fff'}}><div style={{fontSize:12,color:'#607487'}}>Execution</div><code>{a.execution_id||'—'}</code><div style={{marginTop:10}}><button disabled={busy==='approve-approval-'+a.id} onClick={()=>approveIndependentApproval(a.id)} style={btn(true)}>Approve</button></div></div>)}</div>}
     {aiResult&&<div style={{marginTop:16,padding:16,border:'1px solid #c8d9e8',borderRadius:12,background:'#fff'}}>
-     <strong>Latest governed execution</strong>
+     <strong>Latest governed execution</strong><div style={{marginTop:10}}>{aiResult.request_id&&aiResult.execution_id&&<button disabled={busy==='request-approval-'+aiResult.request_id} onClick={()=>requestIndependentApproval(aiResult.request_id,aiResult.execution_id)} style={btn(true)}>Request independent approval</button>}<span style={{marginLeft:8,padding:'7px 10px',borderRadius:8,background:'#fff3cd',color:'#765a00',fontWeight:800}}>Awaiting independent approval</span></div>
      <pre style={{marginTop:10,whiteSpace:'pre-wrap',overflowX:'auto',fontSize:12,lineHeight:1.5}}>{JSON.stringify(aiResult,null,2)}</pre>
     </div>}
    </Section>}
