@@ -5,6 +5,7 @@ import "./responsive.css";
 import "./site-pages.css";
 import NavigationEnhancements from "./navigation-enhancements";
 import ProfessionalStandardsCarousel from "./professional-standards-carousel";
+import SiteHeader from "./components/site-header";
 import SiteFooter from "./components/site-footer";
 
 export const metadata: Metadata = {
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body>
         <a className="skip-link" href="#services">Skip to content</a>
+        <SiteHeader />
         <NavigationEnhancements />
         {children}
         <ProfessionalStandardsCarousel />
