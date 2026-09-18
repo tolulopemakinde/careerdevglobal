@@ -12,7 +12,8 @@ const tabs=['Overview','AI Governance','Users','Clients','Coaches','Applications
 export default function AdminPage(){
  const supabase=useMemo(()=>createSupabaseBrowserClient(),[]);
  const [dashboard,setDashboard]=useState<Dashboard|null>(null),[ops,setOps]=useState<Ops>({}),[tab,setTab]=useState('Overview');
- const [loading,setLoading]=useState(true),[message,setMessage]=useState(''),[busy,setBusy]=useState<string|null>(null),[search,setSearch]=useState(''),[currentUserId,setCurrentUserId]=useState('');\n const [aiResult,setAiResult]=useState<any|null>(null);
+ const [loading,setLoading]=useState(true),[message,setMessage]=useState(''),[busy,setBusy]=useState<string|null>(null),[search,setSearch]=useState(''),[currentUserId,setCurrentUserId]=useState('');
+ const [aiResult,setAiResult]=useState<any|null>(null);
  async function load(){
   setLoading(true);setMessage('');
   const {data:userData,error:userError}=await supabase.auth.getUser();
