@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react';
 import { createSupabaseBrowserClient } from '../../lib/supabase-browser';
 
 type Plan={plan_key:string;name:string;description:string;monthly_price:number;annual_price:number;monthly_price_ngn:number;annual_price_ngn:number;currency:string;monthly_credits:number;included_agents:string[]};
+type ServiceEntitlement={plan_key:string;feature_key:string;feature_name:string;description:string|null;enabled:boolean;monthly_quantity:number|null;availability_status:string};
 const planOrder=['fresher','starter','professional','career_pro','elite'];
 
 export default function PricingPage(){
   const supabase=createSupabaseBrowserClient();
   const [plans,setPlans]=useState<Plan[]>([]);
+  const [serviceEntitlements,setServiceEntitlements]=useState<ServiceEntitlement[]>([]);
   const [interval,setInterval]=useState<'monthly'|'annual'>('monthly');
   const [currency,setCurrency]=useState<'USD'|'NGN'>('USD');
   const [loading,setLoading]=useState(true);
@@ -26,11 +28,13 @@ export default function PricingPage(){
       if(error||!data?.status){setMessage(data?.error||error?.message||'Payment verification is still pending. Please refresh shortly.');}
       else{setMessage('Payment verified. Your AI Agent subscription is now active.');window.history.replaceState({},'','/pricing');}
     }
-    const [{data:plansData},{data:subscription}]=await Promise.all([
+    const [{data:plansData},{data:serviceData},{data:subscription}]=await Promise.all([
       supabase.from('ai_agent_subscription_plans').select('plan_key,name,description,monthly_price,annual_price,monthly_price_ngn,annual_price_ngn,currency,monthly_credits,included_agents').eq('active',true).order('sort_order'),
+      supabase.from('ai_plan_service_entitlements').select('plan_key,feature_key,feature_name,description,enabled,monthly_quantity,availability_status').eq('enabled',true).eq('availability_status','available'),
       supabase.rpc('get_my_ai_subscription')
     ]);
     setPlans(((plansData||[]) as Plan[]).sort((a,b)=>planOrder.indexOf(a.plan_key)-planOrder.indexOf(b.plan_key)));
+    setServiceEntitlements((serviceData||[]) as ServiceEntitlement[]);
     setCurrentPlan(Array.isArray(subscription)&&subscription[0]?.plan_key?subscription[0].plan_key:null);
     setLoading(false);
   }
@@ -94,12 +98,16 @@ export default function PricingPage(){
             <strong style={{display:'block',marginBottom:6}}>{p.included_agents.length} of 16 AI agents included</strong>
             {p.included_agents.map(k=><div key={k}>✓ {agentLabel(k)}</div>)}
           </div>
+          {serviceEntitlements.filter(s=>s.plan_key===p.plan_key).length>0&&<div style={{fontSize:13,lineHeight:1.65,marginBottom:18,paddingTop:10,borderTop:'1px solid #e2edf5'}}>
+            <strong style={{display:'block',marginBottom:6}}>Additional services included</strong>
+            {serviceEntitlements.filter(s=>s.plan_key===p.plan_key).map(s=><div key={s.feature_key}>✓ {s.feature_name}{s.monthly_quantity?` — ${s.monthly_quantity}/month`:''}</div>)}
+          </div>}
           <button disabled={busy!==null||isCurrent} onClick={()=>subscribe(p.plan_key)} style={{width:'100%',marginTop:'auto',padding:'12px 14px',border:0,borderRadius:10,background:isCurrent?'#e8eef3':'#0b5d9b',color:isCurrent?'#527085':'#fff',fontWeight:900,cursor:isCurrent?'default':'pointer'}}>{isCurrent?'Current Plan':busy===p.plan_key?'Preparing secure checkout…':'Choose '+p.name}</button>
         </article>})}
       </div>}
       <section style={{marginTop:28,background:'#fff',border:'1px solid #d8e6f1',borderRadius:16,padding:20}}>
         <h2 style={{marginTop:0}}>How access works</h2>
-        <p style={{color:'#527085',lineHeight:1.6}}>Your active subscription controls which of the 16 Client & Coach AI Agents can be opened in the AI Agent Workspace. The platform keeps the internal/admin agents separate from these customer plans.</p>
+        <p style={{color:'#527085',lineHeight:1.6}}>Your active subscription controls which of the 16 Client & Coach AI Agents can be opened in the AI Agent Workspace. Published plans can also include separately governed service entitlements, such as Advanced Career Intelligence and Human Coach Review, where shown on the plan card. The platform keeps the internal/admin agents separate from these customer plans.</p>
         <p style={{color:'#527085',lineHeight:1.6}}>Subscriptions are processed securely through Paystack. Payment status is verified server-side before AI Agent access is activated.</p>
       </section>
     </div>
