@@ -47,7 +47,7 @@ export default function PricingPage(){
   }
   return <main style={{minHeight:'100vh',background:'linear-gradient(180deg,#f7fbff,#eef6fb)',color:'#09233f',padding:'0 16px 80px'}}>
     <div style={{maxWidth:1240,margin:'0 auto'}}>
-      <section aria-labelledby="pricing-hero" style={{position:'relative',minHeight:'420px',margin:'0 -16px 34px',overflow:'hidden',backgroundImage:"linear-gradient(90deg,rgba(3,24,55,.94) 0%,rgba(5,35,74,.82) 52%,rgba(5,35,74,.72) 100%),url('https://asset.gecdesigns.com/img/wallpapers/technology-and-developer-wallpaper-with-minimal-blue-neon-desk-setup-sr17022619-cover.webp')",backgroundSize:'cover',backgroundPosition:'center'}}>
+      <section aria-labelledby="pricing-hero" style={{position:'relative',minHeight:'420px',margin:'0 -16px 34px',overflow:'hidden',backgroundImage:"linear-gradient(90deg,rgba(3,24,55,.94) 0%,rgba(5,35,74,.82) 52%,rgba(5,35,74,.72) 100%),url('https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=2400&q=85')",backgroundSize:'cover',backgroundPosition:'center'}}>
         <div style={{position:'relative',zIndex:1,maxWidth:1240,minHeight:'420px',margin:'0 auto',padding:'56px 16px',display:'flex',alignItems:'center'}}>
           <div style={{maxWidth:780,color:'#fff'}}>
             <a href="/" style={{color:'#cfeaff',fontWeight:800,textDecoration:'none'}}>← CareerDev Global</a>
@@ -58,7 +58,7 @@ export default function PricingPage(){
               <a href="/agents" style={{padding:'12px 17px',borderRadius:10,background:'#fff',color:'#0b4779',fontWeight:900,textDecoration:'none'}}>AI Agent Workspace →</a>
               <a href="#plans" style={{padding:'12px 17px',borderRadius:10,border:'1px solid rgba(255,255,255,.55)',color:'#fff',fontWeight:900,textDecoration:'none',background:'rgba(255,255,255,.08)'}}>Compare Plans</a>
             </div>
-            <p style={{fontSize:11,color:'#c8dced',marginTop:22}}>Hero visual: AI-generated technology workspace from GEC Designs; used under its free commercial-use license with attribution.</p>
+            <p style={{fontSize:11,color:'#c8dced',marginTop:22}}>Hero visual: AI/automation technology image from Unsplash, used under the Unsplash License.</p>
           </div>
         </div>
       </section>
