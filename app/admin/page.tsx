@@ -104,7 +104,42 @@ export default function AdminPage(){
   }finally{setBusy(null);}
  }
 
- async function signOut(){await supabase.auth.signOut();window.location.href='/admin/login';}
+ async function runStaffAdminAgentTest(agentKey:string){
+  const agent=adminAgents.find((a:any)=>a.agent_key===agentKey);
+  if(!agent) return;
+  const workflowByAgent:any={
+   ceo_operations_ai:'executive_performance_review',career_discovery_ai:'career_profile_analysis',cv_linkedin_ai:'cv_service_delivery',lead_generation_ai:'lead_qualification',marketing_content_ai:'content_creation',research_opportunities_ai:'opportunity_research',sales_proposal_ai:'proposal_generation'
+  };
+  const workflow=workflowByAgent[agentKey];
+  const outputSchema={type:'object',additionalProperties:true,properties:{summary:{type:'string'},recommendations:{type:'array',items:{type:'string'}},risks:{type:'array',items:{type:'string'}},next_steps:{type:'array',items:{type:'string'}},evidence_flags:{type:'array',items:{type:'string'}},human_review_required:{type:'boolean'}},required:['summary','recommendations','risks','next_steps','evidence_flags','human_review_required']};
+  const syntheticContexts:any={
+   ceo_operations_ai:{operational_snapshot:{revenue_trend:'synthetic',service_delivery_quality:'synthetic',client_outcomes:'synthetic',staff_capacity:'synthetic'},request:'Identify operational priorities and risks from supplied synthetic data.'},
+   career_discovery_ai:{career_profile:{education:'BSc Economics',experience:'2 years programme coordination',skills:['data analysis','facilitation','project coordination'],interests:['youth development','workforce development']},request:'Identify evidence-grounded career directions.'},
+   cv_linkedin_ai:{candidate_profile:{target_role:'Programme Officer',skills:['project coordination','data analysis'],experience:'2 years programme coordination'},request:'Produce truthful CV/LinkedIn positioning recommendations.'},
+   lead_generation_ai:{prospect_profile:{segment:'career services buyer',source:'synthetic',consent_status:'unknown'},request:'Qualify the synthetic prospect and draft ethical next steps without outreach.'},
+   marketing_content_ai:{campaign:{audience:'young professionals',topic:'career development',channels:['LinkedIn']},request:'Draft evidence-aligned content ideas without unsupported claims.'},
+   research_opportunities_ai:{candidate_profile:{location:'Abuja',interests:['youth development','workforce development'],skills:['project coordination']},request:'Structure opportunity-research requirements and identify what must be verified.'},
+   sales_proposal_ai:{prospect:{service_interest:'career coaching',budget:'unknown',requirements:'synthetic'},request:'Prepare a transparent service proposal outline without promising outcomes.'}
+  };
+  const payload={test_class:'staff_admin_governed',test_case:agentKey,synthetic:true,purpose:'functional_validation',...syntheticContexts[agentKey],output_schema:outputSchema};
+  setBusy('agent-test-'+agentKey);setMessage('Starting governed test for '+agent.name+'…');setAiResult(null);
+  try{
+   const {data:requestId,error:requestError}=await supabase.rpc('request_ai_agent_execution',{p_agent_key:agentKey,p_workflow_key:workflow,p_trigger_source:'test_governed',p_input_payload:payload});
+   if(requestError||!requestId) throw new Error(requestError?.message||'Could not create execution request.');
+   const {data:prepared,error:prepareError}=await supabase.rpc('prepare_ai_agent_execution',{p_request_id:requestId});
+   if(prepareError) throw new Error(prepareError.message);
+   const {data:sessionData,error:sessionError}=await supabase.auth.getSession();
+   const token=sessionData.session?.access_token;
+   if(sessionError||!token) throw new Error('A valid Staff/Admin session is required to invoke the governed runtime.');
+   const runtimeUrl=(process.env.NEXT_PUBLIC_SUPABASE_URL||'https://ufmhrmzumqkjvaezrmxf.supabase.co')+'/functions/v1/careerdev-ai-agent-runtime';
+   const response=await fetch(runtimeUrl,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({request_id:requestId})});
+   const body=await response.json();
+   if(!response.ok) throw new Error(body?.error||'Governed runtime failed.');
+   setAiResult({agent_key:agentKey,request_id:requestId,execution_id:prepared?.execution_id,...body});
+   setMessage(agent.name+' completed its authenticated governed test and is held at the human-review gate.');
+  }catch(error:any){setMessage(agent.name+' test failed: '+(error?.message||'Unknown error'));}
+  finally{setBusy(null);await load();}
+ } async function signOut(){await supabase.auth.signOut();window.location.href='/admin/login';}
  const c=dashboard?.counts||{};
  const applications=ops.applications||[];
  const pendingApplications=applications.filter(a=>['submitted','pending','under_review'].includes(String(a.application_status||'').toLowerCase()));
@@ -120,7 +155,7 @@ export default function AdminPage(){
   {loading?<p style={{marginTop:28,textAlign:'center',color:'#527085'}}>Loading administration data…</p>:!dashboard?<p style={{marginTop:28,textAlign:'center',color:'#527085'}}>Administration data is unavailable.</p>:<>
    {pendingApplications.length>0&&<section style={{marginTop:18,padding:'18px 20px',borderRadius:16,border:'1px solid #f0c36a',background:'#fff8e8',display:'flex',justifyContent:'space-between',alignItems:'center',gap:16,flexWrap:'wrap',boxShadow:'0 8px 24px rgba(120,80,0,.06)'}}><div><div style={{fontSize:12,fontWeight:900,textTransform:'uppercase',letterSpacing:'.06em',color:'#8a5a00'}}>Coach applications awaiting review</div><div style={{fontSize:16,fontWeight:800,marginTop:4}}>{pendingApplications.length} application{pendingApplications.length===1?'':'s'} require{pendingApplications.length===1?'s':''} your review.</div><div style={{fontSize:13,color:'#6d5a35',marginTop:4}}>Review the application before granting marketplace approval.</div></div><button onClick={()=>setTab('Applications')} style={{...btn(true),background:'#9a6500',borderColor:'#9a6500'}}>Review applications</button></section>}
    <div style={{display:'flex',gap:8,overflowX:'auto',padding:'20px 0 8px',position:'sticky',top:0,zIndex:5,background:'rgba(238,247,255,.94)',backdropFilter:'blur(8px)'}}>{tabs.map(t=><button key={t} onClick={()=>setTab(t)} style={{...btn(tab===t),whiteSpace:'nowrap',position:'relative'}}>{t}{t==='Applications'&&pendingApplications.length>0&&<span style={{marginLeft:6,display:'inline-flex',minWidth:20,height:20,padding:'0 6px',alignItems:'center',justifyContent:'center',borderRadius:999,background:tab===t?'#fff':'#c47a00',color:tab===t?'#0b5d9b':'#fff',fontSize:11,fontWeight:900}}>{pendingApplications.length}</span>}</button>)}</div>
-   {tab==='Admin AI Agents'&&<Section title="Admin AI Agents"><div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14}}>{adminAgents.map((a:any)=><article key={a.id} style={{padding:18,border:'1px solid #d8e6f1',borderRadius:14,background:'#f8fcff'}}><div style={{display:'flex',justifyContent:'space-between',gap:8,alignItems:'center'}}><strong>{a.name}</strong><span style={{fontSize:11,fontWeight:900,padding:'4px 8px',borderRadius:999,background:'#e8eef5',color:'#36566f'}}>{a.status}</span></div><p style={{fontSize:13,lineHeight:1.55,color:'#527085'}}>{a.description}</p><div style={{fontSize:12,lineHeight:1.7}}><div>Audience: <strong>{a.owner_role==='admin'?'Admin':'Staff/Admin'}</strong></div><div>Autonomy: {a.autonomy_level}</div><div>Human approval: {a.human_approval_required?'Required':'Not required'}</div></div></article>)}</div><p style={{fontSize:12,color:'#607487',marginTop:16}}>These internal agents are not exposed through the public/client/coach agent hub. Production activation remains subject to the same governed testing and human-approval gates.</p></Section>}
+   {tab==='Admin AI Agents'&&<Section title="Staff & Admin AI Agents"><div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14}}>{adminAgents.map((a:any)=><article key={a.id} style={{padding:18,border:'1px solid #d8e6f1',borderRadius:14,background:'#f8fcff'}}><div style={{display:'flex',justifyContent:'space-between',gap:8,alignItems:'center'}}><strong>{a.name}</strong><span style={{fontSize:11,fontWeight:900,padding:'4px 8px',borderRadius:999,background:'#e8eef5',color:'#36566f'}}>{a.status}</span></div><p style={{fontSize:13,lineHeight:1.55,color:'#527085'}}>{a.description}</p><div style={{fontSize:12,lineHeight:1.7}}><div>Owner: <strong>{a.owner_role==='admin'?'Admin':'Staff'}</strong></div><div>Autonomy: {a.autonomy_level}</div><div>Human approval: {a.human_approval_required?'Required':'Not required'}</div></div><button disabled={busy==='agent-test-'+a.agent_key} onClick={()=>runStaffAdminAgentTest(a.agent_key)} style={{...btn(true),marginTop:12,width:'100%'}}>{busy==='agent-test-'+a.agent_key?'Running governed test…':'Run governed functional test'}</button></article>)}</div><p style={{fontSize:12,color:'#607487',marginTop:16}}>Tests use synthetic data and the authenticated governed runtime. Results remain subject to independent human approval; a successful test does not by itself activate production.</p></Section>}
    {approvalQueue.length>0&&<section style={{marginTop:18,padding:'18px 20px',borderRadius:16,border:'1px solid #9ec7e6',background:'#eef8ff'}}><strong>Pending independent AI approvals</strong><div style={{marginTop:8}}>{approvalQueue.length} approval request{approvalQueue.length===1?'':'s'} awaiting review. A requester cannot approve their own execution.</div><button onClick={()=>setTab('AI Governance')} style={{...btn(true),marginTop:10}}>Open AI Governance</button></section>}
    {tab==='AI Governance'&&<Section title="AI Governance — Career Discovery AI" tools={<button type="button" onPointerUp={() => { if (busy!=='run-career-discovery-test') void runGovernedCareerDiscoveryTest(); }} onClick={() => { if (busy!=='run-career-discovery-test') void runGovernedCareerDiscoveryTest(); }} disabled={busy==='run-career-discovery-test'} style={btn(true)}>{busy==='run-career-discovery-test'?'Running governed test…':'Run governed test'}</button>}>
     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14}}>
