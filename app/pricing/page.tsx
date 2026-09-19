@@ -17,6 +17,14 @@ export default function PricingPage(){
 
   useEffect(()=>{void load()},[]);
   async function load(){
+    const params=new URLSearchParams(window.location.search);
+    const reference=params.get('reference');
+    if(params.get('payment')==='return'&&reference){
+      setMessage('Verifying your Paystack payment…');
+      const {data,error}=await supabase.functions.invoke('careerdev-ai-subscription-verify',{body:{reference}});
+      if(error||!data?.status){setMessage(data?.error||error?.message||'Payment verification is still pending. Please refresh shortly.');}
+      else{setMessage('Payment verified. Your AI Agent subscription is now active.');window.history.replaceState({},'', '/pricing');}
+    }
     const [{data:plansData},{data:subscription}]=await Promise.all([
       supabase.from('ai_agent_subscription_plans').select('plan_key,name,description,monthly_price,annual_price,currency,monthly_credits,included_agents').eq('active',true).order('sort_order'),
       supabase.rpc('get_my_ai_subscription')
@@ -54,7 +62,7 @@ export default function PricingPage(){
         {plans.map((p)=>{const price=interval==='monthly'?p.monthly_price:p.annual_price;const popular=p.plan_key==='professional';const isCurrent=currentPlan===p.plan_key;return <article key={p.plan_key} style={{position:'relative',background:'#fff',border:popular?'2px solid #0b5d9b':'1px solid #d8e6f1',borderRadius:18,padding:22,boxShadow:'0 10px 30px rgba(0,60,100,.07)'}}>
           {popular&&<span style={{position:'absolute',top:-12,left:18,padding:'5px 10px',borderRadius:999,background:'#0b5d9b',color:'#fff',fontSize:11,fontWeight:900}}>MOST POPULAR</span>}
           <h2 style={{margin:'4px 0 4px'}}>{p.name}</h2><p style={{minHeight:62,color:'#527085',fontSize:14,lineHeight:1.5}}>{p.description}</p>
-          <div style={{fontSize:34,fontWeight:900,margin:'14px 0 2px'}}>${price.toFixed(2)}<span style={{fontSize:14,fontWeight:600,color:'#718394'}}>/{interval==='monthly'?'month':'year'}</span></div>
+          <div style={{fontSize:34,fontWeight:900,margin:'14px 0 2px'}}>$${price.toFixed(2)}<span style={{fontSize:14,fontWeight:600,color:'#718394'}}>/{interval==='monthly'?'month':'year'}</span></div>
           <p style={{fontSize:12,color:'#718394',marginTop:0}}>{p.monthly_credits.toLocaleString()} AI credits/month allowance</p>
           <div style={{fontSize:13,lineHeight:1.8,minHeight:125}}><strong>{p.included_agents.length} of 16 agents</strong><br/>{p.included_agents.slice(0,6).map(k=><div key={k}>✓ {k.replace(/_agent$/,'').replaceAll('_',' ')}</div>)}{p.included_agents.length>6&&<div>+ {p.included_agents.length-6} more agents</div>}</div>
           <button disabled={busy!==null||isCurrent} onClick={()=>subscribe(p.plan_key)} style={{width:'100%',marginTop:14,padding:'12px 14px',border:0,borderRadius:10,background:isCurrent?'#e8eef3':'#0b5d9b',color:isCurrent?'#527085':'#fff',fontWeight:900,cursor:isCurrent?'default':'pointer'}}>{isCurrent?'Current Plan':busy===p.plan_key?'Preparing secure checkout…':\`Choose ${p.name}\`}</button>
@@ -63,7 +71,7 @@ export default function PricingPage(){
       <section style={{marginTop:28,background:'#fff',border:'1px solid #d8e6f1',borderRadius:16,padding:20}}>
         <h2 style={{marginTop:0}}>How access works</h2>
         <p style={{color:'#527085',lineHeight:1.6}}>Your active subscription controls which of the 16 Client & Coach AI Agents can be opened in the AI Agent Workspace. The platform keeps the internal/admin agents separate from these customer plans.</p>
-        <p style={{color:'#527085',lineHeight:1.6}}>Subscriptions are processed securely through Paystack. Recurring billing is handled by Paystack's subscription infrastructure and payment status is synchronized through verified webhooks.</p>
+        <p style={{color:'#527085',lineHeight:1.6}}>Subscriptions are processed securely through Paystack. Payment status is verified server-side before AI Agent access is activated.</p>
       </section>
     </div>
   </main>
