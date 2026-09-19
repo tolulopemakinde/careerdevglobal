@@ -19,5 +19,8 @@
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest"
+  },
+  "engines": {
+    "node": "24.x"
   }
 }
