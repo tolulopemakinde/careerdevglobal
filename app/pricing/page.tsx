@@ -62,10 +62,10 @@ export default function PricingPage(){
         {plans.map((p)=>{const price=interval==='monthly'?p.monthly_price:p.annual_price;const popular=p.plan_key==='professional';const isCurrent=currentPlan===p.plan_key;return <article key={p.plan_key} style={{position:'relative',background:'#fff',border:popular?'2px solid #0b5d9b':'1px solid #d8e6f1',borderRadius:18,padding:22,boxShadow:'0 10px 30px rgba(0,60,100,.07)'}}>
           {popular&&<span style={{position:'absolute',top:-12,left:18,padding:'5px 10px',borderRadius:999,background:'#0b5d9b',color:'#fff',fontSize:11,fontWeight:900}}>MOST POPULAR</span>}
           <h2 style={{margin:'4px 0 4px'}}>{p.name}</h2><p style={{minHeight:62,color:'#527085',fontSize:14,lineHeight:1.5}}>{p.description}</p>
-          <div style={{fontSize:34,fontWeight:900,margin:'14px 0 2px'}}>$${price.toFixed(2)}<span style={{fontSize:14,fontWeight:600,color:'#718394'}}>/{interval==='monthly'?'month':'year'}</span></div>
+          <div style={{fontSize:34,fontWeight:900,margin:'14px 0 2px'}}>${price.toFixed(2)}<span style={{fontSize:14,fontWeight:600,color:'#718394'}}>/{interval==='monthly'?'month':'year'}</span></div>
           <p style={{fontSize:12,color:'#718394',marginTop:0}}>{p.monthly_credits.toLocaleString()} AI credits/month allowance</p>
           <div style={{fontSize:13,lineHeight:1.8,minHeight:125}}><strong>{p.included_agents.length} of 16 agents</strong><br/>{p.included_agents.slice(0,6).map(k=><div key={k}>✓ {k.replace(/_agent$/,'').replaceAll('_',' ')}</div>)}{p.included_agents.length>6&&<div>+ {p.included_agents.length-6} more agents</div>}</div>
-          <button disabled={busy!==null||isCurrent} onClick={()=>subscribe(p.plan_key)} style={{width:'100%',marginTop:14,padding:'12px 14px',border:0,borderRadius:10,background:isCurrent?'#e8eef3':'#0b5d9b',color:isCurrent?'#527085':'#fff',fontWeight:900,cursor:isCurrent?'default':'pointer'}}>{isCurrent?'Current Plan':busy===p.plan_key?'Preparing secure checkout…':\`Choose ${p.name}\`}</button>
+          <button disabled={busy!==null||isCurrent} onClick={()=>subscribe(p.plan_key)} style={{width:'100%',marginTop:14,padding:'12px 14px',border:0,borderRadius:10,background:isCurrent?'#e8eef3':'#0b5d9b',color:isCurrent?'#527085':'#fff',fontWeight:900,cursor:isCurrent?'default':'pointer'}}>{isCurrent?'Current Plan':busy===p.plan_key?'Preparing secure checkout…':'Choose '+p.name}</button>
         </article>})}
       </div>}
       <section style={{marginTop:28,background:'#fff',border:'1px solid #d8e6f1',borderRadius:16,padding:20}}>
