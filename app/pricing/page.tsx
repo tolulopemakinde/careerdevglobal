@@ -45,12 +45,24 @@ export default function PricingPage(){
       window.location.assign(url);
     }catch(e:any){setMessage(e?.message||'Could not start subscription checkout.')}finally{setBusy(null)}
   }
-  return <main style={{minHeight:'100vh',background:'linear-gradient(180deg,#f7fbff,#eef6fb)',color:'#09233f',padding:'40px 16px 80px'}}>
+  return <main style={{minHeight:'100vh',background:'linear-gradient(180deg,#f7fbff,#eef6fb)',color:'#09233f',padding:'0 16px 80px'}}>
     <div style={{maxWidth:1240,margin:'0 auto'}}>
-      <header style={{display:'flex',justifyContent:'space-between',gap:18,alignItems:'center',flexWrap:'wrap',marginBottom:30}}>
-        <div><a href="/" style={{color:'#176da9',fontWeight:800,textDecoration:'none'}}>← CareerDev Global</a><h1 style={{fontSize:'clamp(2.2rem,5vw,3.5rem)',margin:'10px 0 6px'}}>CareerDev AI Agent Pricing</h1><p style={{margin:0,color:'#527085',maxWidth:760}}>Choose a subscription for the 16 Client & Coach AI Agents. One shared Career Intelligence Profile. AI processes. Humans decide.</p></div>
-        <a href="/agents" style={{padding:'11px 15px',border:'1px solid #c8d9e8',borderRadius:10,background:'#fff',color:'#173b59',fontWeight:800,textDecoration:'none'}}>AI Agent Workspace →</a>
-      </header>
+      <section aria-labelledby="pricing-hero" style={{position:'relative',minHeight:'420px',margin:'0 -16px 34px',overflow:'hidden',backgroundImage:"linear-gradient(90deg,rgba(3,24,55,.94) 0%,rgba(5,35,74,.82) 52%,rgba(5,35,74,.72) 100%),url('https://asset.gecdesigns.com/img/wallpapers/technology-and-developer-wallpaper-with-minimal-blue-neon-desk-setup-sr17022619-cover.webp')",backgroundSize:'cover',backgroundPosition:'center'}}>
+        <div style={{position:'relative',zIndex:1,maxWidth:1240,minHeight:'420px',margin:'0 auto',padding:'56px 16px',display:'flex',alignItems:'center'}}>
+          <div style={{maxWidth:780,color:'#fff'}}>
+            <a href="/" style={{color:'#cfeaff',fontWeight:800,textDecoration:'none'}}>← CareerDev Global</a>
+            <h1 id="pricing-hero" style={{fontSize:'clamp(2.5rem,6vw,4.6rem)',lineHeight:1.05,margin:'18px 0 14px',letterSpacing:'-.03em'}}>CareerDev AI Agent Pricing</h1>
+            <p style={{fontSize:'clamp(1rem,2vw,1.2rem)',lineHeight:1.7,color:'#e5f3ff',maxWidth:720,margin:0}}>Choose the subscription that gives you the right level of access to the 16 Client & Coach AI Agents.</p>
+            <p style={{fontWeight:800,color:'#fff',marginTop:18}}>AI processes. Humans decide.</p>
+            <div style={{display:'flex',gap:12,flexWrap:'wrap',marginTop:22}}>
+              <a href="/agents" style={{padding:'12px 17px',borderRadius:10,background:'#fff',color:'#0b4779',fontWeight:900,textDecoration:'none'}}>AI Agent Workspace →</a>
+              <a href="#plans" style={{padding:'12px 17px',borderRadius:10,border:'1px solid rgba(255,255,255,.55)',color:'#fff',fontWeight:900,textDecoration:'none',background:'rgba(255,255,255,.08)'}}>Compare Plans</a>
+            </div>
+            <p style={{fontSize:11,color:'#c8dced',marginTop:22}}>Hero visual: AI-generated technology workspace from GEC Designs; used under its free commercial-use license with attribution.</p>
+          </div>
+        </div>
+      </section>
+      <div id="plans" style={{display:'flex',justifyContent:'center',marginBottom:24}}>
       <div style={{display:'flex',justifyContent:'center',marginBottom:24}}>
         <div style={{display:'inline-flex',padding:4,borderRadius:999,background:'#fff',border:'1px solid #c8d9e8'}}>
           <button onClick={()=>setInterval('monthly')} style={{border:0,borderRadius:999,padding:'10px 18px',fontWeight:900,background:interval==='monthly'?'#0b5d9b':'transparent',color:interval==='monthly'?'#fff':'#173b59'}}>Monthly</button>
