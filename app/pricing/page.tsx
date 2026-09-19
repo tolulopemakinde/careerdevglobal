@@ -39,7 +39,13 @@ export default function PricingPage(){
       const {data:{user}}=await supabase.auth.getUser();
       if(!user){window.location.assign('/account?next=/pricing');return}
       const {data,error}=await supabase.functions.invoke('careerdev-ai-subscription-checkout',{body:{plan_key:planKey,billing_interval:interval}});
-      if(error) throw new Error(error.message||'Could not start checkout.');
+      if(error){
+        let detail='';
+        try{detail=error.context?JSON.stringify(await error.context.json()):''}catch{}
+        let parsed='';
+        try{const body=detail?JSON.parse(detail):null;parsed=body?.error||body?.detail||''}catch{}
+        throw new Error(parsed||error.message||'Could not start checkout.');
+      }
       const url=data?.authorization_url||data?.checkout_url;
       if(typeof url!=='string'||!url) throw new Error(data?.error||'Payment checkout is not currently available.');
       window.location.assign(url);
