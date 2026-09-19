@@ -80,6 +80,7 @@ export default function PricingPage(){
           <button disabled={busy!==null||isCurrent} onClick={()=>subscribe(p.plan_key)} style={{width:'100%',marginTop:14,padding:'12px 14px',border:0,borderRadius:10,background:isCurrent?'#e8eef3':'#0b5d9b',color:isCurrent?'#527085':'#fff',fontWeight:900,cursor:isCurrent?'default':'pointer'}}>{isCurrent?'Current Plan':busy===p.plan_key?'Preparing secure checkout…':'Choose '+p.name}</button>
         </article>})}
       </div>}
+      </div>
       <section style={{marginTop:28,background:'#fff',border:'1px solid #d8e6f1',borderRadius:16,padding:20}}>
         <h2 style={{marginTop:0}}>How access works</h2>
         <p style={{color:'#527085',lineHeight:1.6}}>Your active subscription controls which of the 16 Client & Coach AI Agents can be opened in the AI Agent Workspace. The platform keeps the internal/admin agents separate from these customer plans.</p>
@@ -88,5 +89,3 @@ export default function PricingPage(){
     </div>
   </main>
 }
-
-// Pricing page hero and plan access UI.
