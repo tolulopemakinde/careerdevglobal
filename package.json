@@ -10,15 +10,15 @@
   "dependencies": {
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest"
+    "next": "16.3.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "typescript": "latest",
-    "@types/node": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest"
+    "typescript": "5.9.3",
+    "@types/node": "24.0.15",
+    "@types/react": "19.1.12",
+    "@types/react-dom": "19.1.9"
   },
   "engines": {
     "node": "24.x"
