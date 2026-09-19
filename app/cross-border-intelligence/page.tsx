@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { createSupabaseBrowserClient } from '../../lib/supabase-browser';
 
 export default function CrossBorderIntelligencePage(){
@@ -8,7 +8,7 @@ export default function CrossBorderIntelligencePage(){
  const [form,setForm]=useState({target_country:'',origin_country:'',target_role:'',present_role:'',relocation_intent:'',work_authorization_context:'',request_details:''});
  const [busy,setBusy]=useState(false); const [message,setMessage]=useState(''); const [result,setResult]=useState<any>(null);
  const update=(k:string,v:string)=>setForm(x=>({...x,[k]:v}));
- async function submit(e:React.FormEvent){
+ async function submit(e:FormEvent){
   e.preventDefault();setBusy(true);setMessage('');setResult(null);
   try{
    const {data,error}=await supabase.functions.invoke('careerdev-cross-border-intelligence',{body:form});
