@@ -88,3 +88,5 @@ export default function PricingPage(){
     </div>
   </main>
 }
+
+// Pricing page hero and plan access UI.
