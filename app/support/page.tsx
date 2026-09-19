@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { createSupabaseBrowserClient } from '../../lib/supabase-browser';
 
 type Ticket={id:string;subject:string;description:string;priority_tier:string;sla_target_at:string|null;status:string;created_at:string};
@@ -26,7 +26,7 @@ export default function SupportPage(){
  }
  useEffect(()=>{void load()},[]);
 
- async function submit(e:React.FormEvent){
+ async function submit(e:FormEvent){
   e.preventDefault(); setSending(true); setMessage('');
   try{
    const {data,error}=await supabase.functions.invoke('careerdev-support-ticket',{body:{subject,description}});
