@@ -102,6 +102,10 @@ export default function PricingPage(){
             <strong style={{display:'block',marginBottom:6}}>Additional services included</strong>
             {serviceEntitlements.filter(s=>s.plan_key===p.plan_key).map(s=><div key={s.feature_key}>✓ {s.feature_name}{s.monthly_quantity?` — ${s.monthly_quantity}/month`:''}</div>)}
           </div>}
+          {(p.plan_key==='career_pro'||p.plan_key==='elite')&&<div style={{fontSize:12,lineHeight:1.6,marginBottom:18,paddingTop:10,borderTop:'1px solid #e2edf5',color:'#527085'}}>
+            {p.plan_key==='career_pro'&&<><strong>Priority Support</strong><div>✓ Support requests are automatically routed to the priority queue.</div><a href="/support" style={{color:'#0b5d9b',fontWeight:800}}>Open Support Center →</a></>}
+            {p.plan_key==='elite'&&<><strong>Premium Support + Cross-Border Intelligence</strong><div>✓ Premium support routing with an SLA target.</div><div>✓ International career-intelligence request workflow.</div><div style={{marginTop:6}}><a href="/support" style={{color:'#0b5d9b',fontWeight:800}}>Support Center →</a> · <a href="/cross-border-intelligence" style={{color:'#0b5d9b',fontWeight:800}}>Cross-Border Intelligence →</a></div></>}
+          </div>}
           <button disabled={busy!==null||isCurrent} onClick={()=>subscribe(p.plan_key)} style={{width:'100%',marginTop:'auto',padding:'12px 14px',border:0,borderRadius:10,background:isCurrent?'#e8eef3':'#0b5d9b',color:isCurrent?'#527085':'#fff',fontWeight:900,cursor:isCurrent?'default':'pointer'}}>{isCurrent?'Current Plan':busy===p.plan_key?'Preparing secure checkout…':'Choose '+p.name}</button>
         </article>})}
       </div>}
