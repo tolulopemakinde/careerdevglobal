@@ -9,7 +9,7 @@ export default function SiteHeader() {
         <nav aria-label="Main navigation">
           <a href="/#services">Services</a>
           <a href="/#coaching">Coaching</a>
-          <a href="/pricing">Pricing</a>
+          <a href="/pricing">Pricing</a><a href="/blog">Blog</a>
           <a href="/#about">About</a>
           <a className="nav-cta" href="/account">Get Started</a>
         </nav>
