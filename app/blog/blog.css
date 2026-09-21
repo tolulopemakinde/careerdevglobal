@@ -2,3 +2,6 @@
 
 /* Related article discovery */
 .related-articles{max-width:1100px;margin:64px auto 0;padding-top:48px;border-top:1px solid #dce8f2}.related-articles h2{font-size:clamp(30px,4vw,46px);margin:6px 0 28px}.related-articles .blog-grid{margin-top:0}@media(max-width:760px){.related-articles{margin-top:44px;padding-top:34px}.related-articles .blog-grid{grid-template-columns:1fr}}
+
+
+.article-service-cta{margin:56px auto 0;padding:34px;border:1px solid #cfe4f3;border-radius:24px;background:linear-gradient(135deg,#f5fbff,#fff)}.article-service-cta h2{font-size:clamp(28px,4vw,42px);margin:5px 0 12px}.article-service-cta p{max-width:760px;color:#59657a}.article-service-cta .actions{margin-top:20px}.article-service-cta .primary{background:#10203f;color:#fff}.article-service-cta .secondary{border:1px solid #10203f;color:#10203f;background:#fff}@media(max-width:760px){.article-service-cta{padding:24px;margin-top:42px}}
