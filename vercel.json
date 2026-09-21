@@ -1,1 +1,0 @@
-{"crons":[{"path":"/api/cron/blog-weekly","schedule":"0 9 * * 1"}]}
