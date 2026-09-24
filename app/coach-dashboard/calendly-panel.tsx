@@ -69,7 +69,7 @@ export default function CalendlyPanel({offerings=[],userId,onMapped}:any){
 
   return <section className="dash-card">
     <h2>Calendly scheduling</h2>
-    <p className="note">Connect the coach’s own Calendly account so CareerDev Global can use the coach’s availability and notifications.</p>
+    <p className="note">Connect the coach’s own Calendly account. The meeting platform is inherited from each linked Calendly event type, so you can use Zoom, Google Meet, Microsoft Teams, phone, in-person or another Calendly-supported location without CareerDev Global forcing a single platform.</p>
     {message&&<div className="dash-message">{message}</div>}
     {calendly?.connected?
       <>
@@ -88,7 +88,7 @@ export default function CalendlyPanel({offerings=[],userId,onMapped}:any){
               <strong>{o.title}</strong>
               <select value={o.calendly_event_type_uri||''} onChange={e=>mapOffering(o.id,e.target.value)} disabled={busy}>
                 <option value="">Not linked</option>
-                {eventTypes.map((t:any)=><option value={t.uri} key={t.uri}>{t.name} · {t.duration} min</option>)}
+                {eventTypes.map((t:any)=><option value={t.uri} key={t.uri}>{t.name} · {t.duration} min · {(t.locations||[]).map((l:any)=>String(l.kind||'').replaceAll('_',' ')).join(', ')||'meeting platform configured'}</option>)}
               </select>
             </label>)}
         </div>
