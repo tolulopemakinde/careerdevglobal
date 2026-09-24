@@ -30,7 +30,7 @@ export default function CalendlyPanel({offerings=[],userId,onMapped}:any){
     }
   }
 
-  useEffect(()=>{load()},[]);
+  useEffect(()=>{void load()},[]);
 
   async function connect(){
     setBusy(true);setMessage('');
@@ -88,7 +88,7 @@ export default function CalendlyPanel({offerings=[],userId,onMapped}:any){
               <strong>{o.title}</strong>
               <select value={o.calendly_event_type_uri||''} onChange={e=>mapOffering(o.id,e.target.value)} disabled={busy}>
                 <option value="">Not linked</option>
-                {eventTypes.map((t:any)=><option value={t.uri} key={t.uri}>{t.name} · {t.duration} min · {(t.locations||[]).map((l:any)=>String(l.kind||'').replaceAll('_',' ')).join(', ')||'meeting platform configured'}</option>)}
+                {eventTypes.map((t:any)=><option value={t.uri} key={t.uri}>{t.name} · {t.duration} min · {(t.locations||[]).map((l:any)=>String(l.kind||'').split('_').join(' ')).join(', ')||'meeting platform configured'}</option>)}
               </select>
             </label>)}
         </div>
