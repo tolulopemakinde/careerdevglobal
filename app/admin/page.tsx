@@ -139,6 +139,20 @@ export default function AdminPage(){
    setMessage(agent.name+' completed its authenticated autonomous functional test. The output is available as decision-support; human review is recommended for consequential use.');
   }catch(error:any){setMessage(agent.name+' test failed: '+(error?.message||'Unknown error'));}
   finally{setBusy(null);await load();}
+ } async function runClientCoachQualitySuite(){
+  setBusy('client-coach-suite');setMessage('Starting the governed 16-agent quality suite…');setAiResult(null);
+  try{
+    const {data:sessionData,error:sessionError}=await supabase.auth.getSession();
+    const token=sessionData.session?.access_token;
+    if(sessionError||!token) throw new Error('A valid Staff/Admin session is required.');
+    const runtimeUrl=(process.env.NEXT_PUBLIC_SUPABASE_URL||'https://ufmhrmzumqkjvaezrmxf.supabase.co')+'/functions/v1/careerdev-ai-test-suite-runner';
+    const response=await fetch(runtimeUrl,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:'{}'});
+    const body=await response.json().catch(()=>({error:'Invalid suite runner response'}));
+    if(!response.ok) throw new Error(body?.error||'Governed suite runner failed.');
+    setAiResult(body);
+    setMessage(body.status==='passed'?'All 16 Client/Coach normal quality cases passed through the governed runtime.':'The 16-agent suite completed with one or more failures. Review the persisted test results before any certification decision.');
+  }catch(error:any){setMessage(error?.message||'Governed quality suite failed.');}
+  finally{setBusy(null);await load();}
  } async function signOut(){await supabase.auth.signOut();window.location.href='/admin/login';}
  const c=dashboard?.counts||{};
  const applications=ops.applications||[];
@@ -157,7 +171,7 @@ export default function AdminPage(){
    <div style={{display:'flex',gap:8,overflowX:'auto',padding:'20px 0 8px',position:'sticky',top:0,zIndex:5,background:'rgba(238,247,255,.94)',backdropFilter:'blur(8px)'}}>{tabs.map(t=><button key={t} onClick={()=>setTab(t)} style={{...btn(tab===t),whiteSpace:'nowrap',position:'relative'}}>{t}{t==='Applications'&&pendingApplications.length>0&&<span style={{marginLeft:6,display:'inline-flex',minWidth:20,height:20,padding:'0 6px',alignItems:'center',justifyContent:'center',borderRadius:999,background:tab===t?'#fff':'#c47a00',color:tab===t?'#0b5d9b':'#fff',fontSize:11,fontWeight:900}}>{pendingApplications.length}</span>}</button>)}</div>
    {tab==='Admin AI Agents'&&<Section title="Staff & Admin AI Agents"><div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14}}>{adminAgents.map((a:any)=><article key={a.id} style={{padding:18,border:'1px solid #d8e6f1',borderRadius:14,background:'#f8fcff'}}><div style={{display:'flex',justifyContent:'space-between',gap:8,alignItems:'center'}}><strong>{a.name}</strong><span style={{fontSize:11,fontWeight:900,padding:'4px 8px',borderRadius:999,background:'#e8eef5',color:'#36566f'}}>{a.status}</span></div><p style={{fontSize:13,lineHeight:1.55,color:'#527085'}}>{a.description}</p><div style={{fontSize:12,lineHeight:1.7}}><div>Owner: <strong>{a.owner_role==='admin'?'Admin':'Staff'}</strong></div><div>Autonomy: {a.autonomy_level}</div><div>Human approval: {a.human_approval_required?'Required':'Not required'}</div></div><button disabled={busy==='agent-test-'+a.agent_key} onClick={()=>runStaffAdminAgentTest(a.agent_key)} style={{...btn(true),marginTop:12,width:'100%'}}>{busy==='agent-test-'+a.agent_key?'Running governed test…':'Run autonomous functional test'}</button></article>)}</div><p style={{fontSize:12,color:'#607487',marginTop:16}}>Tests use synthetic data and the authenticated runtime. Results are decision-support outputs; consequential external actions still require appropriate human review. A successful test does not by itself activate production.</p></Section>}
    {approvalQueue.length>0&&<section style={{marginTop:18,padding:'18px 20px',borderRadius:16,border:'1px solid #9ec7e6',background:'#eef8ff'}}><strong>Pending independent AI approvals</strong><div style={{marginTop:8}}>{approvalQueue.length} approval request{approvalQueue.length===1?'':'s'} awaiting review. A requester cannot approve their own execution.</div><button onClick={()=>setTab('AI Governance')} style={{...btn(true),marginTop:10}}>Open AI Governance</button></section>}
-   {tab==='AI Governance'&&<Section title="AI Governance — Career Discovery AI" tools={<button type="button" onPointerUp={() => { if (busy!=='run-career-discovery-test') void runGovernedCareerDiscoveryTest(); }} onClick={() => { if (busy!=='run-career-discovery-test') void runGovernedCareerDiscoveryTest(); }} disabled={busy==='run-career-discovery-test'} style={btn(true)}>{busy==='run-career-discovery-test'?'Running governed test…':'Run governed test'}</button>}>
+   {tab==='AI Governance'&&<Section title="AI Governance — Career Discovery AI" tools={<div style={{display:'flex',gap:8,flexWrap:'wrap'}}><button type="button" onClick={()=>{if(busy!=='run-career-discovery-test')void runGovernedCareerDiscoveryTest();}} disabled={busy==='run-career-discovery-test'} style={btn(true)}>{busy==='run-career-discovery-test'?'Running…':'Run governed test'}</button><button type="button" onClick={()=>{if(busy!=='client-coach-suite')void runClientCoachQualitySuite();}} disabled={busy==='client-coach-suite'} style={btn(true)}>{busy==='client-coach-suite'?'Running 16-agent suite…':'Run 16-agent quality suite'}</button></div>}>
     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14}}>
      <div style={{padding:16,border:'1px solid #d8e6f1',borderRadius:12}}>
       <strong>Current release gate</strong>
