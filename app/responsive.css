@@ -73,6 +73,8 @@ section[id], footer[id] { scroll-margin-top: 100px; }
    duplicate instance while the layout-level header is present on every route. */
 body > main > .site-header { display: none; }
 .site-brand-logo { display:block; width:100%; height:auto; object-fit:contain; object-position:center; }
+.site-header .brand-logo-mark,
+.site-header .brand-logo-text { display: none !important; }
 .brand-logo {
   display: inline-flex;
   align-items: center;
