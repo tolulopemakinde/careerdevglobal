@@ -171,6 +171,12 @@ body:has(.site-header) .professional-standards { display: block; }
 @media(max-width:800px){.admin-page{padding:0 10px 40px}.admin-shell{display:block}.admin-sidebar{position:static;width:100%;height:auto;min-height:0;padding:10px;border-radius:0 0 14px 14px}.admin-sidebar-brand{padding:8px 8px 12px}.admin-side-nav{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;padding-top:10px}.admin-menu-group{min-width:0}.admin-side-nav>a{padding:9px}.admin-submenu{grid-column:1/-1}.admin-sidebar-footer{display:none}.admin-main{padding:12px 0}.admin-topbar{align-items:flex-start}.admin-top-actions{flex-wrap:wrap}.admin-insight-grid,.admin-bottom-grid{grid-template-columns:1fr}.admin-permission-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:520px){.admin-topbar{flex-direction:column}.admin-top-actions{width:100%}.admin-action-button{flex:1}.admin-kpi-grid{grid-template-columns:1fr 1fr}.admin-kpi-card strong{font-size:20px}.admin-permission-grid{grid-template-columns:1fr}.admin-side-nav{grid-template-columns:1fr 1fr}.admin-menu-heading{font-size:12px!important}.admin-main .section{padding:15px!important}.admin-mini-stats,.admin-engagement-grid{grid-template-columns:1fr}}
 
+.cdg-auth-consent-wrap {
+  width: 100%;
+  max-width: 680px;
+  margin: 16px auto 18px;
+  padding: 0;
+}
 .cdg-auth-checkbox {
   display: flex;
   align-items: flex-start;
@@ -180,9 +186,28 @@ body:has(.site-header) .professional-standards { display: block; }
   font-size: 13px;
   line-height: 1.55;
 }
+.cdg-auth-field-help {
+  display: block;
+  margin: 5px 0 2px;
+  color: #667b89;
+  font-size: 12px;
+  line-height: 1.45;
+}
 .cdg-auth-checkbox input {
   flex: 0 0 auto;
   width: 18px;
   height: 18px;
   margin-top: 2px;
+}
+
+@media (max-width: 900px) {
+  .cdg-auth-consent-wrap { max-width: 100%; margin-left: auto; margin-right: auto; }
+  .cdg-auth-checkbox { width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1px solid #dbe5eb; border-radius: 10px; background: #f8fbfc; }
+}
+@media (max-width: 520px) {
+  .cdg-auth-shell { padding: 16px 10px; }
+  .cdg-auth-card { width: 100%; box-sizing: border-box; }
+  .cdg-auth-checkbox { gap: 9px; font-size: 12.5px; line-height: 1.5; padding: 11px 12px; }
+  .cdg-auth-checkbox input { width: 18px; height: 18px; }
+  .cdg-auth-field-help { font-size: 11.5px; }
 }
