@@ -12,7 +12,7 @@ export default function SiteHeader() {
     <header className={`site-header${menuOpen ? " mobile-menu-open" : ""}`}>
       <div className="container nav-wrap">
         <a className="brand" href="/" aria-label="CareerDev Global home" onClick={closeMenu}>
-          <Image className="site-brand-logo" src="/careerdev-global-logo.jpg" alt="CareerDev Global — Unleashing Your Potential" width={1209} height={442} priority sizes="(max-width: 420px) 190px, (max-width: 700px) 210px, (max-width: 1100px) 250px, 300px" />
+          <Image className="site-brand-logo" src="/careerdev-global-logo.png" alt="CareerDev Global — Unleashing Your Potential" width={512} height={168} priority sizes="(max-width: 420px) 190px, (max-width: 700px) 210px, (max-width: 1100px) 250px, 300px" />
         </a>
 
         <button
