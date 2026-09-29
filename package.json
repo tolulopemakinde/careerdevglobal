@@ -12,7 +12,8 @@
     "@supabase/supabase-js": "latest",
     "next": "latest",
     "react": "latest",
-    "react-dom": "latest"
+    "react-dom": "latest",
+    "@sentry/nextjs": "9.37.0"
   },
   "devDependencies": {
     "typescript": "latest",
