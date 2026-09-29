@@ -19,6 +19,7 @@ export default function CoachRegistration() {
   const [userId, setUserId] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [submitted, setSubmitted] = useState(false);
+  const [existingApplicationStatus, setExistingApplicationStatus] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [specializations, setSpecializations] = useState<Specialization[]>([]);
@@ -38,7 +39,12 @@ export default function CoachRegistration() {
       supabase.from("coaching_expertise_categories").select("id,name,description,sort_order").eq("active", true).order("sort_order"),
       supabase.from("coaching_expertise_specializations").select("id,category_id,name,description,sort_order").eq("active", true).order("sort_order"),
     ]).then(([authResult, categoriesResult, specializationsResult]) => {
-      setUserId(authResult.data.user?.id ?? null);
+      const currentUserId = authResult.data.user?.id ?? null;
+      setUserId(currentUserId);
+      if (currentUserId) {
+        const { data: existingApplication } = await supabase.from("coach_marketplace_applications").select("application_status").eq("applicant_user_id", currentUserId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+        setExistingApplicationStatus(existingApplication?.application_status ?? null);
+      }
       if (!categoriesResult.error) setCategories(categoriesResult.data ?? []);
       if (!specializationsResult.error) setSpecializations(specializationsResult.data ?? []);
       if (categoriesResult.error || specializationsResult.error) setError("We could not load the coaching expertise directory. Please refresh and try again.");
@@ -58,6 +64,11 @@ export default function CoachRegistration() {
     if (!form.display_name.trim() || !form.headline.trim() || !form.bio.trim() || !form.expertise_category_ids.length || !form.expertise_specialization_ids.length || !form.coaching_formats.length || !form.agreements) return setError("Please complete your required profile, select at least one expertise category and specialization, choose a coaching format, and accept the marketplace agreements.");
     try {
       const supabase = createSupabaseBrowserClient();
+      const { data: latestApplication } = await supabase.from("coach_marketplace_applications").select("application_status").eq("applicant_user_id", userId).order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (latestApplication && ["submitted","pending","under_review","approved"].includes(String(latestApplication.application_status).toLowerCase())) {
+        setExistingApplicationStatus(latestApplication.application_status);
+        return setError("You already have a CareerDev Global coach application in progress. Your account has been updated with its current application status.");
+      }
       const { error: insertError } = await supabase.from("coach_marketplace_applications").insert({
         applicant_user_id: userId, display_name: form.display_name.trim(), headline: form.headline.trim(), bio: form.bio.trim(), professional_title: form.professional_title.trim() || null, professional_bio: form.professional_bio.trim() || null,
         specializations: form.expertise_specialization_ids.map(id => specializations.find(item => item.id === id)?.name).filter(Boolean), expertise_category_ids: form.expertise_category_ids, expertise_specialization_ids: form.expertise_specialization_ids,
@@ -68,6 +79,8 @@ export default function CoachRegistration() {
       });
       if (insertError) throw insertError;
       setSubmitted(true);
+      setExistingApplicationStatus("submitted");
+      window.setTimeout(() => { window.location.href = "/coach-account"; }, 900);
     } catch (err) { setError(err instanceof Error ? err.message : "We could not submit your application."); }
   };
 
