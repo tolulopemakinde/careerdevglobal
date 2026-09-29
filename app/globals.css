@@ -9,9 +9,11 @@ a { color: inherit; text-decoration: none; }
 .brand img { display: block; width: 100%; height: auto; max-width: 100%; object-fit: contain; object-position: center; content: url('/careerdev-global-logo.svg'); }
 nav { display: flex; align-items: center; gap: 28px; font-size: 14px; font-weight: 700; }
 nav a { color: #43516b; display: inline-flex; align-items: center; gap: 6px; transition: color .2s ease, transform .2s ease; }
-nav a::before { content: "✦"; display: inline-block; font-size: 11px; color: currentColor; line-height: 1; transition: transform .2s ease; }
+nav a::before { content: ""; display: inline-block; font-size: 11px; color: currentColor; line-height: 1; transition: transform .2s ease; }
 nav a[href="#services"]::before { content: "▦"; }
 nav a[href="#coaching"]::before { content: "♧"; }
+nav a[href="/pricing"]::before { content: "$"; }
+nav a[href="/blog"]::before { content: "▤"; }
 nav a[href="#about"]::before { content: "◉"; }
 nav a.nav-cta::before { content: "→"; color: inherit; font-size: 13px; }
 nav a:hover { color: #145bd6; transform: translateY(-1px); }
@@ -144,7 +146,7 @@ body:has(.site-header) .professional-standards { display: block; }
 }
 
 /* Responsive primary navigation */
-.mobile-menu-toggle { display: none; border: 1px solid #d6e2ef; background: #fff; color: #10203f; border-radius: 12px; width: 44px; height: 44px; align-items: center; justify-content: center; font-size: 23px; line-height: 1; cursor: pointer; }
+.mobile-menu-toggle { display: none; border: 1px solid #145bd6; background: #145bd6; color: #fff; border-radius: 12px; width: 44px; height: 44px; align-items: center; justify-content: center; font-size: 23px; line-height: 1; cursor: pointer; }
 @media (max-width: 1024px) {
   .nav-wrap { gap: 16px; }
   .brand { width: 220px; }
