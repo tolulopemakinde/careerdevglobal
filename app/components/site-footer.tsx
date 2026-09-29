@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const footerGroups = [
@@ -18,7 +19,7 @@ export default function SiteFooter() {
       `}</style>
       <div className="site-footer-inner">
         <div className="site-footer-brand">
-          <img className="site-footer-logo" src="/careerdev-global-logo.jpg" alt="CareerDev Global" />
+          <Image className="site-footer-logo" src="/careerdev-global-logo.jpg" alt="CareerDev Global" width={300} height={102} />
           <div><h2 id="footer-title">CareerDev Global</h2><p>Unleashing Your Potential</p></div>
         </div>
         <p className="site-footer-intro">Career development, coaching, leadership development and global talent mobility — powered by human expertise and responsible AI-enabled career intelligence.</p>
