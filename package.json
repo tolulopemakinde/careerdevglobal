@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@sentry/nextjs": "9.37.0",
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
     "next": "latest",
