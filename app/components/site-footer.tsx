@@ -20,7 +20,7 @@ export default function SiteFooter() {
       <div className="site-footer-inner">
         <div className="site-footer-brand">
           <div className="site-footer-logo-wrap">
-            <Image className="site-footer-logo" src="/careerdev-global-logo.jpg" alt="CareerDev Global — Unleashing Your Potential" width={1536} height={1024} sizes="(max-width: 420px) 225px, (max-width: 700px) 250px, (max-width: 1100px) 230px, 280px" />
+            <Image className="site-footer-logo" src="/careerdev-global-logo.png" alt="CareerDev Global — Unleashing Your Potential" width={512} height={168} sizes="(max-width: 420px) 225px, (max-width: 700px) 250px, (max-width: 1100px) 230px, 280px" />
           </div>
         </div>
         <p className="site-footer-intro">Career development, coaching, leadership development and global talent mobility — powered by human expertise and responsible AI-enabled career intelligence.</p>
