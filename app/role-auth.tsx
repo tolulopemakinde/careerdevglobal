@@ -117,8 +117,11 @@ export default function RoleAuth({ mode, accountType }: Props) {
 
         if (roleError) {
           setError('Signed in, but CareerDev Global could not verify your account permissions. ' + roleError.message);
-        } else if (accountType === 'coach' && (requestedAccountType === 'coach' || role === 'coach') && (!role || role !== 'coach' || status !== 'active')) {
-          window.location.href = '/coach-registration';
+        } else if (accountType === 'coach' && requestedAccountType === 'coach' && role !== 'coach') {
+          window.location.href = '/coach-account';
+          return;
+        } else if (accountType === 'coach' && role === 'coach' && status !== 'active') {
+          window.location.href = '/coach-account';
           return;
         } else if (status && status !== 'active') {
           setError('Your CareerDev Global account is not active. Please contact an administrator.');
