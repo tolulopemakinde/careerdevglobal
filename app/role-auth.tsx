@@ -23,6 +23,7 @@ export default function RoleAuth({ mode, accountType }: Props) {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [pilotOptIn, setPilotOptIn] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -32,6 +33,11 @@ export default function RoleAuth({ mode, accountType }: Props) {
     setBusy(true); setMessage(''); setError('');
 
     if (mode === 'signup') {
+      if ((accountType === 'client' || accountType === 'coach') && !termsAccepted) {
+        setError('Please accept the Terms & Conditions to create your account.');
+        setBusy(false);
+        return;
+      }
       if (password.length < 8) { setError('Password must be at least 8 characters.'); setBusy(false); return; }
       if (password !== confirm) { setError('Passwords do not match.'); setBusy(false); return; }
 
@@ -171,15 +177,27 @@ export default function RoleAuth({ mode, accountType }: Props) {
         {mode === 'signup' && <><label htmlFor="role-confirm">Confirm password</label><input id="role-confirm" type="password" autoComplete="new-password" minLength={8} required value={confirm} onChange={e=>setConfirm(e.target.value)} /></>}
 
         {mode === 'signup' && (accountType === 'client' || accountType === 'coach') && (
-          <div className="cdg-auth-consent-wrap"><label className="cdg-auth-checkbox">
-            <input type="checkbox" checked={pilotOptIn} onChange={e=>setPilotOptIn(e.target.checked)} />
-            <span>
-              {accountType === 'client'
-                ? 'I would like to join the CareerDev Global Client Pilot and help test the Career Intelligence Platform.'
-                : 'I would like to join the CareerDev Global Coach Pilot and help test coach-facing Career Intelligence workflows.'}
-              {' '}I understand that this is optional and I can choose not to participate.
-            </span>
-          </label></div>
+          <div className="cdg-auth-consents" aria-label="Registration consents">
+            <div className="cdg-auth-consent-wrap">
+              <label className="cdg-auth-checkbox">
+                <input type="checkbox" checked={pilotOptIn} onChange={e=>setPilotOptIn(e.target.checked)} />
+                <span>
+                  {accountType === 'client'
+                    ? 'I would like to join the CareerDev Global Client Pilot and help test the Career Intelligence Platform.'
+                    : 'I would like to join the CareerDev Global Coach Pilot and help test coach-facing Career Intelligence workflows.'}
+                  {' '}I understand that this is optional and I can choose not to participate.
+                </span>
+              </label>
+            </div>
+            <div className="cdg-auth-consent-wrap">
+              <label className="cdg-auth-checkbox">
+                <input type="checkbox" checked={termsAccepted} onChange={e=>setTermsAccepted(e.target.checked)} required />
+                <span>
+                  I have read and agree to the <Link href="/conditions-of-use" target="_blank" rel="noopener noreferrer">Terms &amp; Conditions</Link> and understand that they apply to my use of CareerDev Global.
+                </span>
+              </label>
+            </div>
+          </div>
         )}
 
         <button disabled={busy}>{busy ? (mode === 'login' ? 'Logging in…' : 'Creating account…') : (mode === 'login' ? 'Log In' : 'Create Account')}</button>
