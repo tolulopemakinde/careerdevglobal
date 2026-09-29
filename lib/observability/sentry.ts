@@ -29,9 +29,6 @@ export async function withCareerDevAgentObservability<T>(
         const result = await operation();
         span.setAttribute("ai.agent.success", true);
         span.setAttribute("ai.agent.duration_ms", Date.now() - startedAt);
-        Sentry.metrics.increment("careerdev.ai_agent.success", 1, {
-          tags: { agent: context.agent },
-        });
         return result;
       } catch (error) {
         span.setAttribute("ai.agent.success", false);
@@ -45,9 +42,6 @@ export async function withCareerDevAgentObservability<T>(
             agent_run_id: context.runId ?? "unknown",
             role: context.role ?? "system",
           },
-        });
-        Sentry.metrics.increment("careerdev.ai_agent.failure", 1, {
-          tags: { agent: context.agent },
         });
         throw error;
       }
