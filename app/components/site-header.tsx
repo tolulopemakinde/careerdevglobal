@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useState } from 'react';
 
 export default function SiteHeader() {
@@ -11,7 +12,7 @@ export default function SiteHeader() {
     <header className={`site-header${menuOpen ? " mobile-menu-open" : ""}`}>
       <div className="container nav-wrap">
         <a className="brand" href="/" aria-label="CareerDev Global home" onClick={closeMenu}>
-          <img className="site-brand-logo" src="/careerdev-global-logo.jpg" alt="CareerDev Global" />
+          <Image className="site-brand-logo" src="/careerdev-global-logo.jpg" alt="CareerDev Global" width={300} height={102} priority />
         </a>
 
         <button
