@@ -23,9 +23,9 @@ export default function SiteHeader() {
           aria-controls="main-navigation"
           onClick={() => setMenuOpen((open) => !open)}
         >
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
-          <span aria-hidden="true"></span>
+          <span aria-hidden="true" style={{ display: 'block', width: 24, height: 3, flex: '0 0 24px', borderRadius: 99, backgroundColor: '#fff', opacity: 1 }}></span>
+          <span aria-hidden="true" style={{ display: 'block', width: 24, height: 3, flex: '0 0 24px', borderRadius: 99, backgroundColor: '#fff', opacity: 1 }}></span>
+          <span aria-hidden="true" style={{ display: 'block', width: 24, height: 3, flex: '0 0 24px', borderRadius: 99, backgroundColor: '#fff', opacity: 1 }}></span>
         </button>
 
         <nav id="main-navigation" className={menuOpen ? 'nav-open' : ''} aria-label="Main navigation">
