@@ -10,7 +10,7 @@ const footerGroups = [
 
 export default function SiteFooter() {
   return (
-    <footer className="site-footer" aria-labelledby="footer-title">
+    <footer className="site-footer" aria-label="CareerDev Global footer">
       <style>{`
         .site-footer nav.site-footer-links { display:grid !important; align-items:stretch !important; gap:10px !important; font-size:14px !important; }
         .site-footer nav.site-footer-links a { display:block !important; visibility:visible !important; opacity:1 !important; color:#add2df !important; text-decoration:none !important; font-size:14px !important; line-height:1.5 !important; transform:none !important; }
@@ -20,7 +20,6 @@ export default function SiteFooter() {
       <div className="site-footer-inner">
         <div className="site-footer-brand">
           <Image className="site-footer-logo" src="/careerdev-global-logo.jpg" alt="CareerDev Global — Unleashing Your Potential" width={1209} height={442} sizes="(max-width: 420px) 225px, (max-width: 700px) 250px, (max-width: 1100px) 230px, 280px" />
-          <div><h2 id="footer-title">CareerDev Global</h2><p>Unleashing Your Potential</p></div>
         </div>
         <p className="site-footer-intro">Career development, coaching, leadership development and global talent mobility — powered by human expertise and responsible AI-enabled career intelligence.</p>
         <div className="site-footer-grid">
