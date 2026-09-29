@@ -8,7 +8,7 @@ export default function SiteHeader() {
   const closeMenu = () => setMenuOpen(false);
 
   return (
-    <header className="site-header">
+    <header className={`site-header${menuOpen ? " mobile-menu-open" : ""}`}>
       <div className="container nav-wrap">
         <a className="brand" href="/" aria-label="CareerDev Global home" onClick={closeMenu}>
           <span className="brand-logo-mark" aria-hidden="true">CD</span>
@@ -23,7 +23,9 @@ export default function SiteHeader() {
           aria-controls="main-navigation"
           onClick={() => setMenuOpen((open) => !open)}
         >
-          <span aria-hidden="true">{menuOpen ? '×' : '☰'}</span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
         </button>
 
         <nav id="main-navigation" className={menuOpen ? 'nav-open' : ''} aria-label="Main navigation">
