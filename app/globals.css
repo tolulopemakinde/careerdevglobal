@@ -247,7 +247,7 @@ body:has(.site-header) .professional-standards { display: block; }
 
 /* Official CareerDev Global logo */
 .brand { width: clamp(210px, 23vw, 300px); display: flex; align-items: center; line-height: 0; flex: 0 0 auto; }
-.site-brand-logo { display: block; width: 100%; height: auto; aspect-ratio: 300 / 102; object-fit: contain; object-position: center; }
+.site-brand-logo { display: block; width: 100%; height: auto; aspect-ratio: 1209 / 442; object-fit: contain; object-position: center; }
 .site-footer-brand { display: flex; align-items: center; gap: 18px; }
 .site-footer-logo { display: block; width: clamp(190px, 22vw, 280px); height: auto; aspect-ratio: 300 / 102; object-fit: contain; object-position: center; flex: 0 0 auto; }
 .site-footer-brand h2 { margin: 0 0 2px; font-size: 22px; color: #fff; }
