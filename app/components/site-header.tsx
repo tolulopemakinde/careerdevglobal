@@ -11,8 +11,7 @@ export default function SiteHeader() {
     <header className={`site-header${menuOpen ? " mobile-menu-open" : ""}`}>
       <div className="container nav-wrap">
         <a className="brand" href="/" aria-label="CareerDev Global home" onClick={closeMenu}>
-          <span className="brand-logo-mark" aria-hidden="true">CD</span>
-          <span className="brand-logo-text">CareerDev Global</span>
+          <img className="site-brand-logo" src="/careerdev-global-logo.jpg" alt="CareerDev Global" />
         </a>
 
         <button
