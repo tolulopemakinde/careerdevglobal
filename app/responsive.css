@@ -138,18 +138,27 @@ body > main > .footer { display: none; }
     cursor: pointer;
     flex: 0 0 auto;
   }
-  .mobile-menu-toggle span {
-    display: block !important;
+  .mobile-menu-toggle .mobile-menu-icon {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
     width: 24px !important;
-    height: 3px !important;
+    height: 24px !important;
     min-width: 24px !important;
-    min-height: 3px !important;
-    border-radius: 99px;
-    background: #fff !important;
+    min-height: 24px !important;
+    flex: 0 0 24px !important;
+    color: #fff !important;
+    background: transparent !important;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 24px;
+    letter-spacing: -4px;
     opacity: 1 !important;
     visibility: visible !important;
     position: relative;
     z-index: 2;
+    transform: none;
     transition: transform .2s ease, opacity .2s ease;
   }
 
@@ -187,9 +196,18 @@ body > main > .footer { display: none; }
     font-size: 14px;
   }
 
-  .site-header.mobile-menu-open .mobile-menu-toggle span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-  .site-header.mobile-menu-open .mobile-menu-toggle span:nth-child(2) { opacity: 0; }
-  .site-header.mobile-menu-open .mobile-menu-toggle span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+  .site-header.mobile-menu-open .mobile-menu-toggle .mobile-menu-icon {
+    font-size: 0;
+    letter-spacing: 0;
+    transform: rotate(0);
+  }
+  .site-header.mobile-menu-open .mobile-menu-toggle .mobile-menu-icon::after {
+    content: "×";
+    font-size: 32px;
+    line-height: 24px;
+    font-weight: 700;
+    color: #fff;
+  }
 
   .container { width: min(100% - 28px, 1160px); }
   .hero { padding: 52px 0 48px; }
@@ -228,7 +246,7 @@ body > main > .footer { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .skip-link { transition: none; }
-  .mobile-menu-toggle span { transition: none; }
+  .mobile-menu-toggle .mobile-menu-icon { transition: none; }
 }
 
 
