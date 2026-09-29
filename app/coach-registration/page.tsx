@@ -38,7 +38,7 @@ export default function CoachRegistration() {
       supabase.auth.getUser(),
       supabase.from("coaching_expertise_categories").select("id,name,description,sort_order").eq("active", true).order("sort_order"),
       supabase.from("coaching_expertise_specializations").select("id,category_id,name,description,sort_order").eq("active", true).order("sort_order"),
-    ]).then(([authResult, categoriesResult, specializationsResult]) => {
+    ]).then(async ([authResult, categoriesResult, specializationsResult]) => {
       const currentUserId = authResult.data.user?.id ?? null;
       setUserId(currentUserId);
       if (currentUserId) {
