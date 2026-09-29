@@ -17,7 +17,10 @@ export default function SiteFooter() {
         @media (max-width:700px) { .site-footer nav.site-footer-links { gap:11px !important; } .site-footer nav.site-footer-links a { color:#d7edf5 !important; font-size:15px !important; line-height:1.5 !important; padding:3px 0 !important; } }
       `}</style>
       <div className="site-footer-inner">
-        <div className="site-footer-brand"><div className="footer-brand-mark" aria-hidden="true">CD</div><div><h2 id="footer-title">CareerDev Global</h2><p>Unleashing Your Potential</p></div></div>
+        <div className="site-footer-brand">
+          <img className="site-footer-logo" src="/careerdev-global-logo.jpg" alt="CareerDev Global" />
+          <div><h2 id="footer-title">CareerDev Global</h2><p>Unleashing Your Potential</p></div>
+        </div>
         <p className="site-footer-intro">Career development, coaching, leadership development and global talent mobility — powered by human expertise and responsible AI-enabled career intelligence.</p>
         <div className="site-footer-grid">
           {footerGroups.map((group) => <div className="site-footer-group" key={group.title}><h3>{group.title}</h3><nav className="site-footer-links" aria-label={group.title}>
