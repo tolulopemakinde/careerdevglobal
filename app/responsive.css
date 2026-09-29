@@ -139,11 +139,17 @@ body > main > .footer { display: none; }
     flex: 0 0 auto;
   }
   .mobile-menu-toggle span {
-    display: block;
-    width: 24px;
-    height: 3px;
+    display: block !important;
+    width: 24px !important;
+    height: 3px !important;
+    min-width: 24px !important;
+    min-height: 3px !important;
     border-radius: 99px;
-    background: #fff;
+    background: #fff !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    position: relative;
+    z-index: 2;
     transition: transform .2s ease, opacity .2s ease;
   }
 
