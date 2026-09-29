@@ -52,6 +52,23 @@ export default function AuthCallbackPage() {
       }
 
       const { data: userData } = await supabase.auth.getUser();
+      const metadata = userData.user?.user_metadata || {};
+      const profileId = userData.user?.id;
+      if (profileId) {
+        const profilePayload = {
+          id: profileId,
+          full_name: [metadata.first_name, metadata.last_name].filter(Boolean).join(' ').trim() || metadata.full_name || userData.user?.email?.split('@')[0] || 'CareerDev Global User',
+          email: userData.user?.email || null,
+          phone: metadata.phone || metadata.whatsapp_phone || null,
+        };
+        const { data: existingProfile } = await supabase.from('profiles').select('id').eq('id', profileId).maybeSingle();
+        if (existingProfile) {
+          await supabase.from('profiles').update({ full_name: profilePayload.full_name, email: profilePayload.email, phone: profilePayload.phone }).eq('id', profileId);
+        } else {
+          await supabase.from('profiles').insert(profilePayload);
+        }
+      }
+
       const account = accountParam || userData.user?.user_metadata?.requested_account_type;
       const destination = account === 'coach'
         ? '/coach-registration'
