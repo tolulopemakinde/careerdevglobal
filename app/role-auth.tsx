@@ -19,6 +19,7 @@ export default function RoleAuth({ mode, accountType }: Props) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [pilotOptIn, setPilotOptIn] = useState(false);
@@ -44,6 +45,8 @@ export default function RoleAuth({ mode, accountType }: Props) {
             requested_account_type: accountType,
             first_name: firstName.trim(),
             last_name: lastName.trim(),
+            phone: phone.trim(),
+            whatsapp_phone: phone.trim(),
             pilot_tester: pilotOptIn,
           }
         }
@@ -61,6 +64,7 @@ export default function RoleAuth({ mode, accountType }: Props) {
                 email,
                 firstName: firstName.trim(),
                 lastName: lastName.trim(),
+                phone: phone.trim(),
                 role: accountType,
               }),
             });
@@ -158,11 +162,16 @@ export default function RoleAuth({ mode, accountType }: Props) {
           <input id="role-last-name" type="text" autoComplete="family-name" required value={lastName} onChange={e=>setLastName(e.target.value)} maxLength={80} />
         </>}
         <label htmlFor="role-email">Email address</label><input id="role-email" type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)} />
+        {mode === 'signup' && accountType !== 'admin' && <>
+          <label htmlFor="role-phone">Phone number / WhatsApp</label>
+          <input id="role-phone" type="tel" inputMode="tel" autoComplete="tel" required value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+234 703 275 5605" maxLength={30} aria-describedby="role-phone-help" />
+          <small id="role-phone-help" className="cdg-auth-field-help">Use the number you want CareerDev Global to use for WhatsApp communication.</small>
+        </>}
         <label htmlFor="role-password">Password</label><input id="role-password" type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={8} required value={password} onChange={e=>setPassword(e.target.value)} />
         {mode === 'signup' && <><label htmlFor="role-confirm">Confirm password</label><input id="role-confirm" type="password" autoComplete="new-password" minLength={8} required value={confirm} onChange={e=>setConfirm(e.target.value)} /></>}
 
         {mode === 'signup' && (accountType === 'client' || accountType === 'coach') && (
-          <label className="cdg-auth-checkbox">
+          <div className="cdg-auth-consent-wrap"><label className="cdg-auth-checkbox">
             <input type="checkbox" checked={pilotOptIn} onChange={e=>setPilotOptIn(e.target.checked)} />
             <span>
               {accountType === 'client'
@@ -170,7 +179,7 @@ export default function RoleAuth({ mode, accountType }: Props) {
                 : 'I would like to join the CareerDev Global Coach Pilot and help test coach-facing Career Intelligence workflows.'}
               {' '}I understand that this is optional and I can choose not to participate.
             </span>
-          </label>
+          </label></div>
         )}
 
         <button disabled={busy}>{busy ? (mode === 'login' ? 'Logging in…' : 'Creating account…') : (mode === 'login' ? 'Log In' : 'Create Account')}</button>
