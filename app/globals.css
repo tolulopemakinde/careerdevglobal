@@ -248,18 +248,21 @@ body:has(.site-header) .professional-standards { display: block; }
 
 /* Official CareerDev Global logo */
 .brand {
-  width: clamp(190px, 23vw, 300px);
-  display: flex;
-  align-items: center;
-  line-height: 0;
+  position: relative;
+  width: clamp(180px, 21vw, 240px);
+  aspect-ratio: 1214 / 392;
+  display: block;
   flex: 0 0 auto;
   overflow: hidden;
+  line-height: 0;
 }
 .site-brand-logo {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-width: 100%;
+  position: absolute !important;
+  width: 126.52% !important;
+  max-width: none !important;
+  height: auto !important;
+  left: -17.30% !important;
+  top: -76.28% !important;
   object-fit: contain;
   object-position: center;
 }
@@ -281,15 +284,15 @@ body:has(.site-header) .professional-standards { display: block; }
 .site-footer-brand p { margin: 0; color: #b9d5e2; font-size: 12px; }
 @media (max-width: 1100px) {
   .brand { width: 250px; }
-  .site-footer-logo { width: 230px; }
+  .site-footer-logo-wrap { width: 230px; }
 }
 @media (max-width: 700px) {
   .brand { width: 210px; }
   .site-brand-logo { width: 100%; height: auto; }
   .site-footer-brand { align-items: flex-start; gap: 12px; flex-direction: column; }
-  .site-footer-logo { width: min(250px, 78vw); }
+  .site-footer-logo-wrap { width: min(250px, 78vw); }
 }
 @media (max-width: 420px) {
   .brand { width: 190px; }
-  .site-footer-logo { width: min(225px, 82vw); }
+  .site-footer-logo-wrap { width: min(225px, 82vw); }
 }
