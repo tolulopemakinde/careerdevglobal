@@ -78,31 +78,10 @@ export default function NavigationEnhancements() {
       }
     }
 
-    let menuButton = header.querySelector<HTMLButtonElement>('.mobile-menu-toggle');
-    if (!menuButton) {
-      menuButton = document.createElement('button');
-      menuButton.type = 'button';
-      menuButton.className = 'mobile-menu-toggle';
-      menuButton.setAttribute('aria-label', 'Open navigation menu');
-      menuButton.setAttribute('aria-expanded', 'false');
-      menuButton.innerHTML = '<span></span><span></span><span></span>';
-      header.querySelector('.nav-wrap')?.appendChild(menuButton);
-    }
-    const closeMenu = () => { header.classList.remove('mobile-menu-open'); menuButton?.setAttribute('aria-expanded', 'false'); menuButton?.setAttribute('aria-label', 'Open navigation menu'); };
-    const toggleMenu = () => { const open = header.classList.toggle('mobile-menu-open'); menuButton?.setAttribute('aria-expanded', String(open)); menuButton?.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu'); };
-    menuButton.addEventListener('click', toggleMenu);
-    const links = Array.from(nav.querySelectorAll<HTMLAnchorElement>('a'));
-    links.forEach((link) => link.addEventListener('click', closeMenu));
-    const handleResize = () => { if (window.innerWidth > 700) closeMenu(); };
-    window.addEventListener('resize', handleResize);
-
     return () => {
       cancelled = true;
       cleanupCta();
       cleanupDocumentInput();
-      menuButton?.removeEventListener('click', toggleMenu);
-      links.forEach((link) => link.removeEventListener('click', closeMenu));
-      window.removeEventListener('resize', handleResize);
     };
   }, [router]);
 
