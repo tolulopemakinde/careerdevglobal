@@ -131,10 +131,10 @@ body > main > .footer { display: none; }
     align-items: center;
     justify-content: center;
     gap: 5px;
-    border: 1px solid #d9e7ef;
+    border: 1px solid #10203f;
     border-radius: 12px;
-    background: #fff;
-    color: #10203f;
+    background: #10203f;
+    color: #fff;
     cursor: pointer;
     flex: 0 0 auto;
   }
