@@ -54,6 +54,8 @@ export default function RoleAuth({ mode, accountType }: Props) {
             phone: phone.trim(),
             whatsapp_phone: phone.trim(),
             pilot_tester: pilotOptIn,
+            terms_accepted: termsAccepted,
+            terms_accepted_at: termsAccepted ? new Date().toISOString() : null,
           }
         }
       });
