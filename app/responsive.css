@@ -67,7 +67,7 @@ section[id], footer[id] { scroll-margin-top: 100px; }
   justify-content: center;
 }
 
-.mobile-menu-toggle { display: none; }
+.mobile-menu-toggle { display: none; border: 1px solid #145bd6; background: #145bd6; color: #fff; }
 
 /* Shared header: the homepage contains its legacy header markup, so hide only that
    duplicate instance while the layout-level header is present on every route. */
