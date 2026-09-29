@@ -16,9 +16,12 @@ const config = {
 export default function RoleAuth({ mode, accountType }: Props) {
   const supabase = createSupabaseBrowserClient();
   const c = config[accountType];
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [pilotOptIn, setPilotOptIn] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -30,27 +33,63 @@ export default function RoleAuth({ mode, accountType }: Props) {
     if (mode === 'signup') {
       if (password.length < 8) { setError('Password must be at least 8 characters.'); setBusy(false); return; }
       if (password !== confirm) { setError('Passwords do not match.'); setBusy(false); return; }
-      const redirectUrl = `${window.location.origin}/auth/callback?account=${accountType}`;
+
+      const redirectUrl = window.location.origin + '/auth/callback?account=' + accountType;
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { emailRedirectTo: redirectUrl, data: { requested_account_type: accountType } }
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            requested_account_type: accountType,
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            pilot_tester: pilotOptIn,
+          }
+        }
       });
+
       if (error) {
         setError(error.message);
-      } else if (data.session) {
-        window.location.href = c.dashboard;
-        return;
       } else {
+        if (pilotOptIn && (accountType === 'client' || accountType === 'coach')) {
+          try {
+            const pilotResponse = await fetch('/api/pilot-opt-in', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email,
+                firstName: firstName.trim(),
+                lastName: lastName.trim(),
+                role: accountType,
+              }),
+            });
+            const pilotPayload = await pilotResponse.json().catch(() => ({}));
+            if (!pilotResponse.ok) console.error('Pilot list sync failed:', pilotPayload);
+          } catch (pilotError) {
+            console.error('Pilot list sync request failed:', pilotError);
+          }
+        }
+
+        if (data.session) {
+          window.location.href = c.dashboard;
+          return;
+        }
+
         try {
           window.localStorage.setItem('careerdev_signup_email', email);
           window.localStorage.setItem('careerdev_signup_account', accountType);
         } catch {}
+
         setMessage(accountType === 'admin'
           ? 'Account created successfully. Please check your email and click the verification link. Staff/Admin permissions are granted separately by CareerDev Global administration.'
           : accountType === 'coach'
-            ? 'Account created successfully. Please check your email and click the verification link. After verification, complete the coach application and onboarding process.'
-            : 'Account created successfully. Please check your email and click the verification link to activate your CareerDev Global account.');
+            ? pilotOptIn
+              ? 'Account created successfully. You are also registered for the CareerDev Global Coach Pilot. Please check your email and click the verification link. After verification, complete the coach application and onboarding process.'
+              : 'Account created successfully. Please check your email and click the verification link. After verification, complete the coach application and onboarding process.'
+            : pilotOptIn
+              ? 'Account created successfully. You are also registered for the CareerDev Global Client Pilot. Please check your email and click the verification link to activate your account.'
+              : 'Account created successfully. Please check your email and click the verification link to activate your CareerDev Global account.');
         setPassword('');
         setConfirm('');
       }
@@ -65,15 +104,13 @@ export default function RoleAuth({ mode, accountType }: Props) {
         const requestedAccountType = data.user?.user_metadata?.requested_account_type;
 
         if (roleError) {
-          setError(`Signed in, but CareerDev Global could not verify your account permissions. ${roleError.message}`);
+          setError('Signed in, but CareerDev Global could not verify your account permissions. ' + roleError.message);
         } else if (accountType === 'coach' && (requestedAccountType === 'coach' || role === 'coach') && (!role || role !== 'coach' || status !== 'active')) {
           window.location.href = '/coach-registration';
           return;
         } else if (status && status !== 'active') {
           setError('Your CareerDev Global account is not active. Please contact an administrator.');
         } else if (accountType === 'client') {
-          // Preserve an internal destination such as a coach profile when a
-          // client was asked to log in while completing a booking.
           const next = new URLSearchParams(window.location.search).get('next');
           const destination = next && next.startsWith('/') && !next.startsWith('//') ? next : c.dashboard;
           window.location.href = destination;
@@ -96,7 +133,7 @@ export default function RoleAuth({ mode, accountType }: Props) {
   return <main className="cdg-auth-shell"><section className="cdg-auth-card">
     <Link className="cdg-auth-back" href="/">← CareerDev Global</Link>
     <div className="cdg-auth-role">{c.name} Account</div>
-    <h1>{mode === 'login' ? `Log in as ${c.name}` : `Create a ${c.name} account`}</h1>
+    <h1>{mode === 'login' ? 'Log in as ' + c.name : 'Create a ' + c.name + ' account'}</h1>
     <p>{accountType === 'client'
       ? 'Access career services, coaching, bookings, payments, and your personal dashboard.'
       : accountType === 'coach'
@@ -114,9 +151,28 @@ export default function RoleAuth({ mode, accountType }: Props) {
       </div>
     ) : (
       <form onSubmit={submit}>
+        {mode === 'signup' && accountType !== 'admin' && <>
+          <label htmlFor="role-first-name">First name</label>
+          <input id="role-first-name" type="text" autoComplete="given-name" required value={firstName} onChange={e=>setFirstName(e.target.value)} maxLength={80} />
+          <label htmlFor="role-last-name">Last name</label>
+          <input id="role-last-name" type="text" autoComplete="family-name" required value={lastName} onChange={e=>setLastName(e.target.value)} maxLength={80} />
+        </>}
         <label htmlFor="role-email">Email address</label><input id="role-email" type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)} />
         <label htmlFor="role-password">Password</label><input id="role-password" type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} minLength={8} required value={password} onChange={e=>setPassword(e.target.value)} />
         {mode === 'signup' && <><label htmlFor="role-confirm">Confirm password</label><input id="role-confirm" type="password" autoComplete="new-password" minLength={8} required value={confirm} onChange={e=>setConfirm(e.target.value)} /></>}
+
+        {mode === 'signup' && (accountType === 'client' || accountType === 'coach') && (
+          <label className="cdg-auth-checkbox">
+            <input type="checkbox" checked={pilotOptIn} onChange={e=>setPilotOptIn(e.target.checked)} />
+            <span>
+              {accountType === 'client'
+                ? 'I would like to join the CareerDev Global Client Pilot and help test the Career Intelligence Platform.'
+                : 'I would like to join the CareerDev Global Coach Pilot and help test coach-facing Career Intelligence workflows.'}
+              {' '}I understand that this is optional and I can choose not to participate.
+            </span>
+          </label>
+        )}
+
         <button disabled={busy}>{busy ? (mode === 'login' ? 'Logging in…' : 'Creating account…') : (mode === 'login' ? 'Log In' : 'Create Account')}</button>
       </form>
     )}
