@@ -10,7 +10,7 @@ export default function SiteHeader() {
     <header className={`site-header${menuOpen ? " mobile-menu-open" : ""}`}>
       <div className="container nav-wrap">
         <a className="brand" href="/" aria-label="CareerDev Global home" onClick={closeMenu}>
-          <Image className="site-brand-logo" src="/cdg-wordmark.jpg" alt="CareerDev Global — Unleashing Your Potential" width={800} height={270} priority sizes="(max-width: 420px) 190px, (max-width: 700px) 210px, (max-width: 1100px) 250px, 300px" />
+          <Image className="site-brand-logo" src="/cdg-wordmark-transparent.svg" alt="CareerDev Global — Unleashing Your Potential" width={800} height={270} priority sizes="(max-width: 420px) 190px, (max-width: 700px) 210px, (max-width: 1100px) 250px, 300px" />
         </a>
         <button className="mobile-menu-toggle" type="button" aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={menuOpen} aria-controls="main-navigation" onClick={() => setMenuOpen((open) => !open)}>
           <span className="mobile-menu-icon" aria-hidden="true">☰</span>
