@@ -17,7 +17,7 @@ export default function SiteFooter() {
       `}</style>
       <div className="site-footer-inner">
         <div className="site-footer-brand"><div className="site-footer-logo-wrap">
-          <Image className="site-footer-logo" src="/cdg-wordmark-transparent.svg" alt="CareerDev Global — Unleashing Your Potential" width={1208} height={419} sizes="(max-width: 420px) 225px, (max-width: 700px) 250px, (max-width: 1100px) 230px, 280px" />
+          <Image className="site-footer-logo" src="/cdg-wordmark.jpg" alt="CareerDev Global — Unleashing Your Potential" width={1208} height={419} sizes="(max-width: 420px) 225px, (max-width: 700px) 250px, (max-width: 1100px) 230px, 280px" />
         </div></div>
         <p className="site-footer-intro">Career development, coaching, leadership development and global talent mobility — powered by human expertise and responsible AI-enabled career intelligence.</p>
         <div className="site-footer-grid">{footerGroups.map((group) => <div className="site-footer-group" key={group.title}><h3>{group.title}</h3><nav className="site-footer-links" aria-label={group.title}>{group.links.map(([label, href]) => href.startsWith("mailto:") ? <a key={label} href={href}>{label}</a> : <Link key={label} href={href}>{label}</Link>)}</nav></div>)}</div>
