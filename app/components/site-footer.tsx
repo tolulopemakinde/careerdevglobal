@@ -13,14 +13,14 @@ export default function SiteFooter() {
         .site-footer { background:#f1f3f5 !important; color:#001e54 !important; }
         .site-footer .site-footer-intro, .site-footer .site-footer-bottom, .site-footer .site-footer-bottom p { color:#001e54 !important; }
         .site-footer .site-footer-group h3 { color:#003b95 !important; }
-        .site-footer nav.site-footer-links a { color:#001e54 !important; }
-        .site-footer nav.site-footer-links a:hover, .site-footer nav.site-footer-links a:focus-visible { color:#003b95 !important; }
+        .site-footer nav.site-footer-links a { color:#000000 !important; }
+        .site-footer nav.site-footer-links a:hover, .site-footer nav.site-footer-links a:focus-visible { color:#000000 !important; }
         .site-footer nav.site-footer-links { display:grid !important; align-items:stretch !important; gap:10px !important; font-size:14px !important; }
-        .site-footer nav.site-footer-links a { display:block !important; visibility:visible !important; opacity:1 !important; color:#001e54 !important; text-decoration:none !important; font-size:14px !important; line-height:1.5 !important; transform:none !important; }
+        .site-footer nav.site-footer-links a { display:block !important; visibility:visible !important; opacity:1 !important; color:#000000 !important; text-decoration:none !important; font-size:14px !important; line-height:1.5 !important; transform:none !important; }
         .site-footer nav.site-footer-links a::before { content:none !important; display:none !important; }
         @media (max-width:700px) {
           .site-footer nav.site-footer-links { gap:11px !important; }
-          .site-footer nav.site-footer-links a { color:#001e54 !important; font-size:15px !important; line-height:1.5 !important; padding:3px 0 !important; }
+          .site-footer nav.site-footer-links a { color:#000000 !important; font-size:15px !important; line-height:1.5 !important; padding:3px 0 !important; }
         }
       `}</style>
       <div className="site-footer-inner">
