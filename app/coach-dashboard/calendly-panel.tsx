@@ -30,7 +30,14 @@ export default function CalendlyPanel({offerings=[],userId,onMapped}:any){
     }
   }
 
-  useEffect(()=>{void load()},[]);
+  useEffect(()=>{
+    const params=new URLSearchParams(window.location.search);
+    const result=params.get('calendly');
+    if(result==='connected') setMessage('Calendly connected successfully.');
+    if(result==='error') setMessage('Calendly connection failed. Check the Calendly OAuth app redirect URI and permissions, then try again.');
+    if(result==='expired') setMessage('Calendly authorization expired before it could be completed. Please reconnect.');
+    void load();
+  },[]);
 
   async function connect(){
     setBusy(true);setMessage('');
