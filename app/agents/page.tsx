@@ -160,7 +160,7 @@ export default function AgentsPage() {
                 <>
                   <p style={{ margin: '10px 0 0', fontWeight: 800 }}>Current plan: {subscription.plan_name} · {subscription.monthly_credits.toLocaleString()} AI credits/month allowance</p>
                   {creditStatus && (
-                    <div style={{ marginTop: 12, padding: 14, borderRadius: 12, background: '#f5faff', border: '1px solid #cfe3f2' }}>
+                    <div style={{ marginTop: 12, padding: 14, borderRadius: 12, background: creditStatus.credits_remaining === 0 ? '#fff4f4' : (creditStatus.credits_remaining / Math.max(1, creditStatus.monthly_allowance) <= 0.2 ? '#fff8e8' : '#f5faff'), border: creditStatus.credits_remaining === 0 ? '1px solid #e5bcbc' : (creditStatus.credits_remaining / Math.max(1, creditStatus.monthly_allowance) <= 0.2 ? '1px solid #ead9a7' : '1px solid #cfe3f2') }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                         <span><strong>{creditStatus.credits_remaining.toLocaleString()}</strong> credits remaining</span>
                         <span>{creditStatus.credits_consumed.toLocaleString()} consumed</span>
@@ -169,7 +169,13 @@ export default function AgentsPage() {
                       <div style={{ marginTop: 9, height: 8, borderRadius: 999, background: '#dfeaf2', overflow: 'hidden' }}>
                         <div style={{ height: '100%', width: `${Math.min(100, (creditStatus.credits_consumed / Math.max(1, creditStatus.monthly_allowance)) * 100)}%`, background: '#0b5d9b' }} />
                       </div>
-                      <small style={{ display: 'block', marginTop: 8, color: '#607487' }}>Credits are deducted only for governed AI executions. Non-AI operations do not consume credits.</small>
+                      <small style={{ display: 'block', marginTop: 8, color: '#607487' }}>
+                        {creditStatus.credits_remaining === 0
+                          ? 'Your monthly AI credit allowance is exhausted. AI-required operations are unavailable until your allowance resets or your plan changes; non-AI capabilities remain available.'
+                          : creditStatus.credits_remaining / Math.max(1, creditStatus.monthly_allowance) <= 0.2
+                            ? 'You are using the final 20% of your monthly AI allowance. Plan your remaining AI executions carefully.'
+                            : 'Credits are deducted only for governed AI executions. Non-AI operations do not consume credits.'}
+                      </small>
                     </div>
                   )}
                 </>
