@@ -21,6 +21,16 @@ type Subscription = {
   monthly_credits: number;
 };
 
+type CreditStatus = {
+  plan_key: string;
+  monthly_allowance: number;
+  credits_consumed: number;
+  credits_reserved: number;
+  credits_remaining: number;
+  period_start: string;
+  period_end: string;
+};
+
 const groups: Record<string, string> = {
   career_intelligence: 'Career Intelligence',
   service_delivery: 'Career Documents & Services',
@@ -35,6 +45,7 @@ export default function AgentsPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [creditStatus, setCreditStatus] = useState<CreditStatus | null>(null);
 
   useEffect(() => {
     void load();
@@ -82,9 +93,14 @@ export default function AgentsPage() {
 
     setAgents((agentRows || []) as Agent[]);
 
-    const { data: sub } = await supabase.rpc('get_my_ai_subscription');
+    const [{ data: sub }, { data: credits }] = await Promise.all([
+      supabase.rpc('get_my_ai_subscription'),
+      supabase.rpc('get_my_ai_credit_status'),
+    ]);
     const row = Array.isArray(sub) ? sub[0] : sub;
     if (row?.plan_key) setSubscription(row as Subscription);
+    const creditRow = Array.isArray(credits) ? credits[0] : credits;
+    if (creditRow?.plan_key) setCreditStatus(creditRow as CreditStatus);
 
     setLoading(false);
   }
@@ -141,7 +157,22 @@ export default function AgentsPage() {
               <h2 style={{ margin: '6px 0' }}>Career Intelligence Profile™</h2>
               <p style={{ margin: 0, color: '#527085' }}>All {agents.length} agents use the same evolving profile context. Each AI capability is designed to support structured career decision-making.</p>
               {subscription ? (
-                <p style={{ margin: '10px 0 0', fontWeight: 800 }}>Current plan: {subscription.plan_name} · {subscription.monthly_credits.toLocaleString()} AI credits/month allowance</p>
+                <>
+                  <p style={{ margin: '10px 0 0', fontWeight: 800 }}>Current plan: {subscription.plan_name} · {subscription.monthly_credits.toLocaleString()} AI credits/month allowance</p>
+                  {creditStatus && (
+                    <div style={{ marginTop: 12, padding: 14, borderRadius: 12, background: '#f5faff', border: '1px solid #cfe3f2' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                        <span><strong>{creditStatus.credits_remaining.toLocaleString()}</strong> credits remaining</span>
+                        <span>{creditStatus.credits_consumed.toLocaleString()} consumed</span>
+                        {creditStatus.credits_reserved > 0 && <span>{creditStatus.credits_reserved.toLocaleString()} reserved</span>}
+                      </div>
+                      <div style={{ marginTop: 9, height: 8, borderRadius: 999, background: '#dfeaf2', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${Math.min(100, (creditStatus.credits_consumed / Math.max(1, creditStatus.monthly_allowance)) * 100)}%`, background: '#0b5d9b' }} />
+                      </div>
+                      <small style={{ display: 'block', marginTop: 8, color: '#607487' }}>Credits are deducted only for governed AI executions. Non-AI operations do not consume credits.</small>
+                    </div>
+                  )}
+                </>
               ) : (
                 <p style={{ margin: '10px 0 0', color: '#8a5b00', fontWeight: 800 }}>No active AI Agent subscription. <a href="/pricing" style={{ color: '#0b5d9b' }}>Choose a plan →</a></p>
               )}
