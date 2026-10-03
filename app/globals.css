@@ -20,7 +20,7 @@ nav a.nav-cta::before { content: "→"; color: inherit; font-size: 13px; }
 nav a:hover { color: #145bd6; transform: translateY(-1px); }
 nav a:hover::before { transform: scale(1.15); }
 .nav-cta { padding: 10px 17px; border-radius: 999px; background: #10203f; color: #fff !important; }
-.hero { position: relative; padding: 78px 0 72px; background-image: linear-gradient(90deg, rgba(7,24,54,.88) 0%, rgba(16,32,63,.72) 46%, rgba(16,32,63,.42) 100%), url("https://images.unsplash.com/photo-1635038726688-6c5d78b6d0ef?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=85&w=2400"); background-size: cover; background-position: center; color: white; overflow: hidden; border-bottom: 1px solid rgba(255,255,255,.35); }
+.hero { position: relative; padding: 78px 0 72px; background-image: linear-gradient(90deg, rgba(2,32,85,.94) 0%, rgba(2,32,85,.82) 46%, rgba(2,32,85,.68) 100%), url("https://images.unsplash.com/photo-1635038726688-6c5d78b6d0ef?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=85&w=2400"); background-size: cover; background-position: center; color: white; overflow: hidden; border-bottom: 1px solid rgba(255,255,255,.35); }
 .hero-grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 70px; align-items: center; }
 .hero .eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .16em; margin: 0 0 16px; color: #dceaff; }
 .eyebrow { font-weight: 800; }
@@ -53,7 +53,7 @@ h3 { margin: 0 0 12px; font-size: 22px; line-height: 1.15; color: #10203f; }
 .card h3 { margin-bottom: 10px; }
 .card p { max-width: 300px; margin: 0; color: #59657a; }
 .muted { background: linear-gradient(135deg, rgba(222,243,255,.92), rgba(242,249,255,.98)); }
-#coaching { position: relative; overflow: hidden; background-image: linear-gradient(90deg, rgba(7,24,54,.88) 0%, rgba(16,32,63,.72) 46%, rgba(16,32,63,.42) 100%), url("https://images.unsplash.com/photo-1758518730380-04c8e0d57b68?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=85&w=2400"); background-size: cover; background-position: center; color: #fff; }
+#coaching { position: relative; overflow: hidden; background-image: linear-gradient(90deg, rgba(2,32,85,.94) 0%, rgba(2,32,85,.82) 46%, rgba(2,32,85,.68) 100%), url("https://images.unsplash.com/photo-1758518730380-04c8e0d57b68?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=85&w=2400"); background-size: cover; background-position: center; color: #fff; }
 #coaching h2, #coaching h3, #coaching .eyebrow, #coaching p, #coaching strong, #coaching .panel-label { color: #fff; }
 #coaching .split p { color: rgba(255,255,255,.92); }
 #coaching .split { position: relative; z-index: 1; }
@@ -75,7 +75,7 @@ h3 { margin: 0 0 12px; font-size: 22px; line-height: 1.15; color: #10203f; }
 .about-grid > div:nth-child(2) > p:first-child { margin-top: 0; }
 .small-note { font-size: 0; line-height: 1.65; border-left: 4px solid #1764df; padding: 8px 0 8px 20px; margin-top: 4px; color: #10203f; font-weight: 700; }
 .small-note::after { content: "AI assists with analysis, research and drafting. Career professionals remain responsible for high-impact recommendations and client-facing decisions to help you achieve your career goals."; display: block; font-size: 17px; line-height: 1.65; color: #10203f; font-weight: 700; }
-.cta-section { position: relative; overflow: hidden; padding: 78px 0; background-image: linear-gradient(90deg, rgba(7,24,54,.88) 0%, rgba(16,32,63,.72) 46%, rgba(16,32,63,.42) 100%), url("https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=85&w=2400"); background-size: cover; background-position: center; color: white; border-top: 1px solid rgba(255,255,255,.3); border-bottom: 1px solid rgba(255,255,255,.18); }
+.cta-section { position: relative; overflow: hidden; padding: 78px 0; background-image: linear-gradient(90deg, rgba(2,32,85,.94) 0%, rgba(2,32,85,.82) 46%, rgba(2,32,85,.68) 100%), url("https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&fm=jpg&ixlib=rb-4.1.0&q=85&w=2400"); background-size: cover; background-position: center; color: white; border-top: 1px solid rgba(255,255,255,.3); border-bottom: 1px solid rgba(255,255,255,.18); }
 .cta-inner { display: flex; align-items: center; justify-content: space-between; gap: 40px; }
 .cta-section h2, .cta-section .eyebrow { color: white; }
 .cta-section .eyebrow { opacity: .9; }
