@@ -10,6 +10,8 @@ export default function AIGovernancePage() {
   const [rows, setRows] = useState<Row[]>([]);
   const [usagePolicies, setUsagePolicies] = useState<Row[]>([]);
   const [calendly, setCalendly] = useState({ active: 0, oauth: 0 });
+  const [creditSummary, setCreditSummary] = useState<Row | null>(null);
+  const [creditUsage, setCreditUsage] = useState<Row[]>([]);
   const [role, setRole] = useState('');
   const [message, setMessage] = useState('Loading governance status…');
   const [loading, setLoading] = useState(true);
@@ -28,16 +30,20 @@ export default function AIGovernancePage() {
       return;
     }
     setRole(roleData.role);
-    const [{ data: cert, error: certError }, { data: policies }, { data: cal }] = await Promise.all([
+    const [{ data: cert, error: certError }, { data: policies }, { data: cal }, { data: credit }, { data: usage }] = await Promise.all([
       supabase.from('ai_agent_certification_status').select('*').order('agent_key'),
       supabase.from('ai_usage_policies').select('*').order('name'),
-      supabase.rpc('ai_governance_calendly_status')
+      supabase.rpc('ai_governance_calendly_status'),
+      supabase.rpc('get_ai_credit_admin_summary'),
+      supabase.rpc('get_ai_credit_admin_usage', { p_limit: 50 })
     ]);
     if (certError) setMessage(certError.message);
     else setMessage('Governance status loaded. No certification gate is being marked passed without evidence.');
     setRows(cert || []);
     setUsagePolicies(policies || []);
     if (cal) setCalendly(cal);
+    setCreditSummary(Array.isArray(credit) ? credit[0] || null : credit || null);
+    setCreditUsage(Array.isArray(usage) ? usage : []);
     setLoading(false);
   }
 
@@ -94,6 +100,23 @@ export default function AIGovernancePage() {
             <div style={{ fontSize:28, fontWeight:900 }}>{clientCoach.filter(r=>r.e2e_verified).length}/16</div>
             <p style={{ color:'#607487' }}>Requires a legitimate authenticated Client/Coach session; no test identity is fabricated.</p>
           </article>
+        </section>
+
+        <section style={{ marginTop:18, background:'#fff', border:'1px solid #d8e6f1', borderRadius:16, padding:18 }}>
+          <h2 style={{ marginTop:0 }}>CareerDev AI Credit Engine</h2>
+          {creditSummary ? <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))', gap:12 }}>
+            {[
+              ['Active subscribers', creditSummary.active_subscribers],
+              ['Total allowance', creditSummary.total_allowance],
+              ['Credits consumed', creditSummary.credits_consumed],
+              ['Credits reserved', creditSummary.credits_reserved],
+              ['Credits remaining', creditSummary.credits_remaining],
+              ['Usage events', creditSummary.usage_events],
+              ['Ledger entries', creditSummary.ledger_entries],
+            ].map(([label,value]) => <div key={String(label)} style={{ padding:14, borderRadius:12, background:'#f5faff', border:'1px solid #d8e6f1' }}><div style={{ color:'#607487', fontSize:12 }}>{label}</div><div style={{ fontSize:24, fontWeight:900, marginTop:4 }}>{String(value ?? 0)}</div></div>)}
+          </div> : <p>Credit summary unavailable.</p>}
+          <p style={{ color:'#607487' }}>Customer credits are reserved before governed AI execution and consumed only after successful processing. Failed provider calls release the reservation. Non-AI operations do not consume customer credits.</p>
+          {creditUsage.length > 0 && <div style={{ overflowX:'auto', marginTop:12 }}><table style={{ width:'100%', borderCollapse:'collapse', minWidth:900 }}><thead><tr>{['Operation','Agent','Executions','Consumed','Reserved','Input Tokens','Output Tokens','Total Tokens','Est. Cost'].map(h=><th key={h} style={{ textAlign:'left', padding:8, borderBottom:'2px solid #dbe6ef', fontSize:12 }}>{h}</th>)}</tr></thead><tbody>{creditUsage.map(u=><tr key={u.operation_key}><td style={{ padding:8, borderBottom:'1px solid #edf2f6' }}>{u.operation_key}</td><td style={{ padding:8, borderBottom:'1px solid #edf2f6' }}>{u.agent_key}</td><td style={{ padding:8, borderBottom:'1px solid #edf2f6' }}>{u.executions}</td><td style={{ padding:8, borderBottom:'1px solid #edf2f6' }}>{u.credits_consumed}</td><td style={{ padding:8, borderBottom:'1px solid #edf2f6' }}>{u.credits_reserved}</td><td style={{ padding:8, borderBottom:'1px solid #edf2f6' }}>{u.input_tokens}</td><td style={{ padding:8, borderBottom:'1px solid #edf2f6' }}>{u.output_tokens}</td><td style={{ padding:8, borderBottom:'1px solid #edf2f6' }}>{u.total_tokens}</td><td style={{ padding:8, borderBottom:'1px solid #edf2f6' }}>{u.estimated_cost_usd}</td></tr>)}</tbody></table></div>}
         </section>
 
         <section style={{ marginTop:18, background:'#fff', border:'1px solid #d8e6f1', borderRadius:16, padding:18 }}>
