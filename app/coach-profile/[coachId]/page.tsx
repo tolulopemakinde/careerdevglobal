@@ -47,6 +47,16 @@ function localDateString(d: Date) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+function safeExternalUrl(value: unknown) {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function CoachProfilePage() {
   const params = useParams<{ coachId: string }>();
   const router = useRouter();
@@ -250,6 +260,23 @@ export default function CoachProfilePage() {
           <article className="profile-card"><h2>About</h2><p>{profile.bio || profile.professional_bio || 'Professional coaching support tailored to your goals.'}</p></article>
           <article className="profile-card"><h2>Specializations</h2><div className="chips">{(profile.specializations || []).map((x: string) => <span key={x}>{x}</span>)}</div></article>
           <article className="profile-card"><h2>Professional background</h2><p>{profile.professional_bio || 'A goal-focused coaching approach designed around the client’s needs and context.'}</p><div className="meta-row"><span>{profile.years_coaching ? `${profile.years_coaching} years coaching` : 'Verified coach'}</span><span>{(profile.languages || []).join(' · ') || 'Languages available on request'}</span></div></article>
+          {(safeExternalUrl(profile.linkedin_url) || safeExternalUrl(profile.website_url)) && (
+            <article className="profile-card">
+              <h2>Connect with this coach</h2>
+              <div className="profile-external-links">
+                {safeExternalUrl(profile.linkedin_url) && (
+                  <a className="profile-external-button linkedin" href={safeExternalUrl(profile.linkedin_url)!} target="_blank" rel="noopener noreferrer">
+                    <span aria-hidden="true">in</span> LinkedIn
+                  </a>
+                )}
+                {safeExternalUrl(profile.website_url) && (
+                  <a className="profile-external-button website" href={safeExternalUrl(profile.website_url)!} target="_blank" rel="noopener noreferrer">
+                    <span aria-hidden="true">↗</span> Website
+                  </a>
+                )}
+              </div>
+            </article>
+          )}
         </div>
         <aside>
           <article className="profile-card"><h2>Coaching formats</h2><div className="chips">{(profile.coaching_formats || []).map((x: string) => <span key={x}>{x}</span>)}</div><div className="verified">✓ Verified marketplace profile</div></article>
