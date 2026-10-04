@@ -33,6 +33,7 @@ export default function PwaInstallPrompt() {
   const [ios, setIos] = useState(false);
 
   useEffect(() => {
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
     if (isStandalone() || wasDismissedRecently()) return;
 
     const iosDevice = isIOS();
