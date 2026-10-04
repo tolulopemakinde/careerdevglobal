@@ -2,3 +2,5 @@
 
 /* AI credit availability notice */
 .ci-ai-credit-alert{border:1px solid rgba(2,32,85,.2);background:#f5f8fc;border-radius:14px;padding:16px;margin:16px 0}.ci-ai-credit-alert strong{display:block;color:#022055;margin-bottom:6px}.ci-ai-credit-alert p{margin:0 0 12px;color:#334155}.ci-ai-credit-alert .ci-secondary{display:inline-flex;align-items:center;text-decoration:none}
+
+.ci-credit-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}.ci-credit-panel-head span{font-weight:700;color:#022055;white-space:nowrap}.ci-credit-panel-actions{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}.ci-ai-credit-alert small{display:block;color:#64748b;margin-top:4px}
