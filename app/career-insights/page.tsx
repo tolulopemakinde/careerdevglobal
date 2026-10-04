@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { createSupabaseServerClient } from "../../lib/supabase-server";
 import styles from "./career-insights.module.css";
 
 const insights = [
@@ -40,7 +41,9 @@ const insights = [
   },
 ];
 
-export default function CareerInsightsPage() {
+const INSIGHT_PLACEHOLDER = "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1200&q=85";
+
+export default async function CareerInsightsPage() {\n  const supabase = await createSupabaseServerClient();\n  const { data: coachInsights } = await supabase.from("blog_posts").select("id,title,slug,excerpt,category,featured_image_url,published_at").eq("status","published").eq("ai_generated",false).eq("ai_generation_notes","Coach-published Career Insight").order("published_at",{ascending:false}).limit(12);
   return (
     <main className="site-page career-insights-page">
       <section className="site-page-hero career-insights-hero">
@@ -83,6 +86,34 @@ export default function CareerInsightsPage() {
           ))}
         </div>
       </section>
+
+
+
+      {coachInsights?.length ? (
+        <section className="site-page-section career-coach-insights" aria-labelledby="coach-insights-heading">
+          <div className="site-page-section-heading career-insights-heading">
+            <p className="eyebrow">From our Coaches</p>
+            <h2 id="coach-insights-heading">Career Insights from CareerDev Global Coaches</h2>
+            <p>Practical perspectives shared by approved CareerDev Global Coaches to help you make informed career and professional decisions.</p>
+          </div>
+          <div className="site-page-card-grid career-insights-grid">
+            {coachInsights.map((post: any) => (
+              <article className="site-page-card career-coach-insight-card" key={post.id}>
+                <Link href={"/blog/" + post.slug} className="career-coach-insight-media" aria-label={"Read " + post.title}>
+                  <img src={post.featured_image_url || INSIGHT_PLACEHOLDER} alt="" loading="lazy" />
+                </Link>
+                <div className="career-coach-insight-body">
+                  <p className="eyebrow">{post.category}</p>
+                  <h3>{post.title}</h3>
+                  <p>{post.excerpt}</p>
+                  <div className="career-coach-insight-meta">{post.published_at ? new Date(post.published_at).toLocaleDateString() : ""}</div>
+                  <Link href={"/blog/" + post.slug} className="site-page-button">Read insight →</Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="site-page-section site-page-cta career-insights-cta">
         <div>
