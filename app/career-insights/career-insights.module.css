@@ -65,3 +65,5 @@
     transition: none;
   }
 }
+
+.career-coach-insight-card{overflow:hidden;padding:0}.career-coach-insight-media{display:block;aspect-ratio:16/9;background:#e8f1f7;overflow:hidden}.career-coach-insight-media img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .25s ease}.career-coach-insight-card:hover .career-coach-insight-media img{transform:scale(1.03)}.career-coach-insight-body{padding:24px}.career-coach-insight-body h3{margin:.35rem 0 .65rem}.career-coach-insight-body p{line-height:1.65}.career-coach-insight-meta{font-size:.85rem;color:#60788b;margin:14px 0}.career-coach-insight-body .site-page-button{display:inline-flex;margin-top:4px;text-decoration:none}@media(prefers-reduced-motion:reduce){.career-coach-insight-media img{transition:none}.career-coach-insight-card:hover .career-coach-insight-media img{transform:none}}
