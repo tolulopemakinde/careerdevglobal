@@ -17,6 +17,8 @@ const MAX_TOTAL_SIZE = 50 * 1024 * 1024;
 type SavedDocument = { id:string; original_filename:string; file_size:number|null; status:string; uploaded_at:string };
 type Report = { executive_summary:string; target_direction:string; strengths:string[]; gaps:string[]; next_steps:string[]; confidence:number };
 type Recommendation = { title:string; rationale:string; actions:string[]; priority:"high"|"medium"|"low" };
+type CreditStatus = { plan_key:string|null; monthly_allowance:number; credits_consumed:number; credits_reserved:number; credits_remaining:number; period_start:string; period_end:string };
+
 
 export default function CareerIntelligencePage(){
  const supabase=useMemo(()=>createSupabaseBrowserClient(),[]);
