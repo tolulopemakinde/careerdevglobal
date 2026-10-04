@@ -294,3 +294,23 @@ body:has(.site-header) .professional-standards { display: block; }
   .brand { width: 190px; }
   .site-footer-logo-wrap { width: min(225px, 82vw); }
 }
+
+
+/* CareerDev Global PWA installation prompt */
+.pwa-install-overlay{position:fixed;inset:0;z-index:1000;display:grid;place-items:end center;padding:18px;background:rgba(3,18,42,.52);backdrop-filter:blur(5px)}
+.pwa-install-card{position:relative;width:min(520px,100%);padding:28px 26px 22px;border:1px solid rgba(255,255,255,.5);border-radius:26px;background:#fff;color:#10203f;box-shadow:0 28px 90px rgba(0,0,0,.28);animation:pwaInstallIn .28s ease-out}
+.pwa-install-close{position:absolute;right:14px;top:12px;width:34px;height:34px;border:0;border-radius:50%;background:#eef3f8;color:#334b65;font-size:23px;line-height:1;cursor:pointer}
+.pwa-install-icon{width:54px;height:54px;display:grid;place-items:center;border-radius:15px;background:#022055;color:#fff;font-size:15px;font-weight:900;letter-spacing:-.04em;margin-bottom:16px}
+.pwa-install-eyebrow{margin:0 0 7px;color:#1764df;font-size:10px;font-weight:900;letter-spacing:.16em}
+.pwa-install-card h2{max-width:none;margin:0 34px 10px 0;color:#10203f;font-size:clamp(27px,5vw,38px);line-height:1.08;letter-spacing:-.035em}
+.pwa-install-copy{margin:0;color:#5c7084;font-size:14px;line-height:1.65}
+.pwa-install-button{width:100%;margin-top:19px;padding:13px 18px;border:0;border-radius:12px;background:#022055;color:#fff;font:inherit;font-weight:900;cursor:pointer}
+.pwa-later-button{display:block;width:100%;margin-top:8px;padding:10px;border:0;background:transparent;color:#50677d;font:inherit;font-weight:800;cursor:pointer}
+.pwa-install-note{margin:10px 0 0;text-align:center;color:#8292a1;font-size:10px;line-height:1.45}
+.pwa-ios-guide{margin-top:17px;padding:14px 15px;border:1px solid #dbe7ef;border-radius:14px;background:#f7fbfe;color:#435b70;font-size:13px;line-height:1.55}
+.pwa-ios-guide strong{display:block;color:#10203f;margin-bottom:7px}
+.pwa-ios-guide ol{margin:0;padding-left:20px}
+@keyframes pwaInstallIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@media (min-width:761px){.pwa-install-overlay{place-items:end center;padding-bottom:28px}.pwa-install-card{width:min(500px,calc(100% - 40px))}}
+@media (max-width:520px){.pwa-install-overlay{padding:10px}.pwa-install-card{padding:25px 18px 17px;border-radius:21px}.pwa-install-icon{width:48px;height:48px;border-radius:13px}.pwa-install-card h2{font-size:28px}.pwa-install-copy{font-size:13.5px}}
+@media (prefers-reduced-motion:reduce){.pwa-install-card{animation:none}}

@@ -43,7 +43,9 @@ const insights = [
 
 const INSIGHT_PLACEHOLDER = "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1200&q=85";
 
-export default async function CareerInsightsPage() {\n  const supabase = await createSupabaseServerClient();\n  const { data: coachInsights } = await supabase.from("blog_posts").select("id,title,slug,excerpt,category,featured_image_url,published_at").eq("status","published").eq("ai_generated",false).eq("ai_generation_notes","Coach-published Career Insight").order("published_at",{ascending:false}).limit(12);
+export default async function CareerInsightsPage() {
+  const supabase = await createSupabaseServerClient();
+  const { data: coachInsights } = await supabase.from("blog_posts").select("id,title,slug,excerpt,category,featured_image_url,published_at").eq("status","published").eq("ai_generated",false).eq("ai_generation_notes","Coach-published Career Insight").order("published_at",{ascending:false}).limit(12);
   return (
     <main className="site-page career-insights-page">
       <section className="site-page-hero career-insights-hero">
