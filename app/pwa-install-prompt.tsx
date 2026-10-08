@@ -47,7 +47,6 @@ export default function PwaInstallPrompt() {
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
-    // iOS has no beforeinstallprompt event; show a lightweight installation guide.
     if (iosDevice) {
       const timer = window.setTimeout(() => setVisible(true), 1800);
       return () => {
@@ -78,10 +77,18 @@ export default function PwaInstallPrompt() {
     <div className="pwa-install-overlay" role="dialog" aria-modal="true" aria-labelledby="pwa-install-title">
       <div className="pwa-install-card">
         <button className="pwa-install-close" type="button" onClick={dismiss} aria-label="Close app installation prompt">×</button>
-        <div className="pwa-install-icon" aria-hidden="true">CD</div>
+
+        <div className="pwa-install-brand">
+          <img
+            className="pwa-install-logo"
+            src="/S2.svg"
+            alt="CareerDev Global — Unleashing Your Potential"
+          />
+        </div>
+
         <p className="pwa-install-eyebrow">CAREERDEV GLOBAL APP</p>
         <h2 id="pwa-install-title">Take CareerDev Global with you</h2>
-        <p className="pwa-install-copy">Get faster access to Career Intelligence, career tools, coaches and professional development services from your phone or tablet.</p>
+        <p className="pwa-install-copy">Install the full CareerDev Global platform for faster access to Career Intelligence, career tools, coaches and professional development services from your phone or tablet.</p>
 
         {ios ? (
           <div className="pwa-ios-guide">
@@ -97,7 +104,7 @@ export default function PwaInstallPrompt() {
         )}
 
         <button className="pwa-later-button" type="button" onClick={dismiss}>Maybe later</button>
-        <p className="pwa-install-note">Free to install. Your existing CareerDev Global account and data stay connected to the platform.</p>
+        <p className="pwa-install-note">Full platform access. Your existing CareerDev Global account and data stay connected.</p>
       </div>
     </div>
   );

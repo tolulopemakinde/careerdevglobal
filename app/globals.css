@@ -314,3 +314,33 @@ body:has(.site-header) .professional-standards { display: block; }
 @media (min-width:761px){.pwa-install-overlay{place-items:end center;padding-bottom:28px}.pwa-install-card{width:min(500px,calc(100% - 40px))}}
 @media (max-width:520px){.pwa-install-overlay{padding:10px}.pwa-install-card{padding:25px 18px 17px;border-radius:21px}.pwa-install-icon{width:48px;height:48px;border-radius:13px}.pwa-install-card h2{font-size:28px}.pwa-install-copy{font-size:13.5px}}
 @media (prefers-reduced-motion:reduce){.pwa-install-card{animation:none}}
+
+
+/* Official CareerDev Global logo in the PWA install prompt. Use supplied artwork without recreation or distortion. */
+.pwa-install-brand {
+  width: min(330px, 78%);
+  margin: 0 auto 18px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pwa-install-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 82px;
+  object-fit: contain;
+  object-position: center;
+}
+.pwa-install-eyebrow { text-align: center; }
+@media (max-width:520px) {
+  .pwa-install-brand {
+    width: min(300px, 86%);
+    margin-bottom: 15px;
+    padding: 8px 12px;
+  }
+  .pwa-install-logo { max-height: 68px; }
+}
