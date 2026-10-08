@@ -10,7 +10,7 @@ import PwaInstallPrompt from "./pwa-install-prompt";
 export const metadata: Metadata = {
   title: "CareerDev Global | Unleashing Your Potential",
   description: "Career development, leadership development, and global talent mobility powered by human expertise and AI-enabled career intelligence.",
-  icons: { icon: "/S1.svg", shortcut: "/S1.svg", apple: "/S1.svg" },
+  icons: {\n    icon: [{ url: "/S1.svg", type: "image/svg+xml" }],\n    shortcut: [{ url: "/S1.svg", type: "image/svg+xml" }],\n    apple: [{ url: "/S1.svg", type: "image/svg+xml" }],\n  },
   appleWebApp: { capable: true, title: "CareerDev Global", statusBarStyle: "black-translucent" },
   manifest: "/manifest.webmanifest",
 };
