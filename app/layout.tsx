@@ -35,9 +35,43 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
 };
 
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://careerdevglobal-nine.vercel.app/#organization",
+      "name": "CareerDev Global",
+      "url": "https://careerdevglobal-nine.vercel.app",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://careerdevglobal-nine.vercel.app/S1.svg"
+      },
+      "slogan": "Unleashing Your Potential",
+      "description": "Career development, leadership development, and global talent mobility powered by human expertise and AI-enabled career intelligence."
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://careerdevglobal-nine.vercel.app/#website",
+      "url": "https://careerdevglobal-nine.vercel.app",
+      "name": "CareerDev Global",
+      "description": "Career development, leadership development, and global talent mobility powered by human expertise and AI-enabled career intelligence.",
+      "publisher": {
+        "@id": "https://careerdevglobal-nine.vercel.app/#organization"
+      }
+    }
+  ]
+};
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+        />
+      </head>
       <body>
         <a className="skip-link" href="#services">Skip to content</a>
         <SiteHeader />
