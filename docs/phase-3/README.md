@@ -38,3 +38,7 @@ This performs the prior source/type/build-input/auth checks and then validates t
 4. Decide whether to enable leaked-password protection; no Auth setting was changed here.
 5. Approve preview deployment configuration and synthetic authorization/concurrency tests.
 6. Only after preview evidence, review an exact production migration, function deployment, environment-variable diff, and rollback plan.
+
+## Next phase
+
+Phase 4 extends this work with production-blocked concurrency simulation and preview operational-readiness evidence. See `docs/phase-4/`.

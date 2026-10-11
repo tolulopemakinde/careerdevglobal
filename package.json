@@ -15,7 +15,9 @@
     "validate:phase3-preview": "node scripts/validate-phase3-preview.mjs",
     "verify:phase1": "npm run audit:source && npm run typecheck && npm run check:build-inputs && npm run validate:auth-manifest",
     "verify:phase2": "npm run verify:phase1 && npm run validate:phase2-boundaries && npm run validate:edge-security",
-    "verify:phase3": "npm run verify:phase2 && npm run validate:phase3-preview"
+    "verify:phase3": "npm run verify:phase2 && npm run validate:phase3-preview",
+    "validate:phase4-simulation": "node scripts/validate-phase4-simulation.mjs",
+    "verify:phase4": "npm run verify:phase3 && npm run validate:phase4-simulation"
   },
   "dependencies": {
     "@sentry/nextjs": "10.75.2",
