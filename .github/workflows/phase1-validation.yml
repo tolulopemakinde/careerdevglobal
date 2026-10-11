@@ -43,6 +43,9 @@ jobs:
       - name: Verify packaged build inputs
         run: npm run check:build-inputs
 
+      - name: Validate Phase 2 AI boundaries
+        run: npm run validate:phase2-boundaries
+
       - name: Check whitespace errors
         run: git diff --check
 

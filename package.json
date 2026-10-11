@@ -10,7 +10,9 @@
     "audit:source": "node scripts/audit-source-config.mjs",
     "check:build-inputs": "node scripts/verify-build-inputs.mjs",
     "validate:auth-manifest": "node scripts/validate-authorization-manifest.mjs",
-    "verify:phase1": "npm run audit:source && npm run typecheck && npm run check:build-inputs && npm run validate:auth-manifest"
+    "validate:phase2-boundaries": "node scripts/validate-phase2-boundaries.mjs",
+    "verify:phase1": "npm run audit:source && npm run typecheck && npm run check:build-inputs && npm run validate:auth-manifest",
+    "verify:phase2": "npm run verify:phase1 && npm run validate:phase2-boundaries"
   },
   "dependencies": {
     "@sentry/nextjs": "10.75.2",
