@@ -1,0 +1,108 @@
+{
+  "manifest_version": "1.0",
+  "environment_policy": {
+    "requires_isolated_preview": true,
+    "allow_production": false,
+    "uses_synthetic_identities_only": true,
+    "uses_synthetic_documents_only": true,
+    "permitted_side_effects": ["test-schema rows", "test audit events"]
+  },
+  "test_cases": [
+    {
+      "id": "auth-anonymous-admin-rpc",
+      "category": "authentication",
+      "action": "invoke_admin_rpc",
+      "actor": "anonymous",
+      "expected": "rejected",
+      "risk": "critical"
+    },
+    {
+      "id": "auth-client-admin-rpc",
+      "category": "authorization",
+      "action": "invoke_admin_rpc",
+      "actor": "client",
+      "expected": "rejected",
+      "risk": "critical"
+    },
+    {
+      "id": "auth-staff-dashboard-minimal-fields",
+      "category": "data-minimization",
+      "action": "read_staff_dashboard",
+      "actor": "staff",
+      "expected": "approved_fields_only",
+      "risk": "high"
+    },
+    {
+      "id": "auth-client-cross-user-execution",
+      "category": "ownership",
+      "action": "read_other_users_ai_execution",
+      "actor": "client",
+      "expected": "rejected",
+      "risk": "critical"
+    },
+    {
+      "id": "auth-client-cross-user-credit-finalize",
+      "category": "ownership",
+      "action": "finalize_other_users_credit_ledger",
+      "actor": "client",
+      "expected": "rejected",
+      "risk": "critical"
+    },
+    {
+      "id": "ai-review-required-completion",
+      "category": "ai-governance",
+      "action": "complete_human_review_required_execution",
+      "actor": "client",
+      "expected": "rejected_until_approval",
+      "risk": "critical"
+    },
+    {
+      "id": "profile-sync-coach-apply",
+      "category": "profile-integrity",
+      "action": "apply_profile_sync_proposal",
+      "actor": "coach",
+      "expected": "rejected",
+      "risk": "high"
+    },
+    {
+      "id": "workspace-reset-cross-user",
+      "category": "destructive-action",
+      "action": "reset_other_users_workspace",
+      "actor": "client",
+      "expected": "rejected",
+      "risk": "critical"
+    },
+    {
+      "id": "ai-credit-idempotency",
+      "category": "billing-safety",
+      "action": "reserve_same_credit_operation_twice",
+      "actor": "client",
+      "expected": "single_ledger_entry",
+      "risk": "critical"
+    },
+    {
+      "id": "payout-transfer-idempotency",
+      "category": "payment-safety",
+      "action": "prepare_same_payout_twice",
+      "actor": "staff",
+      "expected": "single_provider_reference",
+      "risk": "critical"
+    },
+    {
+      "id": "matching-private-field-redaction",
+      "category": "privacy",
+      "action": "request_public_coach_match",
+      "actor": "anonymous",
+      "expected": "public_fields_only",
+      "risk": "high"
+    },
+    {
+      "id": "payload-bounds",
+      "category": "abuse-resistance",
+      "action": "submit_oversized_ai_payload",
+      "actor": "client",
+      "expected": "rejected_or_bounded",
+      "risk": "high"
+    }
+  ]
+}

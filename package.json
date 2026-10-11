@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "audit:source": "node scripts/audit-source-config.mjs",
     "check:build-inputs": "node scripts/verify-build-inputs.mjs",
-    "verify:phase1": "npm run audit:source && npm run typecheck && npm run check:build-inputs"
+    "validate:auth-manifest": "node scripts/validate-authorization-manifest.mjs",
+    "verify:phase1": "npm run audit:source && npm run typecheck && npm run check:build-inputs && npm run validate:auth-manifest"
   },
   "dependencies": {
     "@sentry/nextjs": "10.75.2",
