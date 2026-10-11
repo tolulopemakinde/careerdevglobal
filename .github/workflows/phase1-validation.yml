@@ -52,6 +52,9 @@ jobs:
       - name: Validate Phase 3 preview controls
         run: npm run validate:phase3-preview
 
+      - name: Validate Phase 4 concurrency simulation
+        run: npm run validate:phase4-simulation
+
       - name: Check whitespace errors
         run: git diff --check
 
