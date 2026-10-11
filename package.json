@@ -12,8 +12,10 @@
     "validate:auth-manifest": "node scripts/validate-authorization-manifest.mjs",
     "validate:phase2-boundaries": "node scripts/validate-phase2-boundaries.mjs",
     "validate:edge-security": "node scripts/validate-edge-security-module.mjs",
+    "validate:phase3-preview": "node scripts/validate-phase3-preview.mjs",
     "verify:phase1": "npm run audit:source && npm run typecheck && npm run check:build-inputs && npm run validate:auth-manifest",
-    "verify:phase2": "npm run verify:phase1 && npm run validate:phase2-boundaries && npm run validate:edge-security"
+    "verify:phase2": "npm run verify:phase1 && npm run validate:phase2-boundaries && npm run validate:edge-security",
+    "verify:phase3": "npm run verify:phase2 && npm run validate:phase3-preview"
   },
   "dependencies": {
     "@sentry/nextjs": "10.75.2",
