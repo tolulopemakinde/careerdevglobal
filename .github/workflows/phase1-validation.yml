@@ -46,6 +46,9 @@ jobs:
       - name: Validate Phase 2 AI boundaries
         run: npm run validate:phase2-boundaries
 
+      - name: Validate Edge security module
+        run: npm run validate:edge-security
+
       - name: Check whitespace errors
         run: git diff --check
 
