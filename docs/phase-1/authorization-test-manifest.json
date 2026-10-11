@@ -103,6 +103,38 @@
       "actor": "client",
       "expected": "rejected_or_bounded",
       "risk": "high"
+    },
+    {
+      "id": "runtime-human-review-preservation",
+      "category": "ai-governance",
+      "action": "complete_direct_runtime_review_required_execution",
+      "actor": "client",
+      "expected": "rejected_until_approval",
+      "risk": "critical"
+    },
+    {
+      "id": "matching-error-redaction",
+      "category": "privacy",
+      "action": "receive_public_matching_error",
+      "actor": "anonymous",
+      "expected": "stable_public_error_without_internal_detail",
+      "risk": "high"
+    },
+    {
+      "id": "matching-abuse-budget",
+      "category": "abuse-resistance",
+      "action": "repeat_anonymous_coach_matching_requests",
+      "actor": "anonymous",
+      "expected": "bounded_by_rate_or_budget_control",
+      "risk": "high"
+    },
+    {
+      "id": "paystack-signature-replay",
+      "category": "webhook-security",
+      "action": "replay_verified_paystack_event",
+      "actor": "external_provider",
+      "expected": "single_state_transition",
+      "risk": "critical"
     }
   ]
 }

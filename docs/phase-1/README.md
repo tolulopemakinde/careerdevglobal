@@ -44,4 +44,4 @@ npm run build
 
 ## Current evidence
 
-The read-only Supabase inspection is recorded in [`supabase-observed-controls.md`](./supabase-observed-controls.md). It confirms several meaningful in-function authorization controls while identifying remaining decisions around authenticated execute grants, staff data minimization, public coach matching, governed test-run integrity, and synthetic preview isolation testing.
+The read-only Supabase inspection is recorded in [`supabase-observed-controls.md`](./supabase-observed-controls.md), and the deployed Edge Function review is recorded in [`edge-function-boundary-review.md`](./edge-function-boundary-review.md). Together they confirm several meaningful in-function authorization controls while identifying remaining decisions around authenticated execute grants, staff data minimization, public coach matching, AI human-review preservation, error redaction, webhook retention, and synthetic preview isolation testing.
