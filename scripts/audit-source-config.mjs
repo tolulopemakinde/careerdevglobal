@@ -27,7 +27,10 @@ function inspect(path) {
     { label: "Vercel token assignment", pattern: /VERCEL_TOKEN\s*[:=]\s*["'`]?(?!process\.env)[A-Za-z0-9_-]{20,}/i },
   ];
   for (const check of checks) {
-    if (check.pattern.test(text)) findings.push(`${rel}: ${check.label}`);
+    const sanitizedText = check.label === "Supabase service-role secret" && rel.startsWith("supabase/functions/")
+      ? text.replace(/Deno\.env\.get\(["'`]SUPABASE_SERVICE_ROLE_KEY["'`]\)/g, "")
+      : text;
+    if (check.pattern.test(sanitizedText)) findings.push(`${rel}: ${check.label}`);
   }
 }
 

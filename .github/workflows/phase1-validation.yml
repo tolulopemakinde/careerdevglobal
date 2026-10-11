@@ -49,6 +49,9 @@ jobs:
       - name: Validate Edge security module
         run: npm run validate:edge-security
 
+      - name: Validate Phase 3 preview controls
+        run: npm run validate:phase3-preview
+
       - name: Check whitespace errors
         run: git diff --check
 
