@@ -3,7 +3,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { allowedOrigin, consumeDistributedRateLimit, consumeRateLimit, consumeSharedQuota, diagnosticRecord, preflightResponse, readJsonWithLimit, requestKey, securityError, securityResponse, validateCoachMatchingInput } from "../_shared/edge-security.ts";
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const publishableKey = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
-const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const serviceRoleKey = Deno.env.get("CAREERDEV_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const distributedRateLimitEnabled = Deno.env.get("DISTRIBUTED_RATE_LIMIT_ENABLED") !== "false";
 const configuredOrigins = (Deno.env.get("ALLOWED_ORIGINS") ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
 const allowedOrigins = configuredOrigins.length > 0 ? configuredOrigins : ["https://careerdevglobal-nine.vercel.app"];
