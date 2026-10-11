@@ -28,6 +28,10 @@ The command includes all Phase 1–3 checks and the Phase 4 deterministic model 
 
 The simulation does not prove Postgres row locking, Supabase RPC grants, Edge Function deployment behavior, or production protection. Those require a separately verified isolated Supabase preview environment.
 
+## Current deployment verification
+
+The four phases have successful Vercel preview deployments, but production remains on `main` commit `107af72`. Supabase still serves the pre-hardening coach-matching function version 13. See `deployment-verification-2026-10-11.md` for the read-only evidence and the exact remaining rollout gap.
+
 ## Required preview evidence
 
 1. Concurrent calls from multiple function instances stop at the configured limiter and quota boundaries.
