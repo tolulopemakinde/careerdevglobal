@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# TypeScript incremental state
+*.tsbuildinfo
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Extracted/generated assets from the build archive
+public/cdg-favicon.jpg
+public/cdg-wordmark.jpg
+
+# Local logs and OS files
+*.log
+.DS_Store
