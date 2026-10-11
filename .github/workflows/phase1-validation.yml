@@ -1,0 +1,50 @@
+name: Phase 1 validation
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, 'phase-*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phase1-validation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Source, types, inputs, and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      SENTRY_SILENT: 'true'
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Run source-secret audit
+        run: npm run audit:source
+
+      - name: Run TypeScript check
+        run: npm run typecheck
+
+      - name: Verify packaged build inputs
+        run: npm run check:build-inputs
+
+      - name: Check whitespace errors
+        run: git diff --check
+
+      - name: Build application
+        run: npm run build
