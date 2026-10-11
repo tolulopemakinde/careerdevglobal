@@ -4,14 +4,15 @@ import { allowedOrigin, consumeDistributedRateLimit, consumeRateLimit, consumeSh
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const publishableKey = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
 const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-const distributedRateLimitEnabled = Deno.env.get("DISTRIBUTED_RATE_LIMIT_ENABLED") === "true";
+const distributedRateLimitEnabled = Deno.env.get("DISTRIBUTED_RATE_LIMIT_ENABLED") !== "false";
 const configuredOrigins = (Deno.env.get("ALLOWED_ORIGINS") ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
+const allowedOrigins = configuredOrigins.length > 0 ? configuredOrigins : ["https://careerdevglobal-nine.vercel.app"];
 const model = new Supabase.ai.Session("gte-small");
 const publicCoach = (coach: any) => ({ coach_id: coach.coach_id, display_name: coach.display_name, headline: coach.headline, bio: coach.bio, specializations: coach.specializations, coaching_formats: coach.coaching_formats, languages: coach.languages, timezone: coach.timezone, country: coach.country, years_coaching: coach.years_coaching });
 Deno.serve(async (request) => {
   const requestId = request.headers.get("x-request-id")?.trim() || crypto.randomUUID();
   const originHeader = request.headers.get("origin");
-  const origin = allowedOrigin(request, configuredOrigins);
+  const origin = allowedOrigin(request, allowedOrigins);
   if (request.method === "OPTIONS") return originHeader && !origin ? securityError("FORBIDDEN_ORIGIN", 403, requestId) : preflightResponse(requestId, origin);
   if (originHeader && !origin) return securityError("FORBIDDEN_ORIGIN", 403, requestId);
   if (request.method !== "POST") return securityError("METHOD_NOT_ALLOWED", 405, requestId, origin);
