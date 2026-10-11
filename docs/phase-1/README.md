@@ -41,3 +41,7 @@ npm run build
 3. `npm run typecheck` passes.
 4. The AI state-machine and RPC review matrix are reviewed by the owner before any Supabase remediation.
 5. Any later production change is proposed separately with exact SQL/configuration and a rollback plan.
+
+## Current evidence
+
+The read-only Supabase inspection is recorded in [`supabase-observed-controls.md`](./supabase-observed-controls.md). It confirms several meaningful in-function authorization controls while identifying remaining decisions around authenticated execute grants, staff data minimization, public coach matching, governed test-run integrity, and synthetic preview isolation testing.
