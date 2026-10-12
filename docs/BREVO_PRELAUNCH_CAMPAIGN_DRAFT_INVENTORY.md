@@ -51,7 +51,7 @@ The following are **marketing campaign drafts** prepared in the connected Brevo 
 
 ## Required before activation
 1. The two missing email copies are prepared in [BREVO_MISSING_CAMPAIGN_COPY.md](./BREVO_MISSING_CAMPAIGN_COPY.md). The connected Brevo API requires a recipient list or segment to create each campaign. No new marketing list/segment creation tool is available in this connection, and no existing tester list or unverified list should be attached merely to bypass that requirement. Therefore the two campaigns remain repository-only copy until a dedicated, empty audience list/segment is created in Brevo.
-2. Replace the temporary site link with the final approved domain and correct segment-specific landing pages when available.
+2. Replace the temporary site link with the final approved domain and correct segment-specific landing pages when available. The inspected HTML currently points to the site root rather than segment-specific pages.
 3. Confirm a verified company-domain sender and SPF, DKIM and DMARC.
 4. Keep client/coach tester lists separate from marketing lists. Existing Brevo lists IDs 4 and 5 are tester lists, not the default marketing audience.
 5. Create dedicated segment lists or verified segments and map consent evidence (topic, date, source).
