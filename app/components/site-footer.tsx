@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 const footerGroups = [
-  { title: "For Clients", links: [["Career Intelligence","/career-intelligence"],["Find a Coach","/coach-matching"],["Career Services","/#services"],["Client Signup","/client/signup"],["How It Works","/help-center#clients"]] },
+  { title: "For Clients", links: [["Career Intelligence","/career-intelligence"],["Find a Coach","/coach-matching"],["Career Services","/book-service"],["Client Signup","/client/signup"],["How It Works","/help-center#clients"]] },
   { title: "For Coaches", links: [["Coach With Us","/coach-registration"],["Coach Signup","/coach/signup"],["Coach Agreement","/coach-agreement"],["Coach Guidance","/help-center#coaches"],["Professional Standards","/#professional-standards"]] },
   { title: "Resources", links: [["Help Center","/help-center"],["FAQ","/faq"],["Career Insights","/career-insights"],["Contact Us","mailto:hello@careerdevglobal.com"]] },
   { title: "Legal & Trust", links: [["Privacy Policy","/privacy-policy"],["Conditions of Use","/conditions-of-use"],["AI & Professional Standards","/help-center#ai-trust"],["Accessibility","/help-center#accessibility-support"]] },
