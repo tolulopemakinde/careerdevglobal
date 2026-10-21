@@ -506,3 +506,43 @@ main:not(.homepage-motion) button:not(:disabled):hover,
     transform: none !important;
   }
 }
+
+
+/* Shared scroll-reveal and touch feedback for content cards across every route. */
+.cdg-scroll-motion {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0) scale(.985);
+  transition:
+    opacity .54s ease,
+    transform .54s cubic-bezier(.2,.75,.25,1),
+    box-shadow .24s ease,
+    border-color .24s ease;
+  animation: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+.cdg-scroll-motion.cdg-scroll-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+.cdg-scroll-motion.cdg-scroll-visible:hover {
+  transform: translate3d(0, -4px, 0) scale(1.01);
+  box-shadow: 0 14px 30px rgba(10, 37, 64, .1);
+}
+.cdg-scroll-motion.cdg-scroll-visible:active {
+  transform: translate3d(0, 0, 0) scale(.985);
+}
+@media (max-width: 700px) {
+  .cdg-scroll-motion.cdg-scroll-visible:hover { transform: none; }
+  .cdg-scroll-motion.cdg-scroll-visible:active { transform: scale(.985); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cdg-scroll-motion,
+  .cdg-scroll-motion.cdg-scroll-visible,
+  .cdg-scroll-motion.cdg-scroll-visible:hover,
+  .cdg-scroll-motion.cdg-scroll-visible:active {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
