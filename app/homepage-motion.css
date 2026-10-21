@@ -1,0 +1,52 @@
+/* Homepage premium motion layer. Existing hero/coaching/CTA background images and overlays remain untouched. */
+.homepage-motion .hero { isolation: isolate; }
+.homepage-motion .hero-grid { position: relative; z-index: 2; }
+.global-network {
+  position: absolute; z-index: 1; inset: 0 0 0 auto; width: min(56%, 760px);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  color: rgba(142,205,255,.38); pointer-events: none; opacity: .62;
+  -webkit-mask-image: linear-gradient(90deg,transparent 0%,#000 24%,#000 100%);
+  mask-image: linear-gradient(90deg,transparent 0%,#000 24%,#000 100%);
+}
+.global-network-svg { display:block; width:100%; max-height:620px; overflow:visible; }
+.network-lines { stroke-dasharray:5 12; animation:cdg-network-flow 24s linear infinite; }
+.network-orbits { opacity:.6; transform-origin:50% 50%; animation:cdg-network-orbit 46s linear infinite; }
+.network-nodes circle { transform-box:fill-box; transform-origin:center; animation:cdg-network-node 4.8s ease-in-out infinite; }
+.network-nodes circle:nth-child(3n) { animation-delay:-1.7s; }
+.network-nodes circle:nth-child(3n + 1) { animation-delay:-3.1s; }
+.network-pulse { transform-box:fill-box; transform-origin:center; animation:cdg-network-pulse 3.8s ease-out infinite; }
+.network-pulse-delay { animation-delay:-1.9s; }
+.motion-hero-copy { animation:cdg-enter-left .8s cubic-bezier(.2,.75,.25,1) both; }
+.motion-hero-card { animation:cdg-enter-right .9s cubic-bezier(.2,.75,.25,1) .12s both; }
+.homepage-motion .button { will-change:transform; }
+.homepage-motion .button:active { transform:translateY(0) scale(.985); }
+.homepage-motion .card { transition:transform .28s cubic-bezier(.2,.75,.25,1),box-shadow .28s ease,border-color .28s ease; }
+.homepage-motion .card:hover { transform:translateY(-6px); border-color:rgba(23,100,223,.34); box-shadow:0 20px 44px rgba(16,32,63,.12); }
+.homepage-motion .service-icon { transition:transform .3s cubic-bezier(.2,.75,.25,1),background-color .3s ease,border-color .3s ease; }
+.homepage-motion .card:hover .service-icon,.homepage-motion .card:focus-within .service-icon { transform:translateY(-3px) rotate(-4deg) scale(1.045); background-color:#d9edff; border-color:#a9d5f5; }
+.homepage-motion .journey-step { display:inline-flex; align-items:center; gap:9px; }
+.homepage-motion .journey-step b { transition:transform .25s ease; }
+.homepage-motion .journey-step:hover b { transform:translateX(3px); }
+@keyframes cdg-network-flow { to { stroke-dashoffset:-180; } }
+@keyframes cdg-network-orbit { to { transform:rotate(360deg); } }
+@keyframes cdg-network-node { 0%,100% { opacity:.72; transform:scale(.92); } 50% { opacity:1; transform:scale(1.22); } }
+@keyframes cdg-network-pulse { 0% { opacity:.7; transform:scale(.55); } 75%,100% { opacity:0; transform:scale(2.1); } }
+@keyframes cdg-enter-left { from { opacity:0; transform:translate3d(-18px,10px,0); } to { opacity:1; transform:translate3d(0,0,0); } }
+@keyframes cdg-enter-right { from { opacity:0; transform:translate3d(18px,12px,0); } to { opacity:1; transform:translate3d(0,0,0); } }
+@supports (animation-timeline:view()) {
+  .homepage-motion .motion-reveal { animation:cdg-scroll-reveal linear both; animation-timeline:view(); animation-range:entry 0% entry 32%; }
+  .homepage-motion .card.motion-reveal { animation-delay:calc(var(--motion-index,0) * 45ms); }
+}
+@keyframes cdg-scroll-reveal { from { opacity:.25; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+@media (max-width:900px) { .global-network { width:76%; opacity:.34; } .homepage-motion .hero-grid { gap:34px; } }
+@media (max-width:700px) {
+  .global-network { inset:0 -28% auto auto; width:110%; height:62%; opacity:.28; }
+  .global-network-svg { width:100%; height:100%; }
+  .motion-hero-copy,.motion-hero-card { animation-duration:.65s; }
+  .homepage-motion .card:hover { transform:none; }
+  .homepage-motion .card:active { transform:scale(.99); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .global-network-svg,.network-lines,.network-orbits,.network-nodes circle,.network-pulse,.motion-hero-copy,.motion-hero-card,.homepage-motion .motion-reveal { animation:none !important; }
+  .homepage-motion .card,.homepage-motion .service-icon,.homepage-motion .journey-step b,.homepage-motion .button { transition:none !important; transform:none !important; }
+}
