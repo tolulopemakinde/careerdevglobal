@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./homepage-motion.css";
 import "./auth.css";
 import "./responsive.css";
 import "./site-pages.css";
