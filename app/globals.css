@@ -344,3 +344,41 @@ body:has(.site-header) .professional-standards { display: block; }
   }
   .pwa-install-logo { max-height: 68px; }
 }
+
+
+/* Match the homepage Career Development Framework card to the Career Intelligence glass panel. */
+.hero-card {
+  padding: 26px;
+  border: 1px solid rgba(255,255,255,.24);
+  border-radius: 22px;
+  background: rgba(255,255,255,.1);
+  color: #fff;
+  box-shadow: 0 25px 70px rgba(0,0,0,.2);
+  backdrop-filter: blur(12px);
+}
+.hero-card-top, .hero-card-top::after {
+  color: #a8e2f8;
+}
+.hero-card-top::after {
+  letter-spacing: .16em;
+}
+.journey {
+  gap: 7px;
+  margin: 22px 0;
+}
+.journey span {
+  padding: 11px 9px;
+  border-radius: 9px;
+  background: rgba(255,255,255,.1);
+  color: #fff;
+  font-size: 11px;
+}
+.journey b {
+  color: #9edcf4;
+}
+.hero-card p {
+  color: #e7f2fa;
+}
+@media (max-width: 700px) {
+  .hero-card { padding: 20px; }
+}
