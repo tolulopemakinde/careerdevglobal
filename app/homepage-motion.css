@@ -355,3 +355,58 @@ main:not(.homepage-motion) button:not(:disabled):hover,
     transform: none !important;
   }
 }
+
+
+/* Account, sign-in, registration, and admin sub-pages use the same motion language. */
+.cdg-auth-shell,
+.cdg-account-page,
+.cdg-account-shell {
+  animation: cdg-page-section-enter .65s cubic-bezier(.2,.75,.25,1) both;
+}
+.cdg-auth-card,
+.cdg-account-hero,
+.cdg-account-grid > *,
+.admin-shell .admin-sidebar,
+.admin-shell .admin-topbar,
+.admin-shell .admin-main > * {
+  animation: cdg-panel-enter .62s cubic-bezier(.2,.75,.25,1) both;
+}
+.cdg-auth-card,
+.cdg-account-card,
+.cdg-account-grid > *,
+.admin-shell .admin-icon-button,
+.admin-shell .admin-action-button {
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.cdg-auth-card:hover,
+.cdg-account-card:hover,
+.cdg-account-grid > *:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(10, 37, 64, .09);
+}
+@media (max-width: 700px) {
+  .cdg-auth-card:hover,
+  .cdg-account-card:hover,
+  .cdg-account-grid > *:hover { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cdg-auth-shell,
+  .cdg-auth-card,
+  .cdg-account-page,
+  .cdg-account-shell,
+  .cdg-account-hero,
+  .cdg-account-grid > *,
+  .admin-shell .admin-sidebar,
+  .admin-shell .admin-topbar,
+  .admin-shell .admin-main > * {
+    animation: none !important;
+  }
+  .cdg-auth-card,
+  .cdg-account-card,
+  .cdg-account-grid > *,
+  .admin-shell .admin-icon-button,
+  .admin-shell .admin-action-button {
+    transition: none !important;
+    transform: none !important;
+  }
+}
