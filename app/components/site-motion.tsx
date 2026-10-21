@@ -25,13 +25,14 @@ const MOTION_TARGETS = [
   ".admin-bottom-grid > section",
   ".admin-content-list",
   ".admin-alert-list",
-  ".ci-page #profile .profile-item",
-  ".ci-page #workflow .workflow-step",
-  ".ci-page #systems .system-card",
+  "#profile .profile-item",
+  ".workflow .workflow-step",
+  ".systems-grid .system-card",
   ".ci-page .ci-card",
   ".ci-page .control-panel",
   ".ci-page .ci-result",
   ".motion-reveal",
+  '[data-cdg-motion="agent-card"]',
 ].join(",");
 
 export default function SiteMotion() {
