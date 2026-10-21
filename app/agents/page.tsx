@@ -191,7 +191,7 @@ export default function AgentsPage() {
                   {list.map(agent => {
                     const allowed = included.has(agent.agent_key);
                     return (
-                      <article key={agent.id} style={{ background: '#fff', border: '1px solid ' + (allowed ? '#d8e6f1' : '#e3e8ed'), borderRadius: 16, padding: 18, boxShadow: '0 8px 25px rgba(0,60,100,.05)', opacity: allowed ? 1 : .86 }}>
+                      <article key={agent.id} data-cdg-motion="agent-card" style={{ background: '#fff', border: '1px solid ' + (allowed ? '#d8e6f1' : '#e3e8ed'), borderRadius: 16, padding: 18, boxShadow: '0 8px 25px rgba(0,60,100,.05)', opacity: allowed ? 1 : .86 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'start' }}>
                           <h3 style={{ margin: 0 }}>{agent.name}</h3>
                           <span style={{ fontSize: 11, fontWeight: 900, padding: '4px 7px', borderRadius: 999, background: allowed ? '#eaf6ef' : '#f1f3f5', whiteSpace: 'nowrap' }}>{allowed ? 'Included' : 'Locked'}</span>
