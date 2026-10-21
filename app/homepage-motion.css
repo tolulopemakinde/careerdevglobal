@@ -453,23 +453,28 @@ main:not(.homepage-motion) button:not(:disabled):hover,
 .ci-page .systems-grid .system-card:focus-within .system-icon {
   transform: translateY(-3px) rotate(-5deg) scale(1.1);
 }
-@supports (animation-timeline: view()) {
-  .ci-page #profile .profile-item,
-  .ci-page #workflow .workflow-step,
-  .ci-page #systems .system-card {
-    animation: ci-card-scroll-enter linear both;
-    animation-timeline: view();
-    animation-range: entry 0% entry 65%;
-  }
-  .ci-page #profile .profile-item:nth-child(2n),
-  .ci-page #workflow .workflow-step:nth-child(2n),
-  .ci-page #systems .system-card:nth-child(2n) {
-    animation-delay: 35ms;
-  }
+.ci-page #profile .profile-item,
+.ci-page #workflow .workflow-step,
+.ci-page #systems .system-card {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0) scale(.975);
+  transition:
+    opacity .52s ease,
+    transform .52s cubic-bezier(.2,.75,.25,1),
+    box-shadow .24s ease,
+    border-color .24s ease,
+    background-color .24s ease;
 }
-@keyframes ci-card-scroll-enter {
-  from { opacity: .35; transform: translate3d(0, 24px, 0) scale(.975); }
-  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+.ci-page #profile .profile-item.ci-card-visible,
+.ci-page #workflow .workflow-step.ci-card-visible,
+.ci-page #systems .system-card.ci-card-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+.ci-page #profile .profile-item:nth-child(2n).ci-card-visible,
+.ci-page #workflow .workflow-step:nth-child(2n).ci-card-visible,
+.ci-page #systems .system-card:nth-child(2n).ci-card-visible {
+  transition-delay: 45ms;
 }
 @media (max-width: 700px) {
   .ci-page .profile-grid .profile-item:hover,
@@ -483,6 +488,13 @@ main:not(.homepage-motion) button:not(:disabled):hover,
   .ci-page .systems-grid .system-card:active { transform: scale(.975); }
 }
 @media (prefers-reduced-motion: reduce) {
+  .ci-page #profile .profile-item,
+  .ci-page #workflow .workflow-step,
+  .ci-page #systems .system-card {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
   .ci-page .profile-grid .profile-item,
   .ci-page .workflow .workflow-step,
   .ci-page .systems-grid .system-card,
