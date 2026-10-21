@@ -50,3 +50,144 @@
   .global-network-svg,.network-lines,.network-orbits,.network-nodes circle,.network-pulse,.motion-hero-copy,.motion-hero-card,.homepage-motion .motion-reveal { animation:none !important; }
   .homepage-motion .card,.homepage-motion .service-icon,.homepage-motion .journey-step b,.homepage-motion .button { transition:none !important; transform:none !important; }
 }
+
+
+/* Stronger, still restrained signature motion. Background images and overlays are intentionally untouched. */
+.global-network { opacity: .82; color: rgba(173, 220, 255, .72); }
+.global-network-svg {
+  filter: drop-shadow(0 0 16px rgba(75, 165, 255, .14));
+  animation: cdg-network-drift 15s ease-in-out infinite alternate;
+}
+.network-lines { animation-duration: 12s; }
+.network-orbits { animation-duration: 30s; }
+.network-nodes circle { animation-duration: 3.2s; }
+.network-pulse { animation-duration: 2.8s; }
+.motion-hero-copy { animation-duration: 1.05s; }
+.motion-hero-card { animation-duration: 1.15s; }
+@keyframes cdg-network-drift {
+  0% { transform: translate3d(0, 0, 0) scale(.985); }
+  50% { transform: translate3d(-8px, 5px, 0) scale(1.005); }
+  100% { transform: translate3d(5px, -6px, 0) scale(1.02); }
+}
+
+/* Signed-in client and coach portals: reveal key panels without changing behavior. */
+.client-dash .dash-wrap > header,
+.coach-dash .dash-wrap > header {
+  animation: cdg-panel-enter .65s cubic-bezier(.2,.75,.25,1) both;
+}
+.client-dash .dash-hero,
+.coach-dash .dash-hero {
+  animation: cdg-panel-enter .8s cubic-bezier(.2,.75,.25,1) .08s both;
+}
+.client-dash .dash-message,
+.coach-dash .dash-message {
+  animation: cdg-status-enter .35s ease-out both;
+}
+.client-dash .dash-wrap > .dash-card,
+.client-dash .dash-wrap > section.dash-card,
+.coach-dash .dash-wrap > .dash-card,
+.coach-dash .dash-wrap > section.dash-card,
+.coach-dash .dash-wrap > .status-grid,
+.coach-dash .dash-wrap > .offering-list {
+  animation: cdg-panel-enter .65s cubic-bezier(.2,.75,.25,1) both;
+}
+.client-dash .booking-card,
+.coach-dash .booking-card,
+.coach-dash .offering-card {
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.client-dash .booking-card:hover,
+.coach-dash .booking-card:hover,
+.coach-dash .offering-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(10, 37, 64, .09);
+}
+.client-dash .journey-steps > div,
+.coach-dash .status-grid > div {
+  transition: transform .22s ease, box-shadow .22s ease;
+}
+.client-dash .journey-steps > div:hover,
+.coach-dash .status-grid > div:hover {
+  transform: translateY(-2px);
+}
+
+/* Admin workspace: restrained entrance and interaction feedback for key panels. */
+.admin-page .admin-topbar {
+  animation: cdg-panel-enter .65s cubic-bezier(.2,.75,.25,1) both;
+}
+.admin-page .admin-kpi-card {
+  animation: cdg-panel-enter .58s cubic-bezier(.2,.75,.25,1) both;
+}
+.admin-page .admin-kpi-card:nth-child(2) { animation-delay: .06s; }
+.admin-page .admin-kpi-card:nth-child(3) { animation-delay: .12s; }
+.admin-page .admin-kpi-card:nth-child(4) { animation-delay: .18s; }
+.admin-page .admin-insight-grid > section,
+.admin-page .admin-bottom-grid > section,
+.admin-page .admin-content-list,
+.admin-page .admin-alert-list {
+  animation: cdg-panel-enter .62s cubic-bezier(.2,.75,.25,1) both;
+}
+.admin-page .admin-icon-button,
+.admin-page .admin-action-button,
+.admin-page .admin-kpi-card {
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.admin-page .admin-icon-button:hover,
+.admin-page .admin-action-button:hover {
+  transform: translateY(-2px);
+}
+.admin-page .admin-kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(20,55,85,.1);
+}
+@keyframes cdg-panel-enter {
+  from { opacity: .78; transform: translate3d(0, 14px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes cdg-status-enter {
+  from { opacity: .72; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 700px) {
+  .global-network { opacity: .52; }
+  .global-network-svg { animation-duration: 20s; }
+  .client-dash .booking-card:hover,
+  .coach-dash .booking-card:hover,
+  .coach-dash .offering-card:hover,
+  .admin-page .admin-kpi-card:hover { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .global-network-svg { animation: none !important; }
+  .client-dash .dash-wrap > header,
+  .coach-dash .dash-wrap > header,
+  .client-dash .dash-hero,
+  .coach-dash .dash-hero,
+  .client-dash .dash-message,
+  .coach-dash .dash-message,
+  .client-dash .dash-wrap > .dash-card,
+  .client-dash .dash-wrap > section.dash-card,
+  .coach-dash .dash-wrap > .dash-card,
+  .coach-dash .dash-wrap > section.dash-card,
+  .coach-dash .dash-wrap > .status-grid,
+  .coach-dash .dash-wrap > .offering-list,
+  .admin-page .admin-topbar,
+  .admin-page .admin-kpi-card,
+  .admin-page .admin-insight-grid > section,
+  .admin-page .admin-bottom-grid > section,
+  .admin-page .admin-content-list,
+  .admin-page .admin-alert-list {
+    animation: none !important;
+  }
+  .client-dash .booking-card,
+  .coach-dash .booking-card,
+  .coach-dash .offering-card,
+  .client-dash .journey-steps > div,
+  .coach-dash .status-grid > div,
+  .admin-page .admin-icon-button,
+  .admin-page .admin-action-button,
+  .admin-page .admin-kpi-card {
+    transition: none !important;
+    transform: none !important;
+  }
+}
