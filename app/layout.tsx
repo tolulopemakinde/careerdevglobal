@@ -8,6 +8,7 @@ import NavigationEnhancements from "./navigation-enhancements";
 import SiteHeader from "./components/site-header";
 import SiteFooter from "./components/site-footer";
 import PwaInstallPrompt from "./pwa-install-prompt";
+import SiteMotion from "./components/site-motion";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://careerdevglobal-nine.vercel.app"),
@@ -77,6 +78,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <a className="skip-link" href="#services">Skip to content</a>
         <SiteHeader />
         <NavigationEnhancements />
+        <SiteMotion />
         <PwaInstallPrompt />
         {children}
         <SiteFooter />
