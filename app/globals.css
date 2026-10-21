@@ -382,3 +382,33 @@ body:has(.site-header) .professional-standards { display: block; }
 @media (max-width: 700px) {
   .hero-card { padding: 20px; }
 }
+
+
+/* Give the homepage framework card more room and keep its six-stage journey on one desktop line. */
+@media (min-width: 901px) {
+  .hero-grid {
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+    gap: 40px;
+  }
+  .hero-card {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  .journey {
+    flex-wrap: nowrap;
+    gap: 5px;
+    font-size: clamp(10px, .82vw, 12px);
+  }
+  .journey span {
+    flex: 0 1 auto;
+    min-width: 0;
+    padding: 9px 7px;
+    white-space: nowrap;
+  }
+}
+@media (max-width: 900px) {
+  .journey {
+    flex-wrap: wrap;
+  }
+}
