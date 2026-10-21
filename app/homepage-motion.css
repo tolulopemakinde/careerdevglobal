@@ -191,3 +191,167 @@
     transform: none !important;
   }
 }
+
+
+/* Site-wide motion system: extend the same premium language beyond the homepage. */
+main:not(.homepage-motion):not(.client-dash):not(.coach-dash) > section {
+  animation: cdg-page-section-enter .68s cubic-bezier(.2,.75,.25,1) both;
+}
+main:not(.homepage-motion):not(.client-dash):not(.coach-dash) > section:nth-of-type(2) { animation-delay: .06s; }
+main:not(.homepage-motion):not(.client-dash):not(.coach-dash) > section:nth-of-type(3) { animation-delay: .12s; }
+main:not(.homepage-motion):not(.client-dash):not(.coach-dash) > section:nth-of-type(4) { animation-delay: .18s; }
+main:not(.homepage-motion):not(.client-dash):not(.coach-dash) > section:nth-of-type(5) { animation-delay: .24s; }
+
+/* Reusable cards, content panels, and article surfaces across public pages. */
+.blog-page .blog-featured,
+.blog-page .blog-card,
+.article-wrap,
+.legal-page .notice-card,
+.legal-page .conditions-grid > *,
+.help-page .notice-card,
+.faq-page .notice-card,
+.feature-card,
+.audience-card,
+.career-insight-card,
+.cdg-account-card,
+main:not(.homepage-motion) .service-card,
+main:not(.homepage-motion) .pricing-card {
+  animation: cdg-panel-enter .62s cubic-bezier(.2,.75,.25,1) both;
+}
+.blog-page .blog-card:nth-child(2),
+.career-insights-grid .career-insight-card:nth-child(2) { animation-delay: .05s; }
+.blog-page .blog-card:nth-child(3),
+.career-insights-grid .career-insight-card:nth-child(3) { animation-delay: .1s; }
+.blog-page .blog-card:nth-child(4),
+.career-insights-grid .career-insight-card:nth-child(4) { animation-delay: .15s; }
+
+.blog-page .blog-card,
+.blog-page .blog-featured,
+.feature-card,
+.audience-card,
+.career-insight-card,
+.cdg-account-card,
+.legal-page .notice-card,
+.ci-card,
+.system-card,
+.workflow-step {
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.blog-page .blog-card:hover,
+.blog-page .blog-featured:hover,
+.feature-card:hover,
+.audience-card:hover,
+.career-insight-card:hover,
+.cdg-account-card:hover,
+.legal-page .notice-card:hover,
+.ci-card:hover,
+.system-card:hover,
+.workflow-step:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(10, 37, 64, .1);
+}
+main:not(.homepage-motion) a.button,
+main:not(.homepage-motion) button:not(:disabled),
+.ci-page .ci-primary:not(:disabled),
+.ci-page .ci-secondary:not(:disabled) {
+  transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+main:not(.homepage-motion) a.button:hover,
+main:not(.homepage-motion) button:not(:disabled):hover,
+.ci-page .ci-primary:not(:disabled):hover,
+.ci-page .ci-secondary:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(2, 32, 85, .14);
+}
+
+/* Career Intelligence: keep its existing layouts, controls, and background intact. */
+.ci-page > .ci-hero {
+  animation: cdg-panel-enter .8s cubic-bezier(.2,.75,.25,1) both;
+}
+.ci-page .ci-hero-panel {
+  animation: cdg-panel-enter .82s cubic-bezier(.2,.75,.25,1) .1s both;
+}
+.ci-page .ci-section {
+  animation: cdg-page-section-enter .7s cubic-bezier(.2,.75,.25,1) both;
+}
+.ci-page .ci-card,
+.ci-page .system-card,
+.ci-page .workflow-step,
+.ci-page .control-panel,
+.ci-page .ci-result {
+  animation: cdg-panel-enter .62s cubic-bezier(.2,.75,.25,1) both;
+}
+.ci-page .system-card:nth-child(2),
+.ci-page .workflow-step:nth-child(2) { animation-delay: .05s; }
+.ci-page .system-card:nth-child(3),
+.ci-page .workflow-step:nth-child(3) { animation-delay: .1s; }
+.ci-page .system-card:nth-child(4),
+.ci-page .workflow-step:nth-child(4) { animation-delay: .15s; }
+.ci-page .ci-live-dot {
+  animation: cdg-live-glow 2.4s ease-in-out infinite;
+}
+@keyframes cdg-page-section-enter {
+  from { opacity: .82; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes cdg-live-glow {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(255,255,255,.16); }
+  50% { box-shadow: 0 0 0 7px rgba(255,255,255,.08), 0 0 14px rgba(158,224,249,.5); }
+}
+
+@media (max-width: 700px) {
+  .blog-page .blog-card:hover,
+  .blog-page .blog-featured:hover,
+  .feature-card:hover,
+  .audience-card:hover,
+  .career-insight-card:hover,
+  .cdg-account-card:hover,
+  .legal-page .notice-card:hover,
+  .ci-card:hover,
+  .system-card:hover,
+  .workflow-step:hover { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  main:not(.homepage-motion):not(.client-dash):not(.coach-dash) > section,
+  .blog-page .blog-featured,
+  .blog-page .blog-card,
+  .article-wrap,
+  .legal-page .notice-card,
+  .legal-page .conditions-grid > *,
+  .help-page .notice-card,
+  .faq-page .notice-card,
+  .feature-card,
+  .audience-card,
+  .career-insight-card,
+  .cdg-account-card,
+  main:not(.homepage-motion) .service-card,
+  main:not(.homepage-motion) .pricing-card,
+  .ci-page > .ci-hero,
+  .ci-page .ci-hero-panel,
+  .ci-page .ci-section,
+  .ci-page .ci-card,
+  .ci-page .system-card,
+  .ci-page .workflow-step,
+  .ci-page .control-panel,
+  .ci-page .ci-result,
+  .ci-page .ci-live-dot {
+    animation: none !important;
+  }
+  .blog-page .blog-card,
+  .blog-page .blog-featured,
+  .feature-card,
+  .audience-card,
+  .career-insight-card,
+  .cdg-account-card,
+  .legal-page .notice-card,
+  .ci-card,
+  .system-card,
+  .workflow-step,
+  main:not(.homepage-motion) a.button,
+  main:not(.homepage-motion) button:not(:disabled),
+  .ci-page .ci-primary:not(:disabled),
+  .ci-page .ci-secondary:not(:disabled) {
+    transition: none !important;
+    transform: none !important;
+  }
+}
