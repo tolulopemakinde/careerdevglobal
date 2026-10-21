@@ -39,7 +39,7 @@ export default function SiteMotion() {
     const targets = document.querySelectorAll<HTMLElement>(MOTION_TARGETS);
 
     if (!("IntersectionObserver" in window)) {
-      targets.forEach((target) => target.classList.add("cdg-scroll-visible"));
+      targets.forEach((target) => target.classList.add("cdg-scroll-motion", "cdg-scroll-visible"));
       return;
     }
 
