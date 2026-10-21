@@ -1,0 +1,412 @@
+/* Homepage premium motion layer. Existing hero/coaching/CTA background images and overlays remain untouched. */
+.homepage-motion .hero { isolation: isolate; }
+.homepage-motion .hero-grid { position: relative; z-index: 2; }
+.global-network {
+  position: absolute; z-index: 1; inset: 0 0 0 auto; width: min(56%, 760px);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  color: rgba(142,205,255,.38); pointer-events: none; opacity: .62;
+  -webkit-mask-image: linear-gradient(90deg,transparent 0%,#000 24%,#000 100%);
+  mask-image: linear-gradient(90deg,transparent 0%,#000 24%,#000 100%);
+}
+.global-network-svg { display:block; width:100%; max-height:620px; overflow:visible; }
+.network-lines { stroke-dasharray:5 12; animation:cdg-network-flow 24s linear infinite; }
+.network-orbits { opacity:.6; transform-origin:50% 50%; animation:cdg-network-orbit 46s linear infinite; }
+.network-nodes circle { transform-box:fill-box; transform-origin:center; animation:cdg-network-node 4.8s ease-in-out infinite; }
+.network-nodes circle:nth-child(3n) { animation-delay:-1.7s; }
+.network-nodes circle:nth-child(3n + 1) { animation-delay:-3.1s; }
+.network-pulse { transform-box:fill-box; transform-origin:center; animation:cdg-network-pulse 3.8s ease-out infinite; }
+.network-pulse-delay { animation-delay:-1.9s; }
+.motion-hero-copy { animation:cdg-enter-left .8s cubic-bezier(.2,.75,.25,1) both; }
+.motion-hero-card { animation:cdg-enter-right .9s cubic-bezier(.2,.75,.25,1) .12s both; }
+.homepage-motion .button { will-change:transform; }
+.homepage-motion .button:active { transform:translateY(0) scale(.985); }
+.homepage-motion .card { transition:transform .28s cubic-bezier(.2,.75,.25,1),box-shadow .28s ease,border-color .28s ease; }
+.homepage-motion .card:hover { transform:translateY(-6px); border-color:rgba(23,100,223,.34); box-shadow:0 20px 44px rgba(16,32,63,.12); }
+.homepage-motion .service-icon { transition:transform .3s cubic-bezier(.2,.75,.25,1),background-color .3s ease,border-color .3s ease; }
+.homepage-motion .card:hover .service-icon,.homepage-motion .card:focus-within .service-icon { transform:translateY(-3px) rotate(-4deg) scale(1.045); background-color:#d9edff; border-color:#a9d5f5; }
+.homepage-motion .journey-step { display:inline-flex; align-items:center; gap:9px; }
+.homepage-motion .journey-step b { transition:transform .25s ease; }
+.homepage-motion .journey-step:hover b { transform:translateX(3px); }
+@keyframes cdg-network-flow { to { stroke-dashoffset:-180; } }
+@keyframes cdg-network-orbit { to { transform:rotate(360deg); } }
+@keyframes cdg-network-node { 0%,100% { opacity:.72; transform:scale(.92); } 50% { opacity:1; transform:scale(1.22); } }
+@keyframes cdg-network-pulse { 0% { opacity:.7; transform:scale(.55); } 75%,100% { opacity:0; transform:scale(2.1); } }
+@keyframes cdg-enter-left { from { opacity:0; transform:translate3d(-18px,10px,0); } to { opacity:1; transform:translate3d(0,0,0); } }
+@keyframes cdg-enter-right { from { opacity:0; transform:translate3d(18px,12px,0); } to { opacity:1; transform:translate3d(0,0,0); } }
+@supports (animation-timeline:view()) {
+  .homepage-motion .motion-reveal { animation:cdg-scroll-reveal linear both; animation-timeline:view(); animation-range:entry 0% entry 32%; }
+  .homepage-motion .card.motion-reveal { animation-delay:calc(var(--motion-index,0) * 45ms); }
+}
+@keyframes cdg-scroll-reveal { from { opacity:.25; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+@media (max-width:900px) { .global-network { width:76%; opacity:.34; } .homepage-motion .hero-grid { gap:34px; } }
+@media (max-width:700px) {
+  .global-network { inset:0 -28% auto auto; width:110%; height:62%; opacity:.28; }
+  .global-network-svg { width:100%; height:100%; }
+  .motion-hero-copy,.motion-hero-card { animation-duration:.65s; }
+  .homepage-motion .card:hover { transform:none; }
+  .homepage-motion .card:active { transform:scale(.99); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .global-network-svg,.network-lines,.network-orbits,.network-nodes circle,.network-pulse,.motion-hero-copy,.motion-hero-card,.homepage-motion .motion-reveal { animation:none !important; }
+  .homepage-motion .card,.homepage-motion .service-icon,.homepage-motion .journey-step b,.homepage-motion .button { transition:none !important; transform:none !important; }
+}
+
+
+/* Stronger, still restrained signature motion. Background images and overlays are intentionally untouched. */
+.global-network { opacity: .82; color: rgba(173, 220, 255, .72); }
+.global-network-svg {
+  filter: drop-shadow(0 0 16px rgba(75, 165, 255, .14));
+  animation: cdg-network-drift 15s ease-in-out infinite alternate;
+}
+.network-lines { animation-duration: 12s; }
+.network-orbits { animation-duration: 30s; }
+.network-nodes circle { animation-duration: 3.2s; }
+.network-pulse { animation-duration: 2.8s; }
+.motion-hero-copy { animation-duration: 1.05s; }
+.motion-hero-card { animation-duration: 1.15s; }
+@keyframes cdg-network-drift {
+  0% { transform: translate3d(0, 0, 0) scale(.985); }
+  50% { transform: translate3d(-8px, 5px, 0) scale(1.005); }
+  100% { transform: translate3d(5px, -6px, 0) scale(1.02); }
+}
+
+/* Signed-in client and coach portals: reveal key panels without changing behavior. */
+.client-dash .dash-wrap > header,
+.coach-dash .dash-wrap > header {
+  animation: cdg-panel-enter .65s cubic-bezier(.2,.75,.25,1) both;
+}
+.client-dash .dash-hero,
+.coach-dash .dash-hero {
+  animation: cdg-panel-enter .8s cubic-bezier(.2,.75,.25,1) .08s both;
+}
+.client-dash .dash-message,
+.coach-dash .dash-message {
+  animation: cdg-status-enter .35s ease-out both;
+}
+.client-dash .dash-wrap > .dash-card,
+.client-dash .dash-wrap > section.dash-card,
+.coach-dash .dash-wrap > .dash-card,
+.coach-dash .dash-wrap > section.dash-card,
+.coach-dash .dash-wrap > .status-grid,
+.coach-dash .dash-wrap > .offering-list {
+  animation: cdg-panel-enter .65s cubic-bezier(.2,.75,.25,1) both;
+}
+.client-dash .booking-card,
+.coach-dash .booking-card,
+.coach-dash .offering-card {
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.client-dash .booking-card:hover,
+.coach-dash .booking-card:hover,
+.coach-dash .offering-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(10, 37, 64, .09);
+}
+.client-dash .journey-steps > div,
+.coach-dash .status-grid > div {
+  transition: transform .22s ease, box-shadow .22s ease;
+}
+.client-dash .journey-steps > div:hover,
+.coach-dash .status-grid > div:hover {
+  transform: translateY(-2px);
+}
+
+/* Admin workspace: restrained entrance and interaction feedback for key panels. */
+.admin-page .admin-topbar {
+  animation: cdg-panel-enter .65s cubic-bezier(.2,.75,.25,1) both;
+}
+.admin-page .admin-kpi-card {
+  animation: cdg-panel-enter .58s cubic-bezier(.2,.75,.25,1) both;
+}
+.admin-page .admin-kpi-card:nth-child(2) { animation-delay: .06s; }
+.admin-page .admin-kpi-card:nth-child(3) { animation-delay: .12s; }
+.admin-page .admin-kpi-card:nth-child(4) { animation-delay: .18s; }
+.admin-page .admin-insight-grid > section,
+.admin-page .admin-bottom-grid > section,
+.admin-page .admin-content-list,
+.admin-page .admin-alert-list {
+  animation: cdg-panel-enter .62s cubic-bezier(.2,.75,.25,1) both;
+}
+.admin-page .admin-icon-button,
+.admin-page .admin-action-button,
+.admin-page .admin-kpi-card {
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.admin-page .admin-icon-button:hover,
+.admin-page .admin-action-button:hover {
+  transform: translateY(-2px);
+}
+.admin-page .admin-kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(20,55,85,.1);
+}
+@keyframes cdg-panel-enter {
+  from { opacity: .78; transform: translate3d(0, 14px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes cdg-status-enter {
+  from { opacity: .72; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 700px) {
+  .global-network { opacity: .52; }
+  .global-network-svg { animation-duration: 20s; }
+  .client-dash .booking-card:hover,
+  .coach-dash .booking-card:hover,
+  .coach-dash .offering-card:hover,
+  .admin-page .admin-kpi-card:hover { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .global-network-svg { animation: none !important; }
+  .client-dash .dash-wrap > header,
+  .coach-dash .dash-wrap > header,
+  .client-dash .dash-hero,
+  .coach-dash .dash-hero,
+  .client-dash .dash-message,
+  .coach-dash .dash-message,
+  .client-dash .dash-wrap > .dash-card,
+  .client-dash .dash-wrap > section.dash-card,
+  .coach-dash .dash-wrap > .dash-card,
+  .coach-dash .dash-wrap > section.dash-card,
+  .coach-dash .dash-wrap > .status-grid,
+  .coach-dash .dash-wrap > .offering-list,
+  .admin-page .admin-topbar,
+  .admin-page .admin-kpi-card,
+  .admin-page .admin-insight-grid > section,
+  .admin-page .admin-bottom-grid > section,
+  .admin-page .admin-content-list,
+  .admin-page .admin-alert-list {
+    animation: none !important;
+  }
+  .client-dash .booking-card,
+  .coach-dash .booking-card,
+  .coach-dash .offering-card,
+  .client-dash .journey-steps > div,
+  .coach-dash .status-grid > div,
+  .admin-page .admin-icon-button,
+  .admin-page .admin-action-button,
+  .admin-page .admin-kpi-card {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+
+/* Site-wide motion system: extend the same premium language beyond the homepage. */
+main:not(.homepage-motion):not(.client-dash):not(.coach-dash) > section {
+  animation: cdg-page-section-enter .68s cubic-bezier(.2,.75,.25,1) both;
+}
+main:not(.homepage-motion):not(.client-dash):not(.coach-dash) > section:nth-of-type(2) { animation-delay: .06s; }
+main:not(.homepage-motion):not(.client-dash):not(.coach-dash) > section:nth-of-type(3) { animation-delay: .12s; }
+main:not(.homepage-motion):not(.client-dash):not(.coach-dash) > section:nth-of-type(4) { animation-delay: .18s; }
+main:not(.homepage-motion):not(.client-dash):not(.coach-dash) > section:nth-of-type(5) { animation-delay: .24s; }
+
+/* Reusable cards, content panels, and article surfaces across public pages. */
+.blog-page .blog-featured,
+.blog-page .blog-card,
+.article-wrap,
+.legal-page .notice-card,
+.legal-page .conditions-grid > *,
+.help-page .notice-card,
+.faq-page .notice-card,
+.feature-card,
+.audience-card,
+.career-insight-card,
+.cdg-account-card,
+main:not(.homepage-motion) .service-card,
+main:not(.homepage-motion) .pricing-card {
+  animation: cdg-panel-enter .62s cubic-bezier(.2,.75,.25,1) both;
+}
+.blog-page .blog-card:nth-child(2),
+.career-insights-grid .career-insight-card:nth-child(2) { animation-delay: .05s; }
+.blog-page .blog-card:nth-child(3),
+.career-insights-grid .career-insight-card:nth-child(3) { animation-delay: .1s; }
+.blog-page .blog-card:nth-child(4),
+.career-insights-grid .career-insight-card:nth-child(4) { animation-delay: .15s; }
+
+.blog-page .blog-card,
+.blog-page .blog-featured,
+.feature-card,
+.audience-card,
+.career-insight-card,
+.cdg-account-card,
+.legal-page .notice-card,
+.ci-card,
+.system-card,
+.workflow-step {
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.blog-page .blog-card:hover,
+.blog-page .blog-featured:hover,
+.feature-card:hover,
+.audience-card:hover,
+.career-insight-card:hover,
+.cdg-account-card:hover,
+.legal-page .notice-card:hover,
+.ci-card:hover,
+.system-card:hover,
+.workflow-step:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px rgba(10, 37, 64, .1);
+}
+main:not(.homepage-motion) a.button,
+main:not(.homepage-motion) button:not(:disabled),
+.ci-page .ci-primary:not(:disabled),
+.ci-page .ci-secondary:not(:disabled) {
+  transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease;
+}
+main:not(.homepage-motion) a.button:hover,
+main:not(.homepage-motion) button:not(:disabled):hover,
+.ci-page .ci-primary:not(:disabled):hover,
+.ci-page .ci-secondary:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(2, 32, 85, .14);
+}
+
+/* Career Intelligence: keep its existing layouts, controls, and background intact. */
+.ci-page > .ci-hero {
+  animation: cdg-panel-enter .8s cubic-bezier(.2,.75,.25,1) both;
+}
+.ci-page .ci-hero-panel {
+  animation: cdg-panel-enter .82s cubic-bezier(.2,.75,.25,1) .1s both;
+}
+.ci-page .ci-section {
+  animation: cdg-page-section-enter .7s cubic-bezier(.2,.75,.25,1) both;
+}
+.ci-page .ci-card,
+.ci-page .system-card,
+.ci-page .workflow-step,
+.ci-page .control-panel,
+.ci-page .ci-result {
+  animation: cdg-panel-enter .62s cubic-bezier(.2,.75,.25,1) both;
+}
+.ci-page .system-card:nth-child(2),
+.ci-page .workflow-step:nth-child(2) { animation-delay: .05s; }
+.ci-page .system-card:nth-child(3),
+.ci-page .workflow-step:nth-child(3) { animation-delay: .1s; }
+.ci-page .system-card:nth-child(4),
+.ci-page .workflow-step:nth-child(4) { animation-delay: .15s; }
+.ci-page .ci-live-dot {
+  animation: cdg-live-glow 2.4s ease-in-out infinite;
+}
+@keyframes cdg-page-section-enter {
+  from { opacity: .82; transform: translate3d(0, 12px, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes cdg-live-glow {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(255,255,255,.16); }
+  50% { box-shadow: 0 0 0 7px rgba(255,255,255,.08), 0 0 14px rgba(158,224,249,.5); }
+}
+
+@media (max-width: 700px) {
+  .blog-page .blog-card:hover,
+  .blog-page .blog-featured:hover,
+  .feature-card:hover,
+  .audience-card:hover,
+  .career-insight-card:hover,
+  .cdg-account-card:hover,
+  .legal-page .notice-card:hover,
+  .ci-card:hover,
+  .system-card:hover,
+  .workflow-step:hover { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  main:not(.homepage-motion):not(.client-dash):not(.coach-dash) > section,
+  .blog-page .blog-featured,
+  .blog-page .blog-card,
+  .article-wrap,
+  .legal-page .notice-card,
+  .legal-page .conditions-grid > *,
+  .help-page .notice-card,
+  .faq-page .notice-card,
+  .feature-card,
+  .audience-card,
+  .career-insight-card,
+  .cdg-account-card,
+  main:not(.homepage-motion) .service-card,
+  main:not(.homepage-motion) .pricing-card,
+  .ci-page > .ci-hero,
+  .ci-page .ci-hero-panel,
+  .ci-page .ci-section,
+  .ci-page .ci-card,
+  .ci-page .system-card,
+  .ci-page .workflow-step,
+  .ci-page .control-panel,
+  .ci-page .ci-result,
+  .ci-page .ci-live-dot {
+    animation: none !important;
+  }
+  .blog-page .blog-card,
+  .blog-page .blog-featured,
+  .feature-card,
+  .audience-card,
+  .career-insight-card,
+  .cdg-account-card,
+  .legal-page .notice-card,
+  .ci-card,
+  .system-card,
+  .workflow-step,
+  main:not(.homepage-motion) a.button,
+  main:not(.homepage-motion) button:not(:disabled),
+  .ci-page .ci-primary:not(:disabled),
+  .ci-page .ci-secondary:not(:disabled) {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+
+/* Account, sign-in, registration, and admin sub-pages use the same motion language. */
+.cdg-auth-shell,
+.cdg-account-page,
+.cdg-account-shell {
+  animation: cdg-page-section-enter .65s cubic-bezier(.2,.75,.25,1) both;
+}
+.cdg-auth-card,
+.cdg-account-hero,
+.cdg-account-grid > *,
+.admin-shell .admin-sidebar,
+.admin-shell .admin-topbar,
+.admin-shell .admin-main > * {
+  animation: cdg-panel-enter .62s cubic-bezier(.2,.75,.25,1) both;
+}
+.cdg-auth-card,
+.cdg-account-card,
+.cdg-account-grid > *,
+.admin-shell .admin-icon-button,
+.admin-shell .admin-action-button {
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.cdg-auth-card:hover,
+.cdg-account-card:hover,
+.cdg-account-grid > *:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(10, 37, 64, .09);
+}
+@media (max-width: 700px) {
+  .cdg-auth-card:hover,
+  .cdg-account-card:hover,
+  .cdg-account-grid > *:hover { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cdg-auth-shell,
+  .cdg-auth-card,
+  .cdg-account-page,
+  .cdg-account-shell,
+  .cdg-account-hero,
+  .cdg-account-grid > *,
+  .admin-shell .admin-sidebar,
+  .admin-shell .admin-topbar,
+  .admin-shell .admin-main > * {
+    animation: none !important;
+  }
+  .cdg-auth-card,
+  .cdg-account-card,
+  .cdg-account-grid > *,
+  .admin-shell .admin-icon-button,
+  .admin-shell .admin-action-button {
+    transition: none !important;
+    transform: none !important;
+  }
+}
