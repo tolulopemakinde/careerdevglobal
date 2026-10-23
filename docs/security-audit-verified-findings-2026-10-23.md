@@ -236,3 +236,25 @@ Read-only inspection of the active production `careerdev-paystack-payout-transfe
 The existing authorization manifest already includes `payout-transfer-idempotency` and `paystack-signature-replay`, but these cases are only specifications; no test execution was performed here. Add explicit cases for amount/currency mismatch, a timeout after Paystack may have accepted a request, successful provider response with database update failure, and redacted client errors. Use provider stubs and synthetic records only.
 
 **No code, database, configuration, secrets, or deployed functions were changed.** This review inspected production definitions and source only; it did not invoke a payout transfer or alter any payout.
+
+
+## 13. Current decision: pause implementation until the source of truth is reconciled
+
+The Paystack documentation check confirms that the transfer webhook payload includes `data.amount`, `data.currency`, `data.id`, `data.reference`, and `data.transfer_code`, and that transfer status events include success, failure, and reversal. Paystack recommends reusing the same `reference` when retrying a transfer request to avoid treating a retry as a new transfer. See [Single Transfers](https://paystack.com/docs/transfers/single-transfers/) and [How Transfers Work](https://paystack.com/docs/transfers/how-transfers-work/).
+
+This strengthens the required validation design but does not by itself authorize a patch. The current source-of-truth gap remains: the live payout webhook source is not located in the tracked repository functions tree, and the migration/index DDL was not found in repository search. The active transfer-initiation function was reviewed from Supabase, but the matching deployed webhook and migration history must be captured and versioned before a code change can be safely reviewed and released.
+
+### Proposed implementation checklist (not yet implemented)
+
+- Compare the webhook's trusted `data.reference` against the payout's persisted `provider_payout_reference`; do not match a payout solely by an untrusted or ambiguous fallback identifier.
+- Convert stored NGN major units to integer kobo using validated decimal-safe arithmetic and require exact equality with Paystack's integer `data.amount`; require `data.currency === 'NGN'` and the stored payout currency to match.
+- Deduplicate exact deliveries while retaining distinct lifecycle events for the same transfer; do not use transfer code alone as an event-level idempotency key.
+- Define allowed status transitions and ensure retries, out-of-order messages, and reversals cannot overwrite newer/authoritative states without a verified rule.
+- Never mark a payout failed solely because the API request timed out or the connection failed after sending; reconcile the stable reference with Paystack before permitting a retry.
+- Check database update errors and affected-row counts after a provider response; create an alert/reconciliation path when Paystack accepted a transfer but local persistence did not complete.
+- Replace provider messages and raw exception strings in client-facing responses with stable generic errors. Keep only redacted diagnostic details in server-side logs.
+- Add isolated tests for amount/currency/reference mismatch, duplicate delivery, success followed by reversal, failure followed by success, concurrent requests, provider timeout after acceptance, and local database update failure.
+
+### Readiness status
+
+**Not implemented and not deployed.** No code patch or migration was created because the live webhook and database migration baseline are not yet reproducibly tracked and the isolated test schema is not verified. The next safe action is to establish that source-of-truth and test baseline, then implement and test on a branch.
