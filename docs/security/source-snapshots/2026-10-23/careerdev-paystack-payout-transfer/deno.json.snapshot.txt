@@ -1,0 +1,11 @@
+# READ-ONLY PRODUCTION SOURCE SNAPSHOT
+# Function: careerdev-paystack-payout-transfer
+# Retrieved from Supabase project: ufmhrmzumqkjvaezrmxf
+# Deployed version: v9
+# verify_jwt: true
+# Runtime source fingerprint (ezbr_sha256 reported by Supabase): f43b51e553774748e901bbfa2eecdf5658f00ce0b239b17a0edca9bd3ac46575
+# Retrieved: 2026-10-23
+# WARNING: Evidence snapshot only; not a deployable source tree. Do not deploy this .txt file.
+# This is a copy of the currently deployed source, not proof of the original authoring source or migration history.
+
+{"compilerOptions":{"strict":true},"imports":{}}
