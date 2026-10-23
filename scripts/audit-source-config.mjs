@@ -28,7 +28,7 @@ function inspect(path) {
   ];
   for (const check of checks) {
     const sanitizedText = check.label === "Supabase service-role secret" && rel.startsWith("supabase/functions/")
-      ? text.replace(/Deno\.env\.get\(["'`]SUPABASE_SERVICE_ROLE_KEY["'`]\)/g, "")
+      ? text.replace(/Deno\.env\.get\(["'`](?:CAREERDEV_|SUPABASE_)SERVICE_ROLE_KEY["'`]\)/g, "")
       : text;
     if (check.pattern.test(sanitizedText)) findings.push(`${rel}: ${check.label}`);
   }
