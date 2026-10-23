@@ -54,7 +54,7 @@ export default function Home() {
           </div>
           <div className="hero-card motion-hero-card" aria-label="Career Intelligence Profile journey">
             <div className="hero-card-top">CAREER INTELLIGENCE PROFILE™</div>
-            <div className="journey">{["Goals", "Skills", "Experience", "Pathways", "Opportunities", "Outcomes"].map((step, index) => <span className="journey-step" key={step}>{index > 0 && <b aria-hidden="true">→</b>}{step}</span>)}</div>
+            <div className="journey">{["Goals", "Skills", "Experience", "Pathways", "Opportunities", "Outcomes"].flatMap((step, index) => index === 0 ? [<span className="journey-step" key={step}>{step}</span>] : [<b className="journey-arrow" aria-hidden="true" key={`${step}-arrow`}>→</b>, <span className="journey-step" key={step}>{step}</span>])}</div>
             <p>One connected intelligence layer for clearer career decisions, stronger applications and measurable progress.</p>
           </div>
         </div>
