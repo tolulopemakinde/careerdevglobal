@@ -113,3 +113,36 @@ Run these tests only in a schema-equivalent isolated database with synthetic dat
 Recover the original migration SQL from any surviving local clone, CI artifact, developer machine, prior pull-request diff, backup, or database migration archive. In parallel, establish a non-production project in an organization the user explicitly authorizes and confirm the cost before creating anything billable. Reconstruct a *new* forward-fix migration only after comparing the live schema with the recovered sources; label it as a new remediation migration, not as recovered historical SQL.
 
 **Release decision: NO-GO.** The type mismatch and webhook/transfer correctness risks are material. Do not enable or expand real payout activity until the isolated regression suite passes, the schema contract is approved, and an explicit production-release authorization is obtained.
+
+
+## Follow-up source-recovery sweep and CI evaluation
+
+A second repository sweep inspected the recursive Git trees for the following nine accessible branches: `main`, `audit/security-remediation-2026-10-23`, `payout-remediation/evaluation-2026-10-23`, `phase-1-safety-foundation`, `phase-2-server-hardening`, `phase-3-distributed-quotas`, `phase-4-preview-validation`, `security/baseline-response-headers`, and `security/profile-role-authorization-review`.
+
+- No historical payout SQL migration was found on these branch snapshots.
+- The only migration file found in those trees is `supabase/migrations/20261012104600_secure_profile_role_and_status_integrity.sql` on the profile-role security branch; it is unrelated to payout history.
+- `docs/phase-3/preview-distributed-quotas.sql` is a preview control script, not a payout migration.
+- The latest security-audit workflow run inspected for PR #29 has no uploaded artifacts. Thus it provides no migration archive recovery path.
+- The payout-related GitHub commits found by search describe application/UI changes, not original payout SQL migration source. Commit diffs examined for admin release controls confirm application code, not database migration SQL.
+
+### CI source-audit failure examined
+
+The Phase 1 validation workflow on PR #29 failed at `npm run audit:source`; TypeScript, build, and later validation steps were skipped. The reported match was `supabase/functions/careerdev-coach-matching/index.ts: Supabase service-role secret`.
+
+Inspection of the source and `scripts/audit-source-config.mjs` shows that this finding appears to be a **scanner false positive**: the handler references service-role credentials via environment-variable names (`CAREERDEV_SERVICE_ROLE_KEY` and fallback `SUPABASE_SERVICE_ROLE_KEY`), and the audit rule broadly matches the string `SUPABASE_SERVICE_ROLE`. No literal credential value was present in the matched line. The scanner's sanitization removes only the exact fallback expression, not the alternate environment-variable name, so it still flags the line. This does **not** establish that all repository source is secret-free; it means this particular failure is not evidence of a leaked key. Fix the scanner separately by distinguishing environment-variable lookups from literal credential assignments, then rerun the source audit and all skipped checks. Do not print or expose secret values during that work.
+
+### Updated recovery conclusion
+
+The additional branch-tree and CI-artifact sweep strengthens the finding that the original payout migration SQL is not present in the currently accessible repository history snapshots or available workflow artifacts. It does not rule out a developer's local clone, deleted Git refs, prior unindexed commits, external backup, or database-platform backup. Continue searching those sources before deciding that reconstruction is necessary.
+
+### Follow-up log
+
+| Follow-up action | Result |
+|---|---|
+| Recursive Git tree search across 9 branches | Complete; no payout SQL migrations found |
+| Inspect matching SQL migration | Complete; one unrelated profile-role migration |
+| Inspect recent payout UI commits | Complete; application files only |
+| Check PR #29 workflow artifacts | Complete; none uploaded |
+| Diagnose failed CI source audit | Complete; apparent false positive on env-var reference |
+| Run skipped build/type/security checks | Not run; workflow stopped at source audit failure |
+| Patch source-audit script | Deferred; should be a separate reviewed change with positive and negative tests |
