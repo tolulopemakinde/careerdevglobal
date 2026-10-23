@@ -209,3 +209,30 @@ Repository code search did not return the payout-transfer Edge Function source o
 4. Implement and test the webhook and transfer initiation changes together, then have the owner review before any release.
 
 No code, migration, provider configuration, or production data was changed in this step.
+
+
+## 12. Payout initiation path and database authorization cross-check
+
+Read-only inspection of the active production `careerdev-paystack-payout-transfer` Edge Function (version 9), the admin payout UI call site, and live payout-related PostgreSQL function definitions established these additional points:
+
+### Controls confirmed
+
+- The transfer Edge Function has JWT verification enabled and independently calls Supabase Auth `getUser()`; it then checks the profile role is exactly `admin`. The database preparation function independently permits active `admin` or `staff` profiles, so the current UI/function path is narrower than the RPC's own role allowance.
+- Transfers are disabled unless `PAYSTACK_TRANSFERS_ENABLED` is exactly `true`; the UI reads the server-side flag and the POST path checks it again.
+- `prepare_coach_payout_transfer(uuid)` checks the payout is approved/processing, positive, NGN, tied to the same coach and transaction, the source transaction is paid/release-eligible, and a verified default Paystack recipient exists. It locks the payout row and sets its status to `processing`.
+- `admin_review_marketplace_payout(uuid,text)` checks that the caller's profile role is `admin`, constrains actions to `check` or `approve`, locks the payout row, and refuses review for paid/processing/cancelled records.
+- `create_coach_payout_request(uuid)` verifies the caller owns the coach and that the ledger entry is payable and available; the payout table's unique transaction index supports one payout per transaction.
+
+### Confirmed concerns to address in a branch-only proposal
+
+1. **Webhook amount/currency are not bound to the stored payout.** The webhook selects only `id,status,payout_amount,currency` from the payout, but then maps the event to a status without comparing `data.amount` or `data.currency` with the stored amount/currency. Paystack's transfer webhook examples use the smallest currency denomination (for NGN, kobo), while the database stores a decimal payout amount and the initiation function converts it with `Math.round(Number(p.amount) * 100)`. A safe comparison must use the same explicit NGN minor-unit conversion and reject invalid/non-integer values; never compare a provider integer directly to a decimal major-unit amount.
+2. **Provider request error responses disclose detail.** The transfer function includes provider error detail in a client-facing 502 response and raw exception detail in a 500 response; the webhook catch path also returns `String(err)`. Replace these with stable generic client errors and use redacted server-side diagnostics. The transfer function also returns preparation error detail in a 409 response.
+3. **Transfer initiation outcome handling needs reconciliation.** The transfer function treats a non-OK or unsuccessful provider response as failure and updates a payout from `processing` to `failed`. Confirm provider response semantics and ambiguous network/timeout cases before assuming no transfer was created; reconcile using the stable transfer reference before allowing another initiation.
+4. **Transfer response update result is not checked.** After a successful Paystack API response, the function awaits a payout status/metadata update but does not inspect the database update error or affected-row count before returning success. A transfer could have been accepted by Paystack while the local record remains stale. Add a reconciliation/alert path and verify the conditional update affected the intended payout.
+5. **Transfer reference identity.** The preparation function deterministically sets a reference `CDG-PAYOUT-` plus the payout UUID (without hyphens) when no reference exists, and then reuses the saved reference. This is a useful retry-stability property; preserve it and test that retries cannot initiate a second provider transfer after ambiguous outcomes.
+
+### Test gate
+
+The existing authorization manifest already includes `payout-transfer-idempotency` and `paystack-signature-replay`, but these cases are only specifications; no test execution was performed here. Add explicit cases for amount/currency mismatch, a timeout after Paystack may have accepted a request, successful provider response with database update failure, and redacted client errors. Use provider stubs and synthetic records only.
+
+**No code, database, configuration, secrets, or deployed functions were changed.** This review inspected production definitions and source only; it did not invoke a payout transfer or alter any payout.
