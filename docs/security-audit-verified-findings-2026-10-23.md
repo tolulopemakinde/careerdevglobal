@@ -102,3 +102,42 @@ No production deployment or schema/security change until all of the following ar
 5. Enable leaked-password protection after reviewing the current Auth configuration and rollout impact; record the setting change and verify signup/password-reset behavior.
 
 **No production changes were made by this audit.**
+
+
+## 9. Follow-up: payout, subscription webhook, and Calendly table controls
+
+A read-only production SQL inspection on 2026-10-23 verified the following:
+
+### Internal table access
+
+- `ai_agent_subscription_webhook_events`, `calendly_connections`, and `calendly_oauth_states` have RLS enabled and **no policies**. Their listed table grants are limited to `postgres` and `service_role`; no `anon` or `authenticated` table grants were returned. This is consistent with backend-only access, but confirm no browser/client code expects direct access.
+- `marketplace_payout_transfer_events` has RLS enabled and staff/admin authenticated policies for management and selection. The event table stores webhook payload JSON; confirm those payloads are appropriately minimized and that only staff/admin should read them.
+- `marketplace_payouts` grants `SELECT` to authenticated users and has coach-own-payout plus staff/admin policies. No authenticated insert/update/delete grant appeared in the inspected grants. This is a useful boundary to preserve.
+- The subscription webhook event table has a unique constraint on `(provider_key, provider_event_reference)`, supporting event-level deduplication.
+- Payout transfer events have a partial unique index on `(provider_key, provider_transfer_reference)` when the reference is not null. This prevents repeated event rows for the same provider transfer reference, but it does **not by itself** prove safe handling of distinct/out-of-order event types for the same transfer.
+
+### Payout webhook — highest priority follow-up
+
+The handler review found it inserts a transfer event and, when insert reports a duplicate, still proceeds to update payout status. The database uniqueness constraint limits duplicate rows but does not guarantee safe state transitions. A tested change should make duplicate events a no-op, validate amount/currency against the stored payout and trusted provider payload, and reject or safely ignore stale/conflicting state transitions. Confirm whether Paystack's event schema provides the exact fields needed before implementing comparisons. Replace raw exception detail in client responses with a generic error and safe server-side diagnostic logging. Do not change the live function until replay and transition tests pass.
+
+### Calendly OAuth state
+
+- `calendly_oauth_states.state_hash` is unique, and an expiry index exists.
+- Two rows were present at the time of inspection; the count query found both had expired. No state values or verifier contents were retrieved.
+- The handler's state lookup, expiry check, and deletion are separate calls. A one-time state can therefore be vulnerable to concurrent callback races unless a separate atomic claim/delete mechanism is present. Review state-creation call sites and implement an atomic consume operation only after confirming schema/caller compatibility.
+- `calendly_connections` has a unique constraint on `coach_id`; token ciphertext fields are not granted directly to `authenticated` in the inspected table grants.
+
+### Current data observations
+
+At the inspection time, `ai_agent_subscription_webhook_events` and `marketplace_payout_transfer_events` each contained zero rows. This limits what can be inferred from historical event behavior; it is not evidence that the handlers have been tested. The two expired OAuth-state rows should be handled through an approved, tested cleanup path rather than an ad-hoc production delete.
+
+### Required tests before code or schema changes
+
+1. Replay the same signed payout event twice; confirm the second delivery cannot reapply state.
+2. Deliver conflicting and out-of-order success/failure/reversal events; confirm terminal or later states cannot be overwritten incorrectly.
+3. Send a validly signed event whose amount/currency or transfer reference does not match the stored payout; confirm no payout mutation occurs.
+4. Exercise malformed payloads and internal exceptions; confirm generic client responses and no secret/token/state leakage in logs.
+5. Race two OAuth callbacks using the same state; only one may consume it and exchange the code.
+6. Confirm client/coach users cannot read webhook payloads, OAuth state rows, or token ciphertext via direct PostgREST access.
+
+**Scope note:** These were read-only catalog, grants, index, policy, and row-count checks. No production data, settings, policies, grants, or deployed functions were changed.
