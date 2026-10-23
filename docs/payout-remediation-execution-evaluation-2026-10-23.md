@@ -145,4 +145,11 @@ The additional branch-tree and CI-artifact sweep strengthens the finding that th
 | Check PR #29 workflow artifacts | Complete; none uploaded |
 | Diagnose failed CI source audit | Complete; apparent false positive on env-var reference |
 | Run skipped build/type/security checks | Not run; workflow stopped at source audit failure |
-| Patch source-audit script | Deferred; should be a separate reviewed change with positive and negative tests |
+| Patch source-audit script | Prepared on the remediation branch; manual positive/negative regex checks passed; CI still required |
+
+
+### Source-audit correction prepared (2026-10-23)
+
+Updated `scripts/audit-source-config.mjs` on the dedicated remediation branch so its Supabase service-role sanitizer excludes both `Deno.env.get("CAREERDEV_SERVICE_ROLE_KEY")` and `Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")` lookups from this specific name-based scan. The change does not suppress other text or remove the scanner's other checks.
+
+Manual regression checks passed for both environment lookup names, preservation of a literal-looking credential assignment for detection, and preservation of an unrelated environment lookup. These are focused regex checks, not a full repository audit. No GitHub Actions run was returned for this commit, so the actual `npm run audit:source`, TypeScript check, build-input validation, and security validators remain unverified. Do not treat the source-audit blocker as cleared until those checks run successfully. The branch remains unmerged; no deployment or production change was made.
