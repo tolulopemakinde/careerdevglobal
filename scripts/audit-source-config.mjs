@@ -27,6 +27,7 @@ function inspect(path) {
     { label: "Vercel token assignment", pattern: /VERCEL_TOKEN\s*[:=]\s*["'`]?(?!process\.env)[A-Za-z0-9_-]{20,}/i },
   ];
   for (const check of checks) {
+    // Ignore runtime environment-variable lookups, not literal credential values.
     const sanitizedText = check.label === "Supabase service-role secret" && rel.startsWith("supabase/functions/")
       ? text.replace(/Deno\.env\.get\(["'`](?:CAREERDEV_|SUPABASE_)SERVICE_ROLE_KEY["'`]\)/g, "")
       : text;
