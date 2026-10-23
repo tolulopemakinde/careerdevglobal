@@ -414,3 +414,16 @@ body:has(.site-header) .professional-standards { display: block; }
     flex-wrap: wrap;
   }
 }
+
+/* Keep the journey arrows outside the stage boxes. */
+.journey .journey-step {
+  display: inline-flex;
+  align-items: center;
+}
+.journey .journey-arrow {
+  flex: 0 0 auto;
+  padding: 0 1px;
+  color: #9edcf4;
+  background: transparent;
+  line-height: 1;
+}
