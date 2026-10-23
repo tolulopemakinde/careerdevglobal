@@ -190,3 +190,22 @@ The application-side admin payout page calls the separate `careerdev-paystack-pa
 5. Test the full payout lifecycle in an isolated environment with provider stubs or test credentials, including payout eligibility, duplicate initiation, event retries, amount/currency/reference mismatches, reversals, and reconciliation.
 
 **Decision:** no code patch is appropriate yet. Without a tracked, reviewable source-of-truth for the active webhook and migration history, a branch-only fix could be incomplete or overwritten by a later deployment. No production changes were made.
+
+
+## 12. Repository call-site review and implementation readiness
+
+A read-only repository review confirmed the admin payout page calls `admin_review_marketplace_payout` for check/approval and invokes `careerdev-paystack-payout-transfer` only after the client-side checks report transfers enabled. The UI requires a payout to be approved and the recipient to be marked ready before enabling the transfer button, and asks for confirmation before initiating a transfer. These are useful UX controls, but they are not substitutes for server-side authorization, payout-state validation, idempotency, and amount/recipient binding.
+
+The checked-in authorization manifest already includes a critical `payout-transfer-idempotency` case expecting a single provider reference when the same payout is prepared twice, plus a `paystack-signature-replay` case expecting a single state transition. The preview authorization plan explicitly prohibits production execution and requires a separate isolated preview with synthetic users and provider stubs.
+
+Repository code search did not return the payout-transfer Edge Function source or the migration DDL for the existing payout event index. The active production payout webhook source and database catalog remain the authoritative evidence for the current risk. Do not infer that the client UI proves the server transfer endpoint is safe, and do not construct a schema migration from search excerpts alone.
+
+### Implementation readiness decision
+
+**Not ready for code/schema changes yet.** The remaining prerequisites are:
+1. Retrieve the active `careerdev-paystack-payout-transfer` function source and verify its authorization, duplicate-request handling, amount units, currency handling, provider reference generation, and transfer-enable gate.
+2. Retrieve the exact historical migration/source definitions for payout event table/index and payout status transition functions from the repository or database migration history.
+3. Establish a reproducible isolated test schema and test-only provider stub; the checked-in test plan explicitly blocks production.
+4. Implement and test the webhook and transfer initiation changes together, then have the owner review before any release.
+
+No code, migration, provider configuration, or production data was changed in this step.
