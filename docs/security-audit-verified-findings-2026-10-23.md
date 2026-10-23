@@ -154,3 +154,22 @@ A second read of the active production handler sources confirmed:
 **Implementation decision:** do not simply change duplicate handling to return early while retaining the existing uniqueness semantics; that could suppress a legitimate later reversal. First confirm Paystack's documented event identifiers and actual payload shapes, then define a stable event-level idempotency key that distinguishes separate lifecycle events while deduplicating retries of the same event. Apply the schema and handler changes together in a tested migration/branch, with replay, success-then-reversal, failure-then-success, and concurrent-delivery tests.
 
 No active handler source was modified in this step. The source review is read-only; the above is a more precise finding and implementation constraint, not a deployed fix.
+
+
+## 11. Paystack documentation cross-check and live schema detail
+
+A documentation cross-check against Paystack's official transfer and webhook guidance supports treating transfer status events as distinct lifecycle notifications:
+
+- Paystack documents `transfer.success`, `transfer.failed`, and `transfer.reversed` as separate event types. A reversal is a later notification that a previously debited transfer could not be completed and the amount was returned to the Paystack balance. See [Paystack Single Transfers](https://paystack.com/docs/transfers/single-transfers/) and [How Transfers Work](https://paystack.com/docs/transfers/how-transfers-work/).
+- Paystack's webhook guidance warns that an endpoint may receive the same event more than once and recommends checking a unique transaction reference or resource ID before applying value. See [Paystack webhook delivery guidance](https://support.paystack.com/en/articles/10609026).
+- The documentation reviewed does not establish a universal event-level ID in the transfer webhook body that can safely be used for all three lifecycle events. Do not assume that the transfer ID/code alone uniquely identifies each lifecycle event.
+
+A fresh read-only production schema query confirmed `marketplace_payout_transfer_events` already has `event_type` and `payload_hash` columns, but its partial unique index is still only `(provider_key, provider_transfer_reference)` for non-null references. This is the schema-level reason the current uniqueness rule can conflict with recording more than one lifecycle event for a transfer. The table's current fields may support a safer design, but the exact idempotency constraint must be selected only after verifying provider payload variants and existing migration history.
+
+The production project reports a substantial migration history through `20261012104608` (`secure_profile_role_and_status_integrity`). The separate test project previously returned no migrations. Treat this as a **schema-parity blocker**, not proof that the test database is empty: compare actual schema/catalog and repository migration files before choosing a test path. Do not apply the production migration list or any remediation migration to either project until the mismatch is understood.
+
+### Decision for the next implementation phase
+
+Prepare a branch-only change proposal after inspecting the repository's migration files and payout initiation/status-update call sites. The design must preserve separate lifecycle events while making exact retries idempotent, compare amount/currency using confirmed provider field semantics and stored units, enforce an allowed payout transition model, and remove raw exception detail from client responses. Tests must cover repeated identical payloads, success followed by reversal, conflicting/out-of-order events, mismatched amount/currency/reference, and concurrent duplicate delivery.
+
+**No schema or Edge Function changes were made.** This remains a read-only finding; official docs are evidence for event semantics, not a substitute for testing the actual production payload shapes.
