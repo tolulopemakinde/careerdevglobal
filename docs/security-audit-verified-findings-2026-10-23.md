@@ -173,3 +173,20 @@ The production project reports a substantial migration history through `20261012
 Prepare a branch-only change proposal after inspecting the repository's migration files and payout initiation/status-update call sites. The design must preserve separate lifecycle events while making exact retries idempotent, compare amount/currency using confirmed provider field semantics and stored units, enforce an allowed payout transition model, and remove raw exception detail from client responses. Tests must cover repeated identical payloads, success followed by reversal, conflicting/out-of-order events, mismatched amount/currency/reference, and concurrent duplicate delivery.
 
 **No schema or Edge Function changes were made.** This remains a read-only finding; official docs are evidence for event semantics, not a substitute for testing the actual production payload shapes.
+
+
+## 12. Repository and migration traceability check
+
+A read-only GitHub tree inspection of branch `audit/security-remediation-2026-10-23` found a `supabase/functions/` directory, but no `supabase/migrations/` directory at the expected path. The tracked Supabase functions tree includes `careerdev-coach-matching`; the active production `careerdev-paystack-payout-webhook` source returned by the Supabase management connection is not present in that tracked functions directory. Therefore, the production webhook implementation and database schema are not yet demonstrably reproducible from this repository branch.
+
+The application-side admin payout page calls the separate `careerdev-paystack-payout-transfer` function for transfer configuration and transfer initiation, and calls the `admin_review_marketplace_payout` RPC for approval. This confirms the webhook is only one part of the financial workflow: a complete review must trace payout creation, approval, transfer initiation, provider reference persistence, webhook processing, and reconciliation together. The UI's client-side disabled/approved states are usability controls; the authoritative enforcement must remain in the backend functions and database.
+
+### Required repository hygiene before code remediation
+
+1. Establish an owner-approved source-of-truth path for the currently deployed Edge Function sources and SQL migrations.
+2. Export or reconstruct the current schema/migration baseline from verified history without copying production personal data into the test project.
+3. Add the payout transfer and webhook sources plus reviewed migrations to version control, preserving exact deployed versions and secrets only as environment configuration (never commit credentials).
+4. Compare tracked source against active production versions and record differences before preparing changes.
+5. Test the full payout lifecycle in an isolated environment with provider stubs or test credentials, including payout eligibility, duplicate initiation, event retries, amount/currency/reference mismatches, reversals, and reconciliation.
+
+**Decision:** no code patch is appropriate yet. Without a tracked, reviewable source-of-truth for the active webhook and migration history, a branch-only fix could be incomplete or overwritten by a later deployment. No production changes were made.
