@@ -25,7 +25,7 @@ nav a:hover::before { transform: scale(1.15); }
 .hero .eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .16em; margin: 0 0 16px; color: #dceaff; }
 .eyebrow { font-weight: 800; }
 h1 { max-width: 780px; margin: 0; font-size: clamp(52px, 7vw, 88px); line-height: .98; letter-spacing: -.055em; color: #fff; }
-.hero-copy h1 { font-size: clamp(50px, calc(7vw - 2px), 86px); }
+.hero-copy h1 { font-size: clamp(48px, calc(7vw - 4px), 84px); }
 h2 { max-width: 800px; margin: 0 0 24px; font-size: clamp(34px, 5vw, 58px); line-height: 1.05; letter-spacing: -.04em; color: #10203f; }
 h3 { margin: 0 0 12px; font-size: 22px; line-height: 1.15; color: #10203f; }
 .lead { max-width: 720px; margin: 28px 0; font-size: 20px; color: #eef4ff; }
@@ -99,7 +99,7 @@ h3 { margin: 0 0 12px; font-size: 22px; line-height: 1.15; color: #10203f; }
   .section { padding: 50px 0; }
   .grid { grid-template-columns: 1fr; margin-top: 28px; }
   h1 { font-size: clamp(48px, 15vw, 70px); }
-  .hero-copy h1 { font-size: clamp(46px, calc(15vw - 2px), 68px); }
+  .hero-copy h1 { font-size: clamp(44px, calc(15vw - 4px), 66px); }
   .hero-card { padding: 24px; animation: fadeUpMobile .75s ease both, softFloatMobile 4.5s ease-in-out 1s infinite; }
   .card, .panel { animation: fadeUpMobile .7s ease both; }
   .card:nth-child(2), .panel:nth-child(2) { animation-delay: .08s; }
