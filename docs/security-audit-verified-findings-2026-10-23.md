@@ -258,3 +258,17 @@ This strengthens the required validation design but does not by itself authorize
 ### Readiness status
 
 **Not implemented and not deployed.** No code patch or migration was created because the live webhook and database migration baseline are not yet reproducibly tracked and the isolated test schema is not verified. The next safe action is to establish that source-of-truth and test baseline, then implement and test on a branch.
+
+
+## 14. Read-only source-of-truth recovery — 2026-10-23
+
+**Repository:** `audit/security-remediation-2026-10-23`. A recursive Git tree confirms `supabase/` currently contains only `functions/_shared/edge-security.ts` and `functions/careerdev-coach-matching/{index.ts,deno.json}`; no `supabase/migrations/` directory and no tracked Paystack payout webhook/transfer function source were found. The admin payout page calls `careerdev-paystack-payout-transfer`, but that client call is not the server implementation.
+
+**Production migration inventory:** Supabase reports 228 migration records, from `20260914233715` to `20261012104608`. Payout-related recorded names include `build_marketplace_coach_earnings_payout_engine_v70b`, `build_marketplace_payout_release_controls_v86a`, `coach_payout_transfer_guard_v1`, and `harden_payout_and_trigger_functions`. These are migration-history metadata only; the corresponding SQL files have not been recovered into the repository. The test project reports no migration records and no deployed Edge Functions; the payout tables were not found in its `public` schema during the earlier read-only column query.
+
+**Deployed source fingerprints (production Supabase management reads):**
+- `careerdev-paystack-payout-transfer`: v9, JWT verification enabled, SHA-256 `f43b51e553774748e901bbfa2eecdf5658f00ce0b239b17a0edca9bd3ac46575`.
+- `careerdev-paystack-payout-webhook`: v8, JWT verification disabled, SHA-256 `c2c9f3614f2d87b501416cb5f7f7eb8c328ab064cd5534a2f0f8165a1c185755`.
+- `careerdev-paystack-webhook`: v14, JWT verification disabled, SHA-256 `f230f5a78f63b21ac995d5da8ad508afbe124957330cca5a55d9078df1202458`.
+
+**Decision:** source recovery is incomplete. The deployed function source was retrieved read-only, but no canonical migration SQL or isolated schema baseline was found. Do not deploy or apply DDL. Next, recover migration SQL from an owner-approved source/backup or the original deployment artifacts, reconstruct a disposable test baseline, and only then place the exact reviewed function sources and migrations under version control. No production settings, data, functions, grants, policies, or secrets were changed in this recovery step.
