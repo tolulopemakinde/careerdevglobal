@@ -141,3 +141,16 @@ At the inspection time, `ai_agent_subscription_webhook_events` and `marketplace_
 6. Confirm client/coach users cannot read webhook payloads, OAuth state rows, or token ciphertext via direct PostgREST access.
 
 **Scope note:** These were read-only catalog, grants, index, policy, and row-count checks. No production data, settings, policies, grants, or deployed functions were changed.
+
+
+## 10. Handler call-site confirmation and refined payout-event finding
+
+A second read of the active production handler sources confirmed:
+
+- Calendly's `authorize` action first validates the Bearer token with Supabase Auth, then resolves the coach from the authenticated user's profile before inserting a 10-minute OAuth state. This binds newly created state to the authenticated coach. The callback still performs state read and delete as separate database operations, so the concurrency concern remains.
+- The payout webhook maps `transfer.success` to `paid`, `transfer.failed` to `failed`, and `transfer.reversed` to `reversed`. It inserts `provider_transfer_reference` using `transfer_code`, then provider `id`, then the general transfer `reference`.
+- The current partial unique index is `(provider_key, provider_transfer_reference)` when the reference is not null. This may conflate multiple lifecycle event types for one transfer. For example, a reversal for a transfer whose transfer code is unchanged may collide with the earlier success event. The handler currently treats a duplicate insert as a reason to continue to payout mutation, so a duplicate or later event can still overwrite status.
+
+**Implementation decision:** do not simply change duplicate handling to return early while retaining the existing uniqueness semantics; that could suppress a legitimate later reversal. First confirm Paystack's documented event identifiers and actual payload shapes, then define a stable event-level idempotency key that distinguishes separate lifecycle events while deduplicating retries of the same event. Apply the schema and handler changes together in a tested migration/branch, with replay, success-then-reversal, failure-then-success, and concurrent-delivery tests.
+
+No active handler source was modified in this step. The source review is read-only; the above is a more precise finding and implementation constraint, not a deployed fix.
