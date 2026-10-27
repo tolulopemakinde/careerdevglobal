@@ -8,6 +8,7 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "audit:source": "node scripts/audit-source-config.mjs",
+    "validate:linkedin-intake-evidence": "node scripts/validate-linkedin-intake-evidence.mjs",
     "check:build-inputs": "node scripts/verify-build-inputs.mjs",
     "validate:auth-manifest": "node scripts/validate-authorization-manifest.mjs",
     "validate:phase2-boundaries": "node scripts/validate-phase2-boundaries.mjs",
