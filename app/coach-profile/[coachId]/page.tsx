@@ -77,13 +77,21 @@ export default function CoachProfilePage() {
     let active = true;
     (async () => {
       try {
-        const { data } = await supabase.rpc('get_public_coach_profile', { p_coach_id: params.coachId });
+        const [{ data }, { data: bookingLinks }] = await Promise.all([
+          supabase.rpc('get_public_coach_profile', { p_coach_id: params.coachId }),
+          supabase.rpc('get_public_calendly_booking_links', { p_coach_id: params.coachId }),
+        ]);
         if (!active) return;
         if (data?.coach_id) {
-          setProfile(data);
+          const linksByOffering = new Map(Array.isArray(bookingLinks) ? bookingLinks.map((x: any) => [x.offering_id, x.calendly_booking_url]) : []);
+          const profileWithBookingLinks = {
+            ...data,
+            offerings: (data.offerings || []).map((o: any) => ({ ...o, calendly_booking_url: linksByOffering.get(o.id) || null })),
+          };
+          setProfile(profileWithBookingLinks);
           const requestedOffering = searchParams.get('offering');
           if (requestedOffering) {
-            setSelectedOffering(data.offerings?.find((o: any) => o.id === requestedOffering) ?? null);
+            setSelectedOffering(profileWithBookingLinks.offerings?.find((o: any) => o.id === requestedOffering) ?? null);
           }
         }
       } finally {
@@ -289,6 +297,7 @@ export default function CoachProfilePage() {
             {modeOfferings.length ? (
               <>
                 <div className="booking-context"><span>{bookingMode === 'coaching' ? 'COACHING SESSION' : 'PROFESSIONAL SERVICE'}</span><strong>{bookingMode === 'coaching' ? 'Select your coaching session' : 'Select the service you need'}</strong></div>
+                {selectedOffering?.calendly_booking_url && <div className="calendly-direct-booking"><a href={selectedOffering.calendly_booking_url} target="_blank" rel="noopener noreferrer">Book directly on Calendly →</a><p>Booking completes on Calendly. It will not be recorded or paid through CareerDev’s marketplace flow. Choose one booking route to avoid duplicate requests.</p></div>}
                 <div className="booking-step"><span>1</span><div><strong>{bookingMode === 'coaching' ? 'Choose a coaching session' : 'Choose a service'}</strong><label><select value={selectedOffering?.id || ''} onChange={(e) => { setSelectedOffering(modeOfferings.find((o: any) => o.id === e.target.value) || null); setSelectedSlot(null); }}>{modeOfferings.map((o: any) => <option value={o.id} key={o.id}>{o.title} · {o.duration_minutes} min{o.price != null ? ` · ${o.currency} ${o.price}` : ''}</option>)}</select></label></div></div>
                 <div className="booking-step"><span>2</span><div><strong>Choose a date</strong><label><input type="date" min={minDate} value={date} onChange={(e) => { setDate(e.target.value); setSelectedSlot(null); }} /></label></div></div>
                 {date && <div className="booking-step"><span>3</span><div><strong>Choose an available time</strong><p className="booking-help">Times are shown in the coach’s timezone.</p><div className="availability-list">{slots.length ? slots.map((s: any) => <button type="button" className={selectedSlot === s ? 'booking-slot selected' : 'booking-slot'} key={s.start.toISOString()} onClick={() => setSelectedSlot(s)}>{s.label}</button>) : <p>No available times on this date. Try another date.</p>}</div></div></div>}

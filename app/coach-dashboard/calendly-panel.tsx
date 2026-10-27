@@ -8,6 +8,7 @@ export default function CalendlyPanel({offerings=[],userId,onMapped}:any){
   const[eventTypes,setEventTypes]=useState<any[]>([]);
   const[busy,setBusy]=useState(false);
   const[message,setMessage]=useState('');
+  const[bookingUrlDrafts,setBookingUrlDrafts]=useState<Record<string,string>>({});
 
   async function call(body:any){
     const{data,error}=await supabase.functions.invoke('careerdev-calendly-oauth',{body});
@@ -74,10 +75,47 @@ export default function CalendlyPanel({offerings=[],userId,onMapped}:any){
     else{setMessage('Calendly event type linked.');onMapped?.()}
   }
 
+  function normalizeBookingUrl(value:string){
+    if(!value.trim())return '';
+    try{
+      const url=new URL(value.trim());
+      const host=url.hostname.toLowerCase();
+      if(url.protocol!=='https:'||(host!=='calendly.com'&&!host.endsWith('.calendly.com'))||url.username||url.password||url.hash||url.pathname==='/')return null;
+      return url.href;
+    }catch{return null}
+  }
+
+  useEffect(()=>{
+    setBookingUrlDrafts(Object.fromEntries(offerings.map((o:any)=>[o.id,o.calendly_booking_url||''])));
+  },[offerings]);
+
+  async function saveBookingUrl(o:any){
+    const raw=bookingUrlDrafts[o.id]??'';
+    const normalized=normalizeBookingUrl(raw);
+    if(normalized===null){
+      setMessage('Enter a full HTTPS Calendly scheduling link, such as https://calendly.com/name/meeting.');
+      return;
+    }
+    setBusy(true);setMessage('');
+    try{
+      const{error}=await supabase.from('coach_service_offerings').update({calendly_booking_url:normalized||null}).eq('id',o.id);
+      if(error)setMessage(error.message);
+      else{setMessage(normalized?'Direct Calendly booking link saved.':'Direct Calendly booking link removed.');onMapped?.()}
+    }finally{setBusy(false)}
+  }
+
   return <section className="dash-card">
     <h2>Calendly scheduling</h2>
     <p className="note">Connect the coach’s own Calendly account. The meeting platform is inherited from each linked Calendly event type, so you can use Zoom, Google Meet, Microsoft Teams, phone, in-person or another Calendly-supported location without CareerDev Global forcing a single platform.</p>
     {message&&<div className="dash-message">{message}</div>}
+    <div className="calendly-link-fallback" style={{marginTop:16}}>
+      <h3>Direct booking link fallback</h3>
+      <p className="note">Optional: add a public Calendly link for each service so clients can schedule on Calendly without OAuth. These bookings are handled on Calendly and will not create CareerDev marketplace requests, payments, or slot records.</p>
+      {offerings.length===0?<p className="note">Publish a service offering first.</p>:offerings.map((o:any)=><div key={o.id} style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',gap:10,alignItems:'end',marginTop:12}}>
+        <label><strong>{o.title}</strong><input type="url" inputMode="url" autoComplete="url" placeholder="https://calendly.com/your-name/meeting" value={bookingUrlDrafts[o.id]??o.calendly_booking_url??''} onChange={e=>setBookingUrlDrafts(current=>({...current,[o.id]:e.target.value}))}/></label>
+        <button className="secondary" onClick={()=>saveBookingUrl(o)} disabled={busy}>Save link</button>
+      </div>)}
+    </div>
     {calendly?.connected?
       <>
         <div className="status-grid">
