@@ -129,5 +129,8 @@ test("missing and malformed coach assignments fail closed", () => {
 test("missing or malformed actors and requests fail closed", () => {
   assert.equal(canAccessIntakeRequest(null, request), false);
   assert.equal(canAccessIntakeRequest(actor("", "client"), request), false);
-  assert.equal(canAccessIntakeRequest(actor("client-1", "client"), null), false);
+  assert.equal(
+    canAccessIntakeRequest(actor("client-1", "client"), null),
+    false,
+  );
 });
