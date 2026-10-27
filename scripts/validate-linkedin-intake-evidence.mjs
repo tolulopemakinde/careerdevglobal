@@ -10,7 +10,7 @@ const checks = [
   ["only completed document processing is included", /from\(["']document_processing_jobs["']\)[\s\S]{0,600}\.eq\(["']status["'],\s*["']completed["']\)/],
   ["retrieval is restricted to documents attached to the request", /\.in\(["']document_id["'],\s*\(docs\?\?\[\]\)\.map\(\(d:any\)=>d\.id\)\)/],
   ["retrieval is explicitly scoped to the owning client", /\.eq\(["']client_id["'],\s*r\.client_id\)/],
-  ["retrieval failures return an explicit blocked response without claiming a persisted queue", /documentEvidenceResult\.error\)return json\([\s\S]{0,550}status:"blocked"[\s\S]{0,300}No automatic retry has been recorded[\s\S]{0,200}\},503\)/],
+  ["retrieval failures return an explicit blocked response without claiming a persisted queue", /status:"blocked",reason:"DOCUMENT_EVIDENCE_RETRIEVAL_FAILED",message:"[^"]*No automatic retry has been recorded[^"]*",human_review_required:true,next_action:[\s\S]{0,300}\},503\)/],
   ["each extracted document is length-bounded", /job\.extracted_text\.slice\(0,Math\.min\(8000,40000-totalEvidenceChars\)\)/],
   ["total extracted evidence is bounded", /totalEvidenceChars<40000/],
   ["the number of documents passed to the model is bounded", /document_evidence:\s*Array\.from\(evidenceByDocument\.values\(\)\)\.slice\(0,10\)/],
