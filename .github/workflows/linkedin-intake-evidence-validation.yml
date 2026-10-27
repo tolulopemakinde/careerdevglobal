@@ -9,6 +9,7 @@ on:
       - feature/linkedin-optimization-adaptive-intake
     paths:
       - "supabase/functions/careerdev-intake-engine-v2/**"
+      - "supabase/functions/_shared/intake-authorization.mjs"
       - "scripts/validate-linkedin-intake-evidence.mjs"
       - "package.json"
       - "package-lock.json"
@@ -38,13 +39,22 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
 
+      - name: Run intake authorization unit tests
+        run: npm run test:intake-authorization
+
       - name: Run LinkedIn intake evidence static validation
         run: npm run validate:linkedin-intake-evidence
+
+      - name: Run existing repository validations
+        run: npm run verify:phase4
 
       - name: Set up Deno
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+
+      - name: Check formatting for new authorization modules
+        run: deno fmt --check supabase/functions/_shared/intake-authorization.mjs supabase/functions/careerdev-intake-engine-v2/authorization.test.mjs
 
       - name: Type-check Supabase Edge Function
         run: deno check --no-config supabase/functions/careerdev-intake-engine-v2/index.ts

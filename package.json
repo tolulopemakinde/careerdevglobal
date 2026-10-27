@@ -18,7 +18,8 @@
     "verify:phase2": "npm run verify:phase1 && npm run validate:phase2-boundaries && npm run validate:edge-security",
     "verify:phase3": "npm run verify:phase2 && npm run validate:phase3-preview",
     "validate:phase4-simulation": "node scripts/validate-phase4-simulation.mjs",
-    "verify:phase4": "npm run verify:phase3 && npm run validate:phase4-simulation"
+    "verify:phase4": "npm run verify:phase3 && npm run validate:phase4-simulation",
+    "test:intake-authorization": "node --test supabase/functions/careerdev-intake-engine-v2/authorization.test.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "10.75.2",
