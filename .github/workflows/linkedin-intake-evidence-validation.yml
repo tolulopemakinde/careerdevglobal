@@ -10,6 +10,7 @@ on:
     paths:
       - "supabase/functions/careerdev-intake-engine-v2/**"
       - "supabase/functions/_shared/intake-authorization.mjs"
+      - "supabase/functions/_shared/intake-outcome.mjs"
       - "scripts/validate-linkedin-intake-evidence.mjs"
       - "package.json"
       - "package-lock.json"
@@ -54,7 +55,7 @@ jobs:
           deno-version: v2.x
 
       - name: Check formatting for new authorization modules
-        run: deno fmt --check supabase/functions/_shared/intake-authorization.mjs supabase/functions/careerdev-intake-engine-v2/authorization.test.mjs
+        run: deno fmt --check supabase/functions/_shared/intake-authorization.mjs supabase/functions/_shared/intake-outcome.mjs supabase/functions/careerdev-intake-engine-v2/authorization.test.mjs supabase/functions/careerdev-intake-engine-v2/intake-outcome.test.mjs
 
       - name: Type-check Supabase Edge Function
         run: deno check --no-config supabase/functions/careerdev-intake-engine-v2/index.ts
