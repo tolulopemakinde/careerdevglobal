@@ -12,7 +12,8 @@ export function canAccessIntakeRequest(actor, request) {
     case "client":
       return actor.id === request.clientProfileId;
     case "coach":
-      return Boolean(request.assignedCoachId) && actor.id === request.assignedCoachId;
+      return Boolean(request.assignedCoachId) &&
+        actor.id === request.assignedCoachId;
     case "staff":
     case "admin":
       return true;
