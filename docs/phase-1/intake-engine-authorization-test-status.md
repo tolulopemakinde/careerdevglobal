@@ -34,7 +34,21 @@ The deterministic tests cover:
 
 The mapping is explicit: `awaiting_client` maps to `awaiting_client`; `awaiting_review` maps to `awaiting_review`; `ready` maps to intake-session `ready` and service-request `awaiting_review`; `blocked` maps to `blocked` in both tables. Review, ready, and blocked outcomes keep human review required and AI approval pending.
 
-The two final status updates use checked row-returning updates in sequence. If the session update succeeds but the request update fails, the response reports that partial persistence and does not report success. There is no cross-table transaction; the existing schema offers no intake-status RPC, and this change does not add one. Gap and question persistence, session creation, AI usage metering, and AI-run logging are also checked. Persistence failures return safe generic messages without database/provider payloads and do not claim a queue exists.
+The two final status updates use checked row-returning updates in sequence. If the session update succeeds but the request update fails, the response reports that partial persistence and does not report success. There is no transaction spanning these tables; the existing schema offers no intake-status RPC, and this change does not add one.
+
+### Exact partial-write behavior
+
+Writes occur in this order after authorization and required context reads:
+
+1. If there is no existing session, the function creates an `in_progress` intake session before document retrieval and the budget/provider checks. A later retrieval, budget, provider, or usage failure can therefore leave that session `in_progress`; the response is blocked and does not claim a queue exists.
+2. After a provider response, the usage event is written before parsing the result. If metering fails, the function stops before writing an AI run, gaps, questions, or final statuses. The provider may already have generated output, but that output is not returned or saved by this workflow.
+3. If usage logging succeeds but the completed AI-run insert fails, the usage event remains; gaps, questions, and final statuses are not written.
+4. Information gaps are inserted one at a time. If a later gap fails, the usage event, AI run, and any earlier gap inserts remain; question and final status writes do not occur.
+5. Intake questions are inserted as one batch after the gaps. If that write fails, earlier usage, AI-run, and gap records remain; final statuses do not change.
+6. Final status updates run session first and service request second. If the session update fails, the request update is not attempted. If the request update fails, the session update remains committed and the response returns both persistence flags so the partial state is explicit.
+7. Missing/invalid model output records usage and attempts a safe failed AI-run log; it does not write gaps, questions, or final statuses. Provider failure logs are also checked. A failed audit insert produces a non-success response.
+
+These writes are not rolled back across tables, and no automatic retry or durable queue is created. Responses do not include raw database/provider error bodies or raw invalid model output.
 
 ## Authenticated integration tests
 
