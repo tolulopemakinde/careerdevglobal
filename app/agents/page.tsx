@@ -80,9 +80,10 @@ export default function AgentsPage() {
 
     const { data: agentRows, error: agentsError } = await supabase
       .from('ai_agent_registry')
-      .select('id,agent_key,name,description,agent_category,status,human_approval_required')
+      .select('id,agent_key,name,description,agent_category,status,human_approval_required,ai_dependency_mode')
       .eq('active', true)
       .eq('owner_role', 'client_coach')
+      .neq('ai_dependency_mode', 'ai_required')
       .order('created_at');
 
     if (agentsError) {
@@ -125,7 +126,7 @@ export default function AgentsPage() {
               <a href="/" style={{ color: 'rgba(255,255,255,.9)', fontWeight: 800, textDecoration: 'none' }}>← CareerDev Global</a>
               <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: 1.2, textTransform: 'uppercase', marginTop: 26, opacity: .86 }}>Career Development • AI & Automation</div>
               <h1 style={{ fontSize: 'clamp(2.2rem,5vw,4rem)', lineHeight: 1.05, margin: '10px 0 12px' }}>CareerDev AI Agents</h1>
-              <p style={{ margin: 0, color: 'rgba(255,255,255,.9)', maxWidth: 760, fontSize: 'clamp(1rem,2vw,1.15rem)', lineHeight: 1.65 }}>Sixteen specialized agents working from one shared Career Intelligence Profile to help you develop your career, build your professional brand, discover opportunities, and grow globally.</p>
+              <p style={{ margin: 0, color: 'rgba(255,255,255,.9)', maxWidth: 760, fontSize: 'clamp(1rem,2vw,1.15rem)', lineHeight: 1.65 }}>Pilot career agents working from one shared Career Intelligence Profile to help you develop your career, build your professional brand, discover opportunities, and grow globally.</p>
               <p style={{ fontWeight: 900, margin: '18px 0 0' }}>AI prepares. You review. Coaches validate when needed.</p>
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -158,8 +159,8 @@ export default function AgentsPage() {
               <p style={{ margin: 0, color: '#527085' }}>All {agents.length} agents use the same evolving profile context. Each AI capability is designed to support structured career decision-making.</p>
               {subscription ? (
                 <>
-                  <p style={{ margin: '10px 0 0', fontWeight: 800 }}>Current plan: {subscription.plan_name} · {subscription.monthly_credits.toLocaleString()} AI credits/month allowance</p>
-                  {creditStatus && (
+                  <p style={{ margin: '10px 0 0', fontWeight: 800 }}>Current plan: {subscription.plan_name} · pilot access</p>
+                  {false && creditStatus && (
                     <div style={{ marginTop: 12, padding: 14, borderRadius: 12, background: creditStatus.credits_remaining === 0 ? '#fff4f4' : (creditStatus.credits_remaining / Math.max(1, creditStatus.monthly_allowance) <= 0.2 ? '#fff8e8' : '#f5faff'), border: creditStatus.credits_remaining === 0 ? '1px solid #e5bcbc' : (creditStatus.credits_remaining / Math.max(1, creditStatus.monthly_allowance) <= 0.2 ? '1px solid #ead9a7' : '1px solid #cfe3f2') }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
                         <span><strong>{creditStatus.credits_remaining.toLocaleString()}</strong> credits remaining</span>
