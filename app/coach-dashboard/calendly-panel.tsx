@@ -111,7 +111,7 @@ export default function CalendlyPanel({offerings=[],userId,onMapped}:any){
     {message&&<div className="dash-message">{message}</div>}
     <div className="calendly-link-fallback" style={{marginTop:16}}>
       <h3>Direct booking link fallback</h3>
-      <p className="note">Optional: add a public Calendly link for each service so clients can schedule on Calendly without OAuth. These bookings are handled on Calendly and will not create CareerDev marketplace requests, payments, or slot records.</p>
+      <p className="note">Add a public Calendly link for each service so clients can schedule on Calendly</p>
       {calendlyOfferings.length===0?<p className="note">Publish a service offering first.</p>:calendlyOfferings.map((o:any)=><div key={o.id} style={{display:'grid',gridTemplateColumns:'minmax(0,1fr) auto',gap:10,alignItems:'end',marginTop:12}}>
         <label><strong>{o.title}</strong><input type="url" inputMode="url" autoComplete="url" placeholder="Optional: paste your actual Calendly event link" value={bookingUrlDrafts[o.id]??o.calendly_booking_url??''} onChange={e=>setBookingUrlDrafts(current=>({...current,[o.id]:e.target.value}))}/></label>
         <button className="secondary" onClick={()=>saveBookingUrl(o)} disabled={busy}>Save link</button>
