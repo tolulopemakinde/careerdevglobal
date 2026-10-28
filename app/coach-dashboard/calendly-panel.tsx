@@ -107,7 +107,7 @@ export default function CalendlyPanel({offerings=[],userId,onMapped}:any){
 
   return <section className="dash-card">
     <h2>Calendly scheduling</h2>
-    <p className="note">Connect the coach’s own Calendly account. The meeting platform is inherited from each linked Calendly event type, so you can use Zoom, Google Meet, Microsoft Teams, phone, in-person or another Calendly-supported location without CareerDev Global forcing a single platform.</p>
+    <p className="note">Connect your Calendly account for each service so clients can schedule on Calendly. The meeting platform is inherited from each linked Calendly event type, so you can use Zoom, Google Meet, Microsoft Teams, phone, in-person, or another Calendly-supported location.</p>
     {message&&<div className="dash-message">{message}</div>}
     <div className="calendly-link-fallback" style={{marginTop:16}}>
       <h3>Direct booking link fallback</h3>
