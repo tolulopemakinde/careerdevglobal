@@ -23,7 +23,7 @@ export default function AdminPage(){
   if(roleError){setMessage(`Account verification failed. ${roleError.message}`);setLoading(false);return;}
   if(roleData?.status && roleData.status!=='active'){setMessage('Your Staff/Admin account is not active.');setLoading(false);return;}
   if(roleData?.role!=='admin' && roleData?.role!=='staff'){setMessage('This account does not have Staff/Admin permissions.');setLoading(false);return;}
-  const [{data:d,error:de},{data:o,error:oe},agentResult,approvalResult,releaseResult,promptResult,modelResult,analyticsResult]=await Promise.all([supabase.rpc('admin_get_platform_dashboard'),supabase.rpc('admin_get_platform_operations'),supabase.from('ai_agent_registry').select('id,name,agent_key,description,status,autonomy_level,human_approval_required,active,owner_role').in('owner_role',['staff','admin']).eq('active',true).neq('ai_dependency_mode','ai_required').order('created_at'),supabase.from('ai_human_approval_requests').select('id,request_id,execution_id,requested_by,status,requested_at,approved_by,approved_at,decision_notes').in('status',['pending','approved']).order('requested_at',{ascending:false}),supabase.rpc('get_ai_release_candidates'),supabase.from('ai_prompt_versions').select('id,prompt_key,version,purpose,status,created_by,approved_by,approved_at,created_at').eq('prompt_key','career_discovery_ai_system').order('version',{ascending:false}),supabase.from('ai_model_versions').select('id,provider,model_name,model_version,purpose,status,approved_by,approved_at,created_at').eq('model_name','gpt-5.6-luna').order('created_at',{ascending:false}),supabase.rpc('admin_get_platform_analytics')]);
+  const [{data:d,error:de},{data:o,error:oe},agentResult,approvalResult,releaseResult,promptResult,modelResult,analyticsResult]=await Promise.all([supabase.rpc('admin_get_platform_dashboard'),supabase.rpc('admin_get_platform_operations'),supabase.from('ai_agent_registry').select('id,name,agent_key,description,status,autonomy_level,human_approval_required,active,owner_role').order('created_at'),supabase.from('ai_human_approval_requests').select('id,request_id,execution_id,requested_by,status,requested_at,approved_by,approved_at,decision_notes').in('status',['pending','approved']).order('requested_at',{ascending:false}),supabase.rpc('get_ai_release_candidates'),supabase.from('ai_prompt_versions').select('id,prompt_key,version,purpose,status,created_by,approved_by,approved_at,created_at').eq('prompt_key','career_discovery_ai_system').order('version',{ascending:false}),supabase.from('ai_model_versions').select('id,provider,model_name,model_version,purpose,status,approved_by,approved_at,created_at').eq('model_name','gpt-5.6-luna').order('created_at',{ascending:false}),supabase.rpc('admin_get_platform_analytics')]);
   if(de||oe||releaseResult.error||promptResult.error||modelResult.error||analyticsResult.error){setMessage((de||oe||releaseResult.error||promptResult.error||modelResult.error||analyticsResult.error)?.message||'Administration data is unavailable.');setLoading(false);return;}
   const approvals=approvalResult.data||[]; const approvedIds=approvals.filter((a:any)=>a.status==='approved'&&a.execution_id).map((a:any)=>a.execution_id);
   const {data:approvedExecutions,error:approvedExecutionsError}=approvedIds.length?await supabase.from('ai_agent_executions').select('id,status,completed_at').in('id',approvedIds):{data:[],error:null};
@@ -37,123 +37,10 @@ export default function AdminPage(){
 
  async function requestIndependentApproval(requestId:string,executionId:string){setBusy('request-approval-'+requestId);setMessage('Creating independent human-approval request…');const {data,error}=await supabase.rpc('request_ai_human_approval',{p_request_id:requestId,p_execution_id:executionId});setMessage(error?error.message:`Independent approval requested. Approval ID: ${data}`);setBusy(null);await load();}
  async function approvePromptVersion(id:string){setBusy('approve-prompt-'+id);setMessage('Approving prompt version…');const {data,error}=await supabase.rpc('approve_ai_prompt_version',{p_prompt_version_id:id,p_decision_notes:'Independent prompt approval after governed Career Discovery testing.'});setMessage(error?'Prompt approval failed: '+error.message:'Prompt version approved: v'+(data?.version||''));setBusy(null);await load();} async function approveModelVersion(id:string){setBusy('approve-model-'+id);setMessage('Approving model version…');const {data,error}=await supabase.rpc('approve_ai_model_version',{p_model_version_id:id,p_decision_notes:'Independent model approval for the governed Career Discovery service configuration.'});setMessage(error?'Model approval failed: '+error.message:'Model version approved: '+(data?.model_name||'model')+' '+(data?.model_version||''));setBusy(null);await load();} async function runProductionSafetyGate(id:string){setBusy('safety-gate-'+id);setMessage('Running production safety gate…');const {data,error}=await supabase.rpc('evaluate_ai_production_safety_gate',{p_release_candidate_id:id});setMessage(error?'Production safety gate failed: '+error.message:(data?.eligible?'Production safety gate: ELIGIBLE.':'Production safety gate: NOT ELIGIBLE.'));setBusy(null);await load();} async function approveIndependentApproval(approvalId:string){setBusy('approve-approval-'+approvalId);setMessage('Recording independent approval…');const {error}=await supabase.rpc('approve_ai_human_approval',{p_approval_id:approvalId,p_decision_notes:'Reviewed through CareerDev Global AI Governance.'});setMessage(error?error.message:'Independent human approval recorded. The execution can now proceed through the governed completion transition.');setBusy(null);await load();} async function completeApprovedExecution(requestId:string){setBusy('complete-'+requestId);setMessage('Completing approved governed execution…');const {data,error}=await supabase.rpc('transition_ai_agent_execution',{p_request_id:requestId,p_status:'completed',p_event_data:{reason:'Independent human approval confirmed; governed test completion.'}});setMessage(error?`Completion failed: ${error.message}`:`Completion response: ${JSON.stringify(data)}`);setBusy(null);await load();}
- async function runGovernedCareerDiscoveryTest(){
-  setBusy('run-career-discovery-test');setMessage('Step 1/5: starting governed test…');setAiResult(null);
-  const testCaseId='b294be94-b7c8-4cd1-ad80-c0cdf17794d0';
-  const outputSchema={
-   type:'object',
-   additionalProperties:false,
-   properties:{
-    career_direction:{type:'string'},
-    target_roles:{type:'array',items:{type:'string'}},
-    recommendations:{type:'array',items:{type:'string'}},
-    gaps:{type:'array',items:{type:'string'}},
-    evidence_grounding:{type:'number',minimum:0,maximum:1},
-    no_fabrication:{type:'number',minimum:0,maximum:1},
-    source_traceability:{type:'number',minimum:0,maximum:1},
-    verification_gate:{type:'boolean'},
-    mapping_accuracy:{type:'number',minimum:0,maximum:1},
-    profile_consistency:{type:'number',minimum:0,maximum:1},
-    service_relevance:{type:'number',minimum:0,maximum:1},
-    end_to_end_integrity:{type:'number',minimum:0,maximum:1},
-    human_review_gate:{type:'boolean'},
-    uncertainty_flags:{type:'array',items:{type:'string'}},
-    source_refs:{type:'array',items:{type:'string'}},
-    unsupported_claims:{type:'integer',minimum:0},
-    unverified_applied:{type:'integer',minimum:0},
-    fact_classifications:{type:'array',items:{type:'string'}},
-    human_approved:{type:'boolean'}
-   },
-   required:['career_direction','target_roles','recommendations','gaps','evidence_grounding','no_fabrication','source_traceability','verification_gate','mapping_accuracy','profile_consistency','service_relevance','end_to_end_integrity','human_review_gate','uncertainty_flags','source_refs','unsupported_claims','unverified_applied','fact_classifications','human_approved']
-  };
-  const inputPayload={
-   test_class:'grounding',
-   test_case:testCaseId,
-   purpose:'release_candidate',
-   synthetic:true,
-   career_profile:{
-    education:[{degree:'BSc Economics',institution:'Synthetic University',year:2022}],
-    experience:[{role:'Programme Assistant',employer:'Synthetic NGO',years:2,responsibilities:['youth employability programmes','stakeholder coordination']}],
-    skills:['project coordination','data analysis','facilitation'],
-    target_preferences:{interests:['youth development','workforce development'],work_mode:'hybrid',location:'Abuja'}
-   },
-   service_request:{type:'Career Intelligence Assessment',goal:'Identify evidence-grounded career directions.'},
-   evidence:{source_refs:['synthetic-test-profile'],verification_status:'unverified'},
-   output_schema:outputSchema
-  };
-  try{
-   setMessage('Step 2/5: creating governed execution request…');
-   const {data:requestId,error:requestError}=await supabase.rpc('request_ai_agent_execution',{p_agent_key:'career_discovery_ai',p_workflow_key:'career_profile_analysis',p_trigger_source:'test_governed',p_input_payload:inputPayload});
-   if(requestError||!requestId) throw new Error(requestError?.message||'Could not create governed execution request.');
-   setMessage('Step 3/5: preparing governed execution…');
-   const {data:executionId,error:prepareError}=await supabase.rpc('prepare_ai_agent_execution',{p_request_id:requestId});
-   if(prepareError||!executionId) throw new Error(prepareError?.message||'Could not prepare governed execution.');
-   setMessage('Step 4/5: validating authenticated Staff/Admin session…');
-   const {data:sessionData,error:sessionError}=await supabase.auth.getSession();
-   const token=sessionData.session?.access_token;
-   if(sessionError||!token) throw new Error('A valid Staff/Admin session is required to invoke the governed runtime.');
-   const runtimeUrl=(process.env.NEXT_PUBLIC_SUPABASE_URL||'https://ufmhrmzumqkjvaezrmxf.supabase.co')+'/functions/v1/careerdev-ai-agent-runtime';
-   setMessage('Step 5/5: invoking authenticated AI runtime…');
-   const response=await fetch(runtimeUrl,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({request_id:requestId})});
-   const body=await response.json();
-   if(!response.ok) throw new Error(body?.error||'Governed runtime execution failed.');
-   setAiResult({request_id:requestId,execution_id:executionId,...body});
-   setMessage('Career Discovery AI governed execution completed through the authenticated runtime. The result is held at the human-review gate. Request independent approval for a second Admin/Staff reviewer.');
-  }catch(error:any){
-   setMessage(error?.message||'Governed AI test failed.');
-  }finally{setBusy(null);}
- }
-
- async function runStaffAdminAgentTest(agentKey:string){
-  const agent=adminAgents.find((a:any)=>a.agent_key===agentKey);
-  if(!agent) return;
-  const workflowByAgent:any={
-   ceo_operations_ai:'executive_performance_review',career_discovery_ai:'career_profile_analysis',cv_linkedin_ai:'cv_service_delivery',lead_generation_ai:'lead_qualification',marketing_content_ai:'content_creation',research_opportunities_ai:'opportunity_research',sales_proposal_ai:'proposal_generation'
-  };
-  const workflow=workflowByAgent[agentKey];
-  const outputSchema={type:'object',additionalProperties:true,properties:{summary:{type:'string'},recommendations:{type:'array',items:{type:'string'}},risks:{type:'array',items:{type:'string'}},next_steps:{type:'array',items:{type:'string'}},evidence_flags:{type:'array',items:{type:'string'}},human_review_required:{type:'boolean'}},required:['summary','recommendations','risks','next_steps','evidence_flags','human_review_required']};
-  const syntheticContexts:any={
-   ceo_operations_ai:{operational_snapshot:{revenue_trend:'synthetic',service_delivery_quality:'synthetic',client_outcomes:'synthetic',staff_capacity:'synthetic'},request:'Identify operational priorities and risks from supplied synthetic data.'},
-   career_discovery_ai:{career_profile:{education:'BSc Economics',experience:'2 years programme coordination',skills:['data analysis','facilitation','project coordination'],interests:['youth development','workforce development']},request:'Identify evidence-grounded career directions.'},
-   cv_linkedin_ai:{candidate_profile:{target_role:'Programme Officer',skills:['project coordination','data analysis'],experience:'2 years programme coordination'},request:'Produce truthful CV/LinkedIn positioning recommendations.'},
-   lead_generation_ai:{prospect_profile:{segment:'career services buyer',source:'synthetic',consent_status:'unknown'},request:'Qualify the synthetic prospect and draft ethical next steps without outreach.'},
-   marketing_content_ai:{campaign:{audience:'young professionals',topic:'career development',channels:['LinkedIn']},request:'Draft evidence-aligned content ideas without unsupported claims.'},
-   research_opportunities_ai:{candidate_profile:{location:'Abuja',interests:['youth development','workforce development'],skills:['project coordination']},request:'Structure opportunity-research requirements and identify what must be verified.'},
-   sales_proposal_ai:{prospect:{service_interest:'career coaching',budget:'unknown',requirements:'synthetic'},request:'Prepare a transparent service proposal outline without promising outcomes.'}
-  };
-  const payload={test_class:'staff_admin_governed',test_case:agentKey,synthetic:true,purpose:'functional_validation',...syntheticContexts[agentKey],output_schema:outputSchema};
-  setBusy('agent-test-'+agentKey);setMessage('Starting autonomous functional test for '+agent.name+'…');setAiResult(null);
-  try{
-   const {data:requestId,error:requestError}=await supabase.rpc('request_ai_agent_execution',{p_agent_key:agentKey,p_workflow_key:workflow,p_trigger_source:'functional_test',p_input_payload:payload});
-   if(requestError||!requestId) throw new Error(requestError?.message||'Could not create execution request.');
-   const {data:prepared,error:prepareError}=await supabase.rpc('prepare_ai_agent_execution',{p_request_id:requestId});
-   if(prepareError) throw new Error(prepareError.message);
-   const {data:sessionData,error:sessionError}=await supabase.auth.getSession();
-   const token=sessionData.session?.access_token;
-   if(sessionError||!token) throw new Error('A valid Staff/Admin session is required to invoke the governed runtime.');
-   const runtimeUrl=(process.env.NEXT_PUBLIC_SUPABASE_URL||'https://ufmhrmzumqkjvaezrmxf.supabase.co')+'/functions/v1/careerdev-ai-agent-runtime';
-   const response=await fetch(runtimeUrl,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({request_id:requestId})});
-   const body=await response.json();
-   if(!response.ok) throw new Error(body?.error||'Governed runtime failed.');
-   setAiResult({agent_key:agentKey,request_id:requestId,execution_id:prepared?.execution_id,...body});
-   setMessage(agent.name+' completed its authenticated autonomous functional test. The output is available as decision-support; human review is recommended for consequential use.');
-  }catch(error:any){setMessage(agent.name+' test failed: '+(error?.message||'Unknown error'));}
-  finally{setBusy(null);await load();}
- } async function runClientCoachQualitySuite(){
-  setBusy('client-coach-suite');setMessage('Starting the governed 16-agent quality suite…');setAiResult(null);
-  try{
-    const {data:sessionData,error:sessionError}=await supabase.auth.getSession();
-    const token=sessionData.session?.access_token;
-    if(sessionError||!token) throw new Error('A valid Staff/Admin session is required.');
-    const runtimeUrl=(process.env.NEXT_PUBLIC_SUPABASE_URL||'https://ufmhrmzumqkjvaezrmxf.supabase.co')+'/functions/v1/careerdev-ai-test-suite-runner';
-    const response=await fetch(runtimeUrl,{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:'{}'});
-    const body=await response.json().catch(()=>({error:'Invalid suite runner response'}));
-    if(!response.ok) throw new Error(body?.error||'Governed suite runner failed.');
-    setAiResult(body);
-    setMessage(body.status==='passed'?'All 16 Client/Coach normal quality cases passed through the governed runtime.':'The 16-agent suite completed with one or more failures. Review the persisted test results before any certification decision.');
-  }catch(error:any){setMessage(error?.message||'Governed quality suite failed.');}
-  finally{setBusy(null);await load();}
- } async function signOut(){await supabase.auth.signOut();window.location.href='/admin/login';}
+ async function runGovernedCareerDiscoveryTest(){setMessage('AI execution is paused during the structured pilot.');}
+ async function runStaffAdminAgentTest(agentKey:string){setMessage('AI execution is paused during the structured pilot. Configurations and historical executions are preserved.');}
+ async function runClientCoachQualitySuite(){setMessage('Use the verified 11-agent pilot test suite. Provider-dependent execution is paused.');}
+ async function signOut(){await supabase.auth.signOut();window.location.href='/admin/login';}
  const c=dashboard?.counts||{};
  const applications=ops.applications||[];
  const pendingApplications=applications.filter(a=>['submitted','pending','under_review'].includes(String(a.application_status||'').toLowerCase()));
@@ -169,9 +56,9 @@ export default function AdminPage(){
   {loading?<p style={{marginTop:28,textAlign:'center',color:'#527085'}}>Loading administration data…</p>:!dashboard?<p style={{marginTop:28,textAlign:'center',color:'#527085'}}>Administration data is unavailable.</p>:<>
    {pendingApplications.length>0&&<section style={{marginTop:18,padding:'18px 20px',borderRadius:16,border:'1px solid #f0c36a',background:'#fff8e8',display:'flex',justifyContent:'space-between',alignItems:'center',gap:16,flexWrap:'wrap',boxShadow:'0 8px 24px rgba(120,80,0,.06)'}}><div><div style={{fontSize:12,fontWeight:900,textTransform:'uppercase',letterSpacing:'.06em',color:'#8a5a00'}}>Coach applications awaiting review</div><div style={{fontSize:16,fontWeight:800,marginTop:4}}>{pendingApplications.length} application{pendingApplications.length===1?'':'s'} require{pendingApplications.length===1?'s':''} your review.</div><div style={{fontSize:13,color:'#6d5a35',marginTop:4}}>Review the application before granting marketplace approval.</div></div><button onClick={()=>setTab('Applications')} style={{...btn(true),background:'#9a6500',borderColor:'#9a6500'}}>Review applications</button></section>}
    <div style={{display:'flex',gap:8,overflowX:'auto',padding:'20px 0 8px',position:'sticky',top:0,zIndex:5,background:'rgba(238,247,255,.94)',backdropFilter:'blur(8px)'}}>{tabs.map(t=><button key={t} onClick={()=>setTab(t)} style={{...btn(tab===t),whiteSpace:'nowrap',position:'relative'}}>{t}{t==='Applications'&&pendingApplications.length>0&&<span style={{marginLeft:6,display:'inline-flex',minWidth:20,height:20,padding:'0 6px',alignItems:'center',justifyContent:'center',borderRadius:999,background:tab===t?'#fff':'#c47a00',color:tab===t?'#0b5d9b':'#fff',fontSize:11,fontWeight:900}}>{pendingApplications.length}</span>}</button>)}</div>
-   {tab==='Admin AI Agents'&&<Section title="Staff & Admin AI Agents"><div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14}}>{adminAgents.map((a:any)=><article key={a.id} style={{padding:18,border:'1px solid #d8e6f1',borderRadius:14,background:'#f8fcff'}}><div style={{display:'flex',justifyContent:'space-between',gap:8,alignItems:'center'}}><strong>{a.name}</strong><span style={{fontSize:11,fontWeight:900,padding:'4px 8px',borderRadius:999,background:'#e8eef5',color:'#36566f'}}>{a.status}</span></div><p style={{fontSize:13,lineHeight:1.55,color:'#527085'}}>{a.description}</p><div style={{fontSize:12,lineHeight:1.7}}><div>Owner: <strong>{a.owner_role==='admin'?'Admin':'Staff'}</strong></div><div>Autonomy: {a.autonomy_level}</div><div>Human approval: {a.human_approval_required?'Required':'Not required'}</div></div><button disabled={busy==='agent-test-'+a.agent_key} onClick={()=>runStaffAdminAgentTest(a.agent_key)} style={{...btn(true),marginTop:12,width:'100%'}}>{busy==='agent-test-'+a.agent_key?'Running governed test…':'Run autonomous functional test'}</button></article>)}</div><p style={{fontSize:12,color:'#607487',marginTop:16}}>Tests use synthetic data and the authenticated runtime. Results are decision-support outputs; consequential external actions still require appropriate human review. A successful test does not by itself activate production.</p></Section>}
+   {tab==='Admin AI Agents'&&<Section title="Agent Governance — All 23 Records"><div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14}}>{adminAgents.map((a:any)=><article key={a.id} style={{padding:18,border:'1px solid #d8e6f1',borderRadius:14,background:'#f8fcff'}}><div style={{display:'flex',justifyContent:'space-between',gap:8,alignItems:'center'}}><strong>{a.name}</strong><span style={{fontSize:11,fontWeight:900,padding:'4px 8px',borderRadius:999,background:'#e8eef5',color:'#36566f'}}>{a.status}</span></div><p style={{fontSize:13,lineHeight:1.55,color:'#527085'}}>{a.description}</p><div style={{fontSize:12,lineHeight:1.7}}><div>Owner: <strong>{a.owner_role==='admin'?'Admin':'Staff'}</strong></div><div>Autonomy: {a.autonomy_level}</div><div>Human approval: {a.human_approval_required?'Required':'Not required'}</div></div><button disabled onClick={()=>runStaffAdminAgentTest(a.agent_key)} style={{...btn(true),marginTop:12,width:'100%'}}>{busy==='agent-test-'+a.agent_key?'Running governed test…':'Execution paused in governance view'}</button></article>)}</div><p style={{fontSize:12,color:'#607487',marginTop:16}}>Tests use synthetic data and the authenticated runtime. Results are decision-support outputs; consequential external actions still require appropriate human review. A successful test does not by itself activate production.</p></Section>}
    {approvalQueue.length>0&&<section style={{marginTop:18,padding:'18px 20px',borderRadius:16,border:'1px solid #9ec7e6',background:'#eef8ff'}}><strong>Pending independent AI approvals</strong><div style={{marginTop:8}}>{approvalQueue.length} approval request{approvalQueue.length===1?'':'s'} awaiting review. A requester cannot approve their own execution.</div><button onClick={()=>setTab('AI Governance')} style={{...btn(true),marginTop:10}}>Open AI Governance</button></section>}
-   {tab==='AI Governance'&&<Section title="AI Governance — Career Discovery AI" tools={<div style={{display:'flex',gap:8,flexWrap:'wrap'}}><button type="button" onClick={()=>{if(busy!=='run-career-discovery-test')void runGovernedCareerDiscoveryTest();}} disabled={busy==='run-career-discovery-test'} style={btn(true)}>{busy==='run-career-discovery-test'?'Running…':'Run governed test'}</button><button type="button" onClick={()=>{if(busy!=='client-coach-suite')void runClientCoachQualitySuite();}} disabled={busy==='client-coach-suite'} style={btn(true)}>{busy==='client-coach-suite'?'Running 16-agent suite…':'Run 16-agent quality suite'}</button></div>}>
+   {tab==='AI Governance'&&<Section title="AI Governance — Career Discovery AI" tools={<div style={{display:'flex',gap:8,flexWrap:'wrap'}}><button type="button" onClick={()=>{if(busy!=='run-career-discovery-test')void runGovernedCareerDiscoveryTest();}} disabled={busy==='run-career-discovery-test'} style={btn(true)}>{busy==='run-career-discovery-test'?'Running…':'AI test paused during pilot'}</button><button type="button" onClick={()=>{if(busy!=='client-coach-suite')void runClientCoachQualitySuite();}} disabled={busy==='client-coach-suite'} style={btn(true)}>{busy==='client-coach-suite'?'Running 16-agent suite…':'AI suite paused during pilot'}</button></div>}>
     <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:14}}>
      <div style={{padding:16,border:'1px solid #d8e6f1',borderRadius:12}}>
       <strong>Current release gate</strong>

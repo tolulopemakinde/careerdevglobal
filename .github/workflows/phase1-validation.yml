@@ -41,7 +41,7 @@ jobs:
         run: npm run typecheck
 
       - name: Test structured pilot execution and billing guards
-        run: node --test tests/pilot.test.mjs tests/pilot-runtime.test.mjs
+        run: node --test tests/pilot.test.mjs tests/pilot-runtime.test.mjs tests/pilot-provider-boundaries.test.mjs
 
       - name: Verify packaged build inputs
         run: npm run check:build-inputs

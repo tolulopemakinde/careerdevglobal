@@ -43,7 +43,7 @@ Deno.serve(async(req)=>{
   if(reqErr||!reqRow) return reply({error:'Execution request not found'},404);
   if(!['prepared','running'].includes(reqRow.status)) return reply({error:`Execution request is not runnable from status ${reqRow.status}`},409);
   observabilityRole=String(profile.role);
-  if(['client','coach'].includes(profile.role) && reqRow.requested_by!==user.id) return reply({error:'Coach may only run own execution requests'},403);
+  if(['client','coach'].includes(profile.role) && reqRow.requested_by!==user.id) return reply({error:'Users may only run their own execution requests'},403);
   if(!reqRow.execution_id) return reply({error:'Execution request must be prepared first'},409);
 
   if(reqRow.trigger_source==='test_governed' && !['admin','staff'].includes(profile.role)) return reply({error:'Governed test executions require staff or admin access'},403);
@@ -91,16 +91,15 @@ Deno.serve(async(req)=>{
     if(serviceExecutionId&&stepRun){
       const {error:we}=await sb.rpc('record_ai_service_workflow_step_output',{p_step_run_id:stepRun.id,p_output:fallback,p_error:null});
       if(we)return reply({error:'Could not persist fallback output'},500);
-      const {data:q,error:qe}=await sb.rpc('evaluate_ai_workflow_step_quality',{p_step_run_id:stepRun.id});
-      if(qe){await sb.rpc('transition_ai_agent_execution',{p_request_id:reqRow.id,p_status:'awaiting_human_review',p_event_data:{stage:'fallback_quality_error',detail:qe.message}});return reply({status:'awaiting_human_review',execution_id:agentExec.id,output:fallback,quality_error:qe.message},200);}
-      if(q?.passed===true){const {data:a,error:ae}=await sb.rpc('complete_ai_workflow_step_after_quality',{p_step_run_id:stepRun.id});if(!ae){await sb.rpc('transition_ai_agent_execution',{p_request_id:reqRow.id,p_status:'completed',p_event_data:{stage:'fallback_completed',quality:q}});return reply({status:a?.status||'completed',execution_id:agentExec.id,output:fallback,quality:q,advance:a},200);}}
-      await sb.rpc('transition_ai_agent_execution',{p_request_id:reqRow.id,p_status:'awaiting_human_review',p_event_data:{stage:'fallback_quality_review',quality:q}});
-      return reply({status:'awaiting_human_review',execution_id:agentExec.id,output:fallback,quality:q},200);
+      const {error:transitionError}=await sb.rpc('transition_ai_agent_execution',{p_request_id:reqRow.id,p_status:'awaiting_human_review',p_event_data:{stage:'pilot_service_draft',dependency_mode:dependencyMode}});
+      if(transitionError)return reply({error:'Could not record service review state'},500);
+      return reply({status:'awaiting_human_review',execution_id:agentExec.id,output:{...fallback,human_review_required:true,human_review_gate:true},human_review_required:true},200);
     }
-    const admin=serviceRoleKey?createClient(supabaseUrl,serviceRoleKey):sb, humanReview=dependencyMode!=='works_without_ai';
+    const admin=serviceRoleKey?createClient(supabaseUrl,serviceRoleKey):sb, humanReview=fallback.human_review_required;
     const {error:ue}=await admin.from('ai_agent_executions').update({status:humanReview?'awaiting_human_review':'completed',output_snapshot:fallback,quality_summary:{mode:fallback.fallback_mode,quality_evaluated:false},human_review_required:humanReview,human_review_status:humanReview?'pending':'not_required',completed_at:humanReview?null:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',agentExec.id);
     if(ue)return reply({error:'Could not persist no-AI agent output'},500);
-    await sb.rpc('transition_ai_agent_execution',{p_request_id:reqRow.id,p_status:humanReview?'awaiting_human_review':'completed',p_event_data:{stage:'no_ai_fallback_completed',dependency_mode:dependencyMode}});
+    const {error:transitionError}=await sb.rpc('transition_ai_agent_execution',{p_request_id:reqRow.id,p_status:humanReview?'awaiting_human_review':'completed',p_event_data:{stage:'no_ai_fallback_completed',dependency_mode:dependencyMode}});
+    if(transitionError)return reply({error:'Could not record execution state'},500);
     return reply({status:humanReview?'fallback':'completed',execution_id:agentExec.id,output:fallback,human_review_required:humanReview,coach_validation_recommended:true},200);
   }
 

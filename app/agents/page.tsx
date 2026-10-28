@@ -96,6 +96,8 @@ export default function AgentsPage() {
     }
 
     setAgents((agentRows || []) as Agent[]);
+    const requested=new URLSearchParams(window.location.search).get('agent');
+    if(requested&&pilotAgents.includes(requested))setSelectedAgent((agentRows||[]).find(a=>a.agent_key===requested)||null);
 
     const [{ data: sub }, { data: credits }] = await Promise.all([
       supabase.rpc('get_my_ai_subscription'),
@@ -151,8 +153,8 @@ export default function AgentsPage() {
           <>
             <section style={{ background: '#fff', padding: 20, borderRadius: 16, border: '1px solid #b9d7ea', marginBottom: 24, boxShadow: '0 8px 25px rgba(0,60,100,.04)' }}>
               <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '.08em', fontWeight: 900, color: '#1671b9' }}>Start with Career Intelligence</div>
-              <h2 style={{ margin: '6px 0', fontSize: 22 }}>Your AI Agents work through the Career Intelligence Platform.</h2>
-              <p style={{ margin: '0 0 12px', color: '#527085', lineHeight: 1.6 }}>AI Agents are not separate standalone tools. Purchased AI Agent access enhances the capacity and functionality of your Career Intelligence Platform. Start there so your career profile, goals, evidence, services and context can guide the AI-assisted work.</p>
+              <h2 style={{ margin: '6px 0', fontSize: 22 }}>Your pilot agents support your Career Intelligence journey.</h2>
+              <p style={{ margin: '0 0 12px', color: '#527085', lineHeight: 1.6 }}>Start with your Career Intelligence record, then select a pilot agent below. Structured guidance uses information you supply and does not generate AI content or perform live research.</p>
               <button onClick={startFromCareerIntelligence} style={{ padding: '11px 16px', border: 0, borderRadius: 9, background: '#0b5d9b', color: '#fff', fontWeight: 900, cursor: 'pointer' }}>Open Career Intelligence →</button>
             </section>
 
@@ -186,7 +188,7 @@ export default function AgentsPage() {
                         <p style={{ color: '#527085', lineHeight: 1.55, minHeight: 66 }}>{agent.description}</p>
                         <button onClick={()=>setSelectedAgent(agent)} disabled={!allowed} style={{ width: '100%', padding: '11px 14px', border: 0, borderRadius: 9, background: allowed ? '#0b5d9b' : '#dfe6ec', color: allowed ? '#fff' : '#527085', fontWeight: 900, cursor: allowed ? 'pointer' : 'default' }}>{allowed ? 'Open structured guidance →' : 'Upgrade to Access'}</button>
                         {!allowed && <a href="/pricing" style={{ display: 'block', textAlign: 'center', marginTop: 9, color: '#0b5d9b', fontWeight: 800, fontSize: 12 }}>View plans</a>}
-                        <small style={{ display: 'block', marginTop: 9, color: '#718394' }}>AI output: decision-support · Coach validation recommended for clients</small>
+                        <small style={{ display: 'block', marginTop: 9, color: '#718394' }}>Structured output: decision support · Coach validation recommended for clients</small>
                       </article>
                     );
                   })}
