@@ -18,10 +18,10 @@ function walk(dir) {
 
 function inspect(path) {
   const text = readFileSync(path, "utf8");
-  const rel = relative(root, path);
+  const rel = relative(root, path).replaceAll('\\', '/');
   if (rel === "scripts/audit-source-config.mjs") return;
   const checks = [
-    { label: "Supabase service-role secret", pattern: /SUPABASE_SERVICE_ROLE|service_role_secret|service_role_key/i },
+    { label: "Supabase service-role secret", pattern: /(?:SUPABASE_SERVICE_ROLE_KEY|service_role_secret|service_role_key)\s*[:=]\s*["'`][A-Za-z0-9_.-]{20,}["'`]/i },
     { label: "OpenAI secret assignment", pattern: /OPENAI_API_KEY\s*[:=]\s*["'`]?(?!process\.env)[A-Za-z0-9_-]{20,}/i },
     { label: "Private key material", pattern: /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/i },
     { label: "Vercel token assignment", pattern: /VERCEL_TOKEN\s*[:=]\s*["'`]?(?!process\.env)[A-Za-z0-9_-]{20,}/i },

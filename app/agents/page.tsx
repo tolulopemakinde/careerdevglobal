@@ -1,5 +1,7 @@
 'use client';
 
+import { pilotAgents } from '../../lib/pilot';
+import PilotWorkspace from './pilot-workspace';
 import { useEffect, useMemo, useState } from 'react';
 import { createSupabaseBrowserClient } from '../../lib/supabase-browser';
 
@@ -41,6 +43,7 @@ const groups: Record<string, string> = {
 export default function AgentsPage() {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [role, setRole] = useState('');
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -80,9 +83,10 @@ export default function AgentsPage() {
 
     const { data: agentRows, error: agentsError } = await supabase
       .from('ai_agent_registry')
-      .select('id,agent_key,name,description,agent_category,status,human_approval_required')
+      .select('id,agent_key,name,description,agent_category,status,human_approval_required,ai_dependency_mode')
       .eq('active', true)
       .eq('owner_role', 'client_coach')
+      .in('agent_key', pilotAgents)
       .order('created_at');
 
     if (agentsError) {
@@ -92,6 +96,8 @@ export default function AgentsPage() {
     }
 
     setAgents((agentRows || []) as Agent[]);
+    const requested=new URLSearchParams(window.location.search).get('agent');
+    if(requested&&pilotAgents.includes(requested))setSelectedAgent((agentRows||[]).find(a=>a.agent_key===requested)||null);
 
     const [{ data: sub }, { data: credits }] = await Promise.all([
       supabase.rpc('get_my_ai_subscription'),
@@ -125,8 +131,8 @@ export default function AgentsPage() {
               <a href="/" style={{ color: 'rgba(255,255,255,.9)', fontWeight: 800, textDecoration: 'none' }}>← CareerDev Global</a>
               <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: 1.2, textTransform: 'uppercase', marginTop: 26, opacity: .86 }}>Career Development • AI & Automation</div>
               <h1 style={{ fontSize: 'clamp(2.2rem,5vw,4rem)', lineHeight: 1.05, margin: '10px 0 12px' }}>CareerDev AI Agents</h1>
-              <p style={{ margin: 0, color: 'rgba(255,255,255,.9)', maxWidth: 760, fontSize: 'clamp(1rem,2vw,1.15rem)', lineHeight: 1.65 }}>Sixteen specialized agents working from one shared Career Intelligence Profile to help you develop your career, build your professional brand, discover opportunities, and grow globally.</p>
-              <p style={{ fontWeight: 900, margin: '18px 0 0' }}>AI prepares. You review. Coaches validate when needed.</p>
+              <p style={{ margin: 0, color: 'rgba(255,255,255,.9)', maxWidth: 760, fontSize: 'clamp(1rem,2vw,1.15rem)', lineHeight: 1.65 }}>Pilot career agents working from one shared Career Intelligence Profile to help you develop your career, build your professional brand, discover opportunities, and grow globally.</p>
+              <p style={{ fontWeight: 900, margin: '18px 0 0' }}>Structured guidance. You review. Coaches validate when needed.</p>
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <a href="/pricing" style={{ padding: '11px 15px', borderRadius: 9, background: '#fff', color: '#0b5d9b', fontWeight: 900, textDecoration: 'none' }}>Pricing</a>
@@ -147,43 +153,26 @@ export default function AgentsPage() {
           <>
             <section style={{ background: '#fff', padding: 20, borderRadius: 16, border: '1px solid #b9d7ea', marginBottom: 24, boxShadow: '0 8px 25px rgba(0,60,100,.04)' }}>
               <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '.08em', fontWeight: 900, color: '#1671b9' }}>Start with Career Intelligence</div>
-              <h2 style={{ margin: '6px 0', fontSize: 22 }}>Your AI Agents work through the Career Intelligence Platform.</h2>
-              <p style={{ margin: '0 0 12px', color: '#527085', lineHeight: 1.6 }}>AI Agents are not separate standalone tools. Purchased AI Agent access enhances the capacity and functionality of your Career Intelligence Platform. Start there so your career profile, goals, evidence, services and context can guide the AI-assisted work.</p>
+              <h2 style={{ margin: '6px 0', fontSize: 22 }}>Your pilot agents support your Career Intelligence journey.</h2>
+              <p style={{ margin: '0 0 12px', color: '#527085', lineHeight: 1.6 }}>Start with your Career Intelligence record, then select a pilot agent below. Structured guidance uses information you supply and does not generate AI content or perform live research.</p>
               <button onClick={startFromCareerIntelligence} style={{ padding: '11px 16px', border: 0, borderRadius: 9, background: '#0b5d9b', color: '#fff', fontWeight: 900, cursor: 'pointer' }}>Open Career Intelligence →</button>
             </section>
 
             <section style={{ background: '#fff', padding: 18, borderRadius: 16, border: '1px solid #d8e6f1', marginBottom: 24 }}>
               <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '.08em', fontWeight: 900, color: '#1671b9' }}>Shared intelligence layer</div>
               <h2 style={{ margin: '6px 0' }}>Career Intelligence Profile™</h2>
-              <p style={{ margin: 0, color: '#527085' }}>All {agents.length} agents use the same evolving profile context. Each AI capability is designed to support structured career decision-making.</p>
+              <p style={{ margin: 0, color: '#527085' }}>All {agents.length} agents use the same evolving profile context. Each pilot capability is designed to support structured career decision-making.</p>
               {subscription ? (
                 <>
-                  <p style={{ margin: '10px 0 0', fontWeight: 800 }}>Current plan: {subscription.plan_name} · {subscription.monthly_credits.toLocaleString()} AI credits/month allowance</p>
-                  {creditStatus && (
-                    <div style={{ marginTop: 12, padding: 14, borderRadius: 12, background: creditStatus.credits_remaining === 0 ? '#fff4f4' : (creditStatus.credits_remaining / Math.max(1, creditStatus.monthly_allowance) <= 0.2 ? '#fff8e8' : '#f5faff'), border: creditStatus.credits_remaining === 0 ? '1px solid #e5bcbc' : (creditStatus.credits_remaining / Math.max(1, creditStatus.monthly_allowance) <= 0.2 ? '1px solid #ead9a7' : '1px solid #cfe3f2') }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-                        <span><strong>{creditStatus.credits_remaining.toLocaleString()}</strong> credits remaining</span>
-                        <span>{creditStatus.credits_consumed.toLocaleString()} consumed</span>
-                        {creditStatus.credits_reserved > 0 && <span>{creditStatus.credits_reserved.toLocaleString()} reserved</span>}
-                      </div>
-                      <div style={{ marginTop: 9, height: 8, borderRadius: 999, background: '#dfeaf2', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${Math.min(100, (creditStatus.credits_consumed / Math.max(1, creditStatus.monthly_allowance)) * 100)}%`, background: '#0b5d9b' }} />
-                      </div>
-                      <small style={{ display: 'block', marginTop: 8, color: '#607487' }}>
-                        {creditStatus.credits_remaining === 0
-                          ? 'Your monthly AI credit allowance is exhausted. AI-required operations are unavailable until your allowance resets or your plan changes; non-AI capabilities remain available.'
-                          : creditStatus.credits_remaining / Math.max(1, creditStatus.monthly_allowance) <= 0.2
-                            ? 'You are using the final 20% of your monthly AI allowance. Plan your remaining AI executions carefully.'
-                            : 'Credits are deducted only for governed AI executions. Non-AI operations do not consume credits.'}
-                      </small>
-                    </div>
-                  )}
+                  <p style={{ margin: '10px 0 0', fontWeight: 800 }}>Current plan: {subscription.plan_name} · pilot access</p>
+
                 </>
               ) : (
                 <p style={{ margin: '10px 0 0', color: '#8a5b00', fontWeight: 800 }}>No active AI Agent subscription. <a href="/pricing" style={{ color: '#0b5d9b' }}>Choose a plan →</a></p>
               )}
             </section>
 
+            {selectedAgent && <PilotWorkspace key={selectedAgent.agent_key} agentKey={selectedAgent.agent_key} name={selectedAgent.name}/>}
             {loading ? <p>Loading agents…</p> : Object.entries(grouped).map(([category, list]) => (
               <section key={category} style={{ marginBottom: 28 }}>
                 <h2 style={{ fontSize: 22 }}>{groups[category] || category}</h2>
@@ -197,9 +186,9 @@ export default function AgentsPage() {
                           <span style={{ fontSize: 11, fontWeight: 900, padding: '4px 7px', borderRadius: 999, background: allowed ? '#eaf6ef' : '#f1f3f5', whiteSpace: 'nowrap' }}>{allowed ? 'Included' : 'Locked'}</span>
                         </div>
                         <p style={{ color: '#527085', lineHeight: 1.55, minHeight: 66 }}>{agent.description}</p>
-                        <button onClick={startFromCareerIntelligence} disabled={!allowed} style={{ width: '100%', padding: '11px 14px', border: 0, borderRadius: 9, background: allowed ? '#0b5d9b' : '#dfe6ec', color: allowed ? '#fff' : '#527085', fontWeight: 900, cursor: allowed ? 'pointer' : 'default' }}>{allowed ? 'Start in Career Intelligence →' : 'Upgrade to Access'}</button>
+                        <button onClick={()=>setSelectedAgent(agent)} disabled={!allowed} style={{ width: '100%', padding: '11px 14px', border: 0, borderRadius: 9, background: allowed ? '#0b5d9b' : '#dfe6ec', color: allowed ? '#fff' : '#527085', fontWeight: 900, cursor: allowed ? 'pointer' : 'default' }}>{allowed ? 'Open structured guidance →' : 'Upgrade to Access'}</button>
                         {!allowed && <a href="/pricing" style={{ display: 'block', textAlign: 'center', marginTop: 9, color: '#0b5d9b', fontWeight: 800, fontSize: 12 }}>View plans</a>}
-                        <small style={{ display: 'block', marginTop: 9, color: '#718394' }}>AI output: decision-support · Coach validation recommended for clients</small>
+                        <small style={{ display: 'block', marginTop: 9, color: '#718394' }}>Structured output: decision support · Coach validation recommended for clients</small>
                       </article>
                     );
                   })}
