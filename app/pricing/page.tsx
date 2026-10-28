@@ -5,6 +5,7 @@ import { createSupabaseBrowserClient } from '../../lib/supabase-browser';
 
 type Plan={plan_key:string;name:string;description:string;monthly_price:number;annual_price:number;monthly_price_ngn:number;annual_price_ngn:number;currency:string;monthly_credits:number;included_agents:string[]};
 type ServiceEntitlement={plan_key:string;feature_key:string;feature_name:string;description:string|null;enabled:boolean;monthly_quantity:number|null;availability_status:string};
+const pilotExcluded = new Set(['cv_resume_agent','cover_letter_agent','linkedin_optimization_agent','interview_coach_agent','leadership_coach_agent']);
 const planOrder=['fresher','starter','professional','career_pro','elite'];
 
 export default function PricingPage(){
@@ -66,7 +67,7 @@ export default function PricingPage(){
           <div style={{maxWidth:780}}>
             <div style={{fontSize:13,fontWeight:900,letterSpacing:1.2,textTransform:'uppercase',opacity:.86}}>CareerDev Global • AI & Automation</div>
             <h1 style={{fontSize:'clamp(2.3rem,5vw,4rem)',lineHeight:1.05,margin:'12px 0 14px'}}>CareerDev AI Agent Pricing</h1>
-            <p style={{fontSize:'clamp(1rem,2vw,1.2rem)',lineHeight:1.65,margin:0,maxWidth:700,color:'rgba(255,255,255,.9)'}}>Choose a subscription for the 16 Client & Coach AI Agents, with a shared Career Intelligence Profile and governed human oversight.</p>
+            <p style={{fontSize:'clamp(1rem,2vw,1.2rem)',lineHeight:1.65,margin:0,maxWidth:700,color:'rgba(255,255,255,.9)'}}>Choose a pilot subscription for structured career guidance and supported career intelligence, with governed human oversight.</p>
             <p style={{fontWeight:900,margin:'18px 0 0'}}>AI processes. Humans decide.</p>
           </div>
         </div>
@@ -93,10 +94,10 @@ export default function PricingPage(){
           <h2 style={{margin:'4px 0 4px',fontSize:'clamp(1.15rem,1.7vw,1.35rem)',lineHeight:1.2,whiteSpace:'normal',overflowWrap:'anywhere'}}>{p.name}</h2>
           <p style={{minHeight:62,color:'#527085',fontSize:14,lineHeight:1.5}}>{p.description}</p>
           <div style={{fontSize:34,fontWeight:900,margin:'14px 0 2px'}}>{symbol}{price.toLocaleString(undefined,{minimumFractionDigits:currency==='USD'?2:0,maximumFractionDigits:currency==='USD'?2:0})}<span style={{fontSize:14,fontWeight:600,color:'#718394'}}>/{interval==='monthly'?'month':'year'}</span></div>
-          <p style={{fontSize:12,color:'#718394',marginTop:0}}>{p.monthly_credits.toLocaleString()} AI credits/month allowance</p>
+          <p style={{fontSize:12,color:'#718394',marginTop:0}}>Pilot access to structured career services; AI-dependent features are paused</p>
           <div style={{fontSize:13,lineHeight:1.75,marginBottom:18,paddingTop:10,borderTop:'1px solid #e2edf5'}}>
-            <strong style={{display:'block',marginBottom:6}}>{p.included_agents.length} of 16 AI agents included</strong>
-            {p.included_agents.map(k=><div key={k}>✓ {agentLabel(k)}</div>)}
+            <strong style={{display:'block',marginBottom:6}}>{p.included_agents.filter(k=>!pilotExcluded.has(k)).length} pilot agents included</strong>
+            {p.included_agents.filter(k=>!pilotExcluded.has(k)).map(k=><div key={k}>✓ {agentLabel(k)}</div>)}
           </div>
           {serviceEntitlements.filter(s=>s.plan_key===p.plan_key).length>0&&<div style={{fontSize:13,lineHeight:1.65,marginBottom:18,paddingTop:10,borderTop:'1px solid #e2edf5'}}>
             <strong style={{display:'block',marginBottom:6}}>Additional services included</strong>
@@ -111,7 +112,7 @@ export default function PricingPage(){
       </div>}
       <section style={{marginTop:28,background:'#fff',border:'1px solid #d8e6f1',borderRadius:16,padding:20}}>
         <h2 style={{marginTop:0}}>How access works</h2>
-        <p style={{color:'#527085',lineHeight:1.6}}>Your active subscription controls which of the 16 Client & Coach AI Agents can be opened in the AI Agent Workspace. Published plans can also include separately governed service entitlements, such as Advanced Career Intelligence and Human Coach Review, where shown on the plan card. The platform keeps the internal/admin agents separate from these customer plans.</p>
+        <p style={{color:'#527085',lineHeight:1.6}}>Your active subscription controls which pilot agents can be opened in the Career Intelligence Workspace. Published plans can also include separately governed service entitlements, such as Advanced Career Intelligence and Human Coach Review, where shown on the plan card. The platform keeps the internal/admin agents separate from these customer plans.</p>
         <p style={{color:'#527085',lineHeight:1.6}}>Subscriptions are processed securely through Paystack. Payment status is verified server-side before AI Agent access is activated.</p>
       </section>
     </div>
