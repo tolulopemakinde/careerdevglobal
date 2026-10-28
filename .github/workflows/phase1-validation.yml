@@ -28,7 +28,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Install locked dependencies
@@ -39,6 +39,9 @@ jobs:
 
       - name: Run TypeScript check
         run: npm run typecheck
+
+      - name: Test structured pilot execution and billing guards
+        run: node --test tests/pilot.test.mjs tests/pilot-runtime.test.mjs
 
       - name: Verify packaged build inputs
         run: npm run check:build-inputs
