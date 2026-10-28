@@ -1,0 +1,29 @@
+.dashboard-shell{--sidebar-width:264px;display:grid;grid-template-columns:var(--sidebar-width) minmax(0,1fr);align-items:start;background:#eef7ff;min-height:100vh}
+.dashboard-shell.is-collapsed{--sidebar-width:80px}
+.dashboard-sidebar{position:sticky;top:0;align-self:start;height:100dvh;box-sizing:border-box;background:#022055;color:white;padding:24px 14px;display:flex;flex-direction:column;gap:12px;z-index:110;overflow-y:auto;scrollbar-width:thin;box-shadow:8px 0 30px #02205512}
+.dashboard-sidebar-top{display:flex;align-items:center;gap:12px;padding:4px 6px 20px;font-weight:800;white-space:nowrap;border-bottom:1px solid #ffffff26}
+.dashboard-monogram{display:grid;place-items:center;width:40px;height:40px;flex-shrink:0;border:1px solid #ffffff60;border-radius:12px;font-size:15px}
+.dashboard-sidebar-copy small{display:block;font-weight:400;font-size:11px;color:#c8d8ef;margin-top:6px}
+.dashboard-sidebar nav{display:grid;gap:5px}
+.dashboard-destination{position:relative;display:flex;align-items:center;gap:12px;padding:12px 10px;border-radius:10px;color:#e0eaff!important;text-decoration:none;font-size:13px;font-weight:600;min-height:44px;box-sizing:border-box}
+.dashboard-destination svg{flex-shrink:0}
+.dashboard-destination:hover,.dashboard-menu-button:hover{background:#ffffff18}
+.dashboard-destination[aria-current]{background:#ffffff22;color:#fff!important;box-shadow:inset 3px 0 #64d5ed}
+.dashboard-menu-button{display:flex;align-items:center;justify-content:flex-start;gap:12px;min-height:44px;min-width:44px;padding:12px 10px;background:transparent;color:white;border:0;border-radius:10px;cursor:pointer;font:inherit;font-size:13px}
+.dashboard-hamburger{width:22px;display:grid;gap:5px;flex-shrink:0}
+.dashboard-hamburger i{display:block;height:2px;width:22px;background:#fff;border-radius:2px}
+.dashboard-home{margin-top:auto;border-top:1px solid #ffffff26;border-radius:0;padding-top:20px}
+.dashboard-sidebar :focus-visible,.dashboard-mobile-bar button:focus-visible{outline:3px solid #79def2;outline-offset:2px}
+.dashboard-content{min-width:0;overflow-wrap:anywhere}
+.dashboard-content [id]{scroll-margin-top:24px}
+.dashboard-content [tabindex="-1"]:focus-visible{outline:3px solid #0879ad;outline-offset:4px}
+.dashboard-content .client-dash,.dashboard-content .coach-dash{padding:28px clamp(14px,2.5vw,36px) 100px}
+.dashboard-content .form-grid>* , .dashboard-content .booking-main>div,.dashboard-content .avatar-copy{min-width:0}
+.dashboard-content input,.dashboard-content select{max-width:100%}
+.dashboard-content .offering-form{grid-template-columns:repeat(2,minmax(0,1fr))}
+.dashboard-content .offering-card>div:last-child{white-space:normal}
+.dashboard-mobile-bar,.dashboard-drawer-close,.dashboard-tooltip{display:none}
+@media(min-width:1024px){.is-collapsed .dashboard-sidebar-copy{display:none}.is-collapsed .dashboard-destination:hover .dashboard-tooltip,.is-collapsed .dashboard-destination:focus-visible .dashboard-tooltip{display:block;position:fixed;left:76px;padding:10px;background:#022055;color:white;border:1px solid #ffffff60;border-radius:8px;z-index:120;box-shadow:0 8px 20px #0003}.is-collapsed .dashboard-sidebar{padding-inline:14px}.is-collapsed .dashboard-sidebar-top{padding-inline:6px}}
+@media(max-width:1023px){.dashboard-shell,.dashboard-shell.is-collapsed{display:block}.dashboard-mobile-bar{display:flex;align-items:center;gap:12px;padding:8px 16px;background:#022055;color:white;font-weight:700;position:sticky;top:0;z-index:100}.dashboard-sidebar{position:fixed;inset:0 auto 0 0;width:min(300px,calc(100vw - 40px));transform:translateX(-110%);visibility:hidden;transition:transform .2s ease,visibility .2s;z-index:210}.drawer-open .dashboard-sidebar{transform:translateX(0);visibility:visible}.dashboard-drawer-close{display:flex}.dashboard-desktop-toggle{display:none}.dashboard-backdrop{position:fixed;inset:0;background:#00112db3;z-index:200}.dashboard-content [id]{scroll-margin-top:80px}.dashboard-content .form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-content .booking-card{flex-wrap:wrap}}
+@media(max-width:600px){.dashboard-content .form-grid,.dashboard-content .offering-form,.dashboard-content .journey-steps{grid-template-columns:minmax(0,1fr)}.dashboard-content .form-grid .wide{grid-column:auto}.dashboard-content .section-heading,.dashboard-content .booking-main{flex-wrap:wrap}.dashboard-content .booking-actions{align-items:flex-start}.dashboard-content .dash-hero{padding:28px 20px}.dashboard-content .dash-card{padding:20px 16px}}
+@media(prefers-reduced-motion:reduce){.dashboard-shell *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
