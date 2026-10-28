@@ -37,7 +37,7 @@ async function getConnection(coachId:string){
 }
 async function calGet(token:string,path:string){const r=await fetch("https://api.calendly.com"+path,{headers:{Authorization:`Bearer ${token}`}});const j=await r.json();if(!r.ok)throw new Error(j?.message||j?.title||"Calendly request failed");return j}
 Deno.serve(async(req)=>{
- if(req.method==="OPTIONS")return new Response("ok");
+ if(req.method==="OPTIONS")return new Response("ok",{headers:{"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS"}});
  const user=await getUser(req);if(!user)return json({error:"Unauthorized"},401);
  const body=await req.json().catch(()=>({}));const action=body.action;
  const {data:coach}=await db.from("coaches").select("id").eq("profile_id",user.id).maybeSingle();
