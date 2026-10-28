@@ -4,7 +4,7 @@ import {createSupabaseBrowserClient} from '../../lib/supabase-browser';
 
 export default function CalendlyPanel({offerings=[],userId,onMapped}:any){
   const supabase=createSupabaseBrowserClient();
-  const calendlyOfferings=offerings.filter((o:any)=>String(o.title||'').trim().toLowerCase()!=='linkedin profile optimization');
+  const calendlyOfferings=offerings;
   const[calendly,setCalendly]=useState<any>(null);
   const[eventTypes,setEventTypes]=useState<any[]>([]);
   const[busy,setBusy]=useState(false);
