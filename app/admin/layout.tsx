@@ -13,6 +13,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return <>
     <nav aria-label="Admin navigation" style={{ position: 'sticky', top: 0, zIndex: 100, display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', padding: '10px 12px', background: 'rgba(238,247,255,.96)', borderBottom: '1px solid #d8e6f1', backdropFilter: 'blur(8px)' }}>
       <a href="/admin" style={linkStyle}>Admin Dashboard</a>
+      <a href="/admin/sales" style={linkStyle}>Sales &amp; Revenue</a>
       <a href="/admin/users" style={linkStyle}>User Directory</a>
       <a href="/coach-admin" style={linkStyle}>Coach Review</a>
     </nav>
