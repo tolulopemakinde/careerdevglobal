@@ -35,12 +35,15 @@ const MOTION_TARGETS = [
   '[data-cdg-motion="agent-card"]',
 ].join(",");
 
+const STATIC_AREAS = ".client-dash, .coach-dash, .cdg-account-page, .cdg-account-shell, .cdg-coach-account, .cdg-auth-shell";
+const shouldAnimate = (target: HTMLElement) => !target.closest(STATIC_AREAS);
+
 export default function SiteMotion() {
   useEffect(() => {
     const targets = document.querySelectorAll<HTMLElement>(MOTION_TARGETS);
 
     if (!("IntersectionObserver" in window)) {
-      targets.forEach((target) => target.classList.add("cdg-scroll-motion", "cdg-scroll-visible"));
+      targets.forEach((target) => { if (shouldAnimate(target)) target.classList.add("cdg-scroll-motion", "cdg-scroll-visible"); });
       return;
     }
 
@@ -59,7 +62,7 @@ export default function SiteMotion() {
     const observed = new WeakSet<Element>();
     const observeTargets = (root: ParentNode) => {
       root.querySelectorAll<HTMLElement>(MOTION_TARGETS).forEach((target) => {
-        if (observed.has(target)) return;
+        if (observed.has(target) || !shouldAnimate(target)) return;
         observed.add(target);
         target.classList.add("cdg-scroll-motion");
         observer.observe(target);
@@ -72,7 +75,7 @@ export default function SiteMotion() {
       records.forEach((record) => {
         record.addedNodes.forEach((node) => {
           if (node instanceof HTMLElement) {
-            if (node.matches(MOTION_TARGETS)) {
+            if (node.matches(MOTION_TARGETS) && shouldAnimate(node)) {
               node.classList.add("cdg-scroll-motion");
               observed.add(node);
               observer.observe(node);
