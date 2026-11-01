@@ -11,6 +11,7 @@ export default function ManageAiSubscription(){
  const [plans,setPlans]=useState<Plan[]>([]);
  const [message,setMessage]=useState('');
  const [busy,setBusy]=useState(false);
+ const cancellationReady=false;
  const [loading,setLoading]=useState(true);
  useEffect(()=>{void (async()=>{
   const db=createSupabaseBrowserClient();
@@ -46,7 +47,7 @@ export default function ManageAiSubscription(){
     <p>Status: <strong>{subscription.status}</strong></p>
     <p>Billing: {subscription.billing_interval} • {subscription.currency} {subscription.amount}</p>
     <p>Current period ends: {subscription.current_period_end?new Date(subscription.current_period_end).toLocaleDateString():'Not yet confirmed'}</p>
-    {subscription.status==='active'&&<button disabled={busy} onClick={cancel} style={{padding:'12px 16px',borderRadius:8,cursor:'pointer'}}>{busy?'Processing…':'Cancel future renewals'}</button>}
+    {subscription.status==='active'&&<button disabled={busy||!cancellationReady} onClick={cancel} style={{padding:'12px 16px',borderRadius:8,cursor:'pointer'}}>{busy?'Processing…':'Cancel future renewals (pending verification)'}</button>}
    </section>
    <h2>Available plans</h2>
    <p>Review plan benefits and pricing before requesting a change. Existing subscribers cannot use the new-subscription checkout; an upgrade requires a verified provider-side plan change.</p>
