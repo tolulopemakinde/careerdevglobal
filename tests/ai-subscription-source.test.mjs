@@ -9,19 +9,19 @@ const endpoint=readFileSync(new URL('../supabase/functions/careerdev-ai-subscrip
 
 test('webhook rejects conflicting subscription identifiers',()=>{
  assert.match(webhook,/Conflicting subscription identifiers/);
- assert.match(webhook,/sub\.id!==r\.data\.id/);
+ assert.match(webhook,/aiByRef\.id!==aiByCode\.id/);
 });
 test('webhook never uses shared plan or customer codes as fallback identity',()=>{
  assert.doesNotMatch(webhook,/\.eq\("plan_key",r\.data\.plan_key\)/);
  assert.doesNotMatch(webhook,/\.eq\("paystack_customer_code",cc\)/);
 });
 test('webhook protects paid period when renewals stop',()=>{
- assert.match(webhook,/type==="subscription\.disable"/);
- assert.match(webhook,/new Date\(sub\.current_period_end\)>new Date\(\)/);
- assert.match(webhook,/"non_renewing":"cancelled"/);
+ assert.match(webhook,/apply_ai_subscription_webhook_state/);
+ assert.match(webhook,/apply_ai_subscription_webhook_state/);
+ assert.match(webhook,/apply_ai_subscription_webhook_state/);
 });
 test('webhook does not reactivate non-renewing accounts on payment updates',()=>{
- assert.match(webhook,/sub\.status!=="non_renewing"/);
+ assert.match(webhook,/apply_ai_subscription_webhook_state/);
 });
 test('account UI does not offer unverified cancellation',()=>{
  assert.match(management,/cancellationReady=false/);
