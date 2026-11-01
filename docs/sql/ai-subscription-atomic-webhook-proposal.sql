@@ -33,14 +33,12 @@ begin
   v_reference:=nullif(v_event.transaction_reference,'');
   v_code:=nullif(coalesce(v_event.payload#>>'{data,subscription_code}',v_event.payload#>>'{data,subscription,subscription_code}'),'');
   if v_reference is not null then
-    select id into strict v_by_ref from public.ai_agent_subscriptions where paystack_transaction_reference=v_reference;
-  exception when no_data_found then v_by_ref:=null;
+    select id into v_by_ref from public.ai_agent_subscriptions where paystack_transaction_reference=v_reference;
+    if (select count(*) from public.ai_agent_subscriptions where paystack_transaction_reference=v_reference)>1 then raise exception 'Ambiguous transaction reference'; end if;
   end if;
   if v_code is not null then
-    begin
-      select id into strict v_by_code from public.ai_agent_subscriptions where paystack_subscription_code=v_code;
-    exception when no_data_found then v_by_code:=null;
-    end;
+    select id into v_by_code from public.ai_agent_subscriptions where paystack_subscription_code=v_code;
+    if (select count(*) from public.ai_agent_subscriptions where paystack_subscription_code=v_code)>1 then raise exception 'Ambiguous subscription code'; end if;
   end if;
   if v_by_ref is not null and v_by_code is not null and v_by_ref<>v_by_code then raise exception 'Conflicting provider identifiers'; end if;
   v_sub_id:=coalesce(v_by_ref,v_by_code);
