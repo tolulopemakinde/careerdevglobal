@@ -19,7 +19,17 @@ async function ai(sb:any,event:any,type:string,eref:string,ref:string,hash:strin
  // Customer codes are not sufficient to identify one subscription; unmatched events are quarantined.
 
  const ins=await sb.from("ai_agent_subscription_webhook_events").insert({provider_key:"paystack",provider_event_reference:eref,event_type:type,signature_verified:true,processing_status:"verified",subscription_id:sub?.id??null,transaction_reference:ref||null,payload_hash:hash,payload:event}).select("id").single();
- if(ins.error){const r=await sb.from("ai_agent_subscription_webhook_events").select("id,processing_status").eq("provider_key","paystack").eq("provider_event_reference",eref).maybeSingle();if(r.error||!r.data)throw new Error("AI subscription webhook event could not be recorded");if(r.data.processing_status!=="processed")throw new Error("Previously recorded AI webhook event requires reconciliation: "+r.data.processing_status);return {received:true,duplicate:true,processed:true,ai_subscription:true,webhook_event_id:r.data.id}}
+ if(ins.error){
+  const r=await sb.from("ai_agent_subscription_webhook_events").select("id,processing_status,payload_hash").eq("provider_key","paystack").eq("provider_event_reference",eref).maybeSingle();
+  if(r.error||!r.data)throw new Error("AI subscription webhook event could not be recorded");
+  if(r.data.payload_hash!==hash)throw new Error("Webhook event reference collision");
+  if(r.data.processing_status==="processed")return {received:true,duplicate:true,processed:true,ai_subscription:true,webhook_event_id:r.data.id};
+  if(!["verified","failed","unmatched"].includes(r.data.processing_status))throw new Error("Webhook event is not replayable");
+  const replay=await sb.rpc("apply_ai_subscription_webhook_state",{p_event_id:r.data.id});
+  if(replay.error)throw new Error("AI webhook replay requires reconciliation: "+replay.error.message);
+  if(!replay.data?.processed)throw new Error("AI webhook replay remains unmatched");
+  return {received:true,duplicate:true,processed:true,replayed:true,ai_subscription:true,webhook_event_id:r.data.id};
+ }
  // Database RPC locks the event and subscription and commits both state changes atomically.
  // Never acknowledge a partial or unmatched event as processed.
  const {data:applied,error:applyError}=await sb.rpc("apply_ai_subscription_webhook_state",{p_event_id:ins.data.id});
