@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const webhook=readFileSync(new URL('../supabase/functions/careerdev-paystack-webhook/index.ts',import.meta.url),'utf8');
+const cancel=readFileSync(new URL('../supabase/functions/careerdev-ai-subscription-manage/index.ts',import.meta.url),'utf8');
+test('webhook only acknowledges fully processed duplicate AI events',()=>{assert.match(webhook,/processing_status!=="processed"/);assert.match(webhook,/requires reconciliation/)});
+test('webhook detects concurrent state updates',()=>{assert.match(webhook,/\.eq\("updated_at",sub\.updated_at\)/);assert.match(webhook,/!up\.data/)});
+test('webhook rejects malformed dates and does not shorten paid periods',()=>{assert.match(webhook,/Invalid provider /);assert.match(webhook,/Date\.parse\(nextEnd\)>Date\.parse\(sub\.current_period_end\)/)});
+test('webhook protects terminal states from late disable events',()=>{assert.match(webhook,/if\(!isTerminal\)u\.status=/);assert.match(webhook,/sub\.status==="expired"/)});
+test('cancellation verifies paid through and conditional update',()=>{assert.match(cancel,/Paid-through date is not verified/);assert.match(cancel,/found\?\.data\?\.subscription_code!==sub\.paystack_subscription_code/);assert.match(cancel,/updateError\|\|!updated/)});
