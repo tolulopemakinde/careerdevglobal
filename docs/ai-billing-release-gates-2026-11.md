@@ -31,3 +31,9 @@ An HTTP error on a duplicate `verified`, `failed`, or `unmatched` event is inten
 - **Critical:** The webhook event insert and RPC are still separate transactions. A verified event can remain pending if the RPC fails; a privileged replay worker is needed. Retry should use the same recorded event ID, not delete/reinsert.
 - **Critical:** For initial subscription checkout, event identity must match a unique provider transaction reference; recurring renewal events should match an unambiguous subscription code. No customer-code-only fallback.
 - Do not deploy until PostgreSQL test schema validation, malicious payload tests, and Paystack sandbox payment/renewal/cancellation tests pass.
+
+## 2026-11-01 recorded-event retry implementation
+- Draft webhook retries already recorded AI events with processing_status `verified`, `failed`, or `unmatched` through the atomic RPC, using the existing event ID. It rejects a payload hash mismatch and does not delete/reinsert records.
+- Replay can succeed only after the RPC SQL is deployed and tested. An unmatched event still requires exact provider identity reconciliation; the webhook must not infer ownership from a shared plan/customer code.
+- A race during the initial unique-key insert may produce an uncommitted conflicting row; the subsequent lookup must be validated in sandbox under concurrent delivery.
+- This does not constitute an operator replay queue or automated monitoring; add those before production.
