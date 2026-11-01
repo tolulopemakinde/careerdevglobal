@@ -16,7 +16,7 @@ async function ai(sb:any,event:any,type:string,eref:string,ref:string,hash:strin
  let sub:any=null;
  if(ref){const r=await sb.from("ai_agent_subscriptions").select("*").eq("paystack_transaction_reference",ref).maybeSingle();sub=r.data}
  if(!sub&&sc){const r=await sb.from("ai_agent_subscriptions").select("*").eq("paystack_subscription_code",sc).maybeSingle();sub=r.data}
- if(!sub&&cc){const r=await sb.from("ai_agent_subscriptions").select("*").eq("paystack_customer_code",cc).in("status",["active","non_renewing","attention","pending"]).limit(2);if(r.data?.length===1)sub=r.data[0]}
+ // Customer codes are not sufficient to identify one subscription; unmatched events are quarantined.
 
  const ins=await sb.from("ai_agent_subscription_webhook_events").insert({provider_key:"paystack",provider_event_reference:eref,event_type:type,signature_verified:true,processing_status:"verified",subscription_id:sub?.id??null,transaction_reference:ref||null,payload_hash:hash,payload:event}).select("id").single();
  if(ins.error){const r=await sb.from("ai_agent_subscription_webhook_events").select("id").eq("provider_key","paystack").eq("provider_event_reference",eref).maybeSingle();if(r.data)return {received:true,duplicate:true,ai_subscription:true,webhook_event_id:r.data.id};throw new Error("AI subscription webhook event could not be recorded")}
