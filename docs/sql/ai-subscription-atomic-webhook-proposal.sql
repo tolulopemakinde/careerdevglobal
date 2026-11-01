@@ -22,12 +22,14 @@ declare
   v_by_code uuid;
   v_metadata jsonb;
 begin
-  if current_user <> 'service_role' and auth.role() <> 'service_role' then
+  if auth.role() is distinct from 'service_role' then
     raise exception 'Service role required';
   end if;
   select * into v_event from public.ai_agent_subscription_webhook_events where id=p_event_id for update;
   if not found then raise exception 'Webhook event not found'; end if;
   if not v_event.signature_verified then raise exception 'Unsigned webhook event'; end if;
+  if v_event.provider_key <> 'paystack' then raise exception 'Unexpected provider'; end if;
+  if v_event.event_type not in ('subscription.create','subscription.disable','subscription.not_renew','invoice.create','invoice.payment_failed','invoice.update','charge.success') then raise exception 'Unsupported AI webhook event'; end if;
   if v_event.processing_status='processed' then return jsonb_build_object('processed',true,'duplicate',true); end if;
   if v_event.processing_status not in ('verified','failed','unmatched') then raise exception 'Invalid event state'; end if;
   v_reference:=nullif(v_event.transaction_reference,'');
@@ -51,7 +53,9 @@ begin
   v_next:=nullif(coalesce(v_event.payload#>>'{data,next_payment_date}',v_event.payload#>>'{data,subscription,next_payment_date}'),'');
   v_paid:=nullif(v_event.payload#>>'{data,paid_at}','');
   if v_next is not null then v_next_date:=v_next::timestamptz; end if;
+  if v_event.event_type in ('subscription.disable','subscription.not_renew') then v_next_date:=null; end if;
   if v_paid is not null then v_paid_date:=v_paid::timestamptz; end if;
+  if v_event.event_type in ('subscription.disable','subscription.not_renew') then v_paid_date:=null; end if;
   if v_event.event_type='subscription.disable' and v_status not in ('cancelled','expired') then
     v_status:=case when v_sub.current_period_end>now() then 'non_renewing' else 'cancelled' end;
   elsif v_event.event_type='subscription.not_renew' and v_status not in ('cancelled','expired') then
