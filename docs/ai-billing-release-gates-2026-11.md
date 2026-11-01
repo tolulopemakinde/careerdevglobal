@@ -23,3 +23,11 @@
 
 ## Operator note
 An HTTP error on a duplicate `verified`, `failed`, or `unmatched` event is intentional: it signals unresolved processing, **not** safe replay. Investigate event state and reconcile transactionally; do not delete the event to force another insert.
+
+## 2026-11-01 RPC security review
+- Verified production event table constraints: primary key, foreign key to subscription (ON DELETE SET NULL), and unique (provider_key, provider_event_reference). There is no DB constraint on processing_status; do not assume arbitrary values are rejected by PostgreSQL.
+- The review-only RPC now checks `auth.role() = 'service_role'`, `provider_key='paystack'`, and an explicit supported event allowlist. These are source-review changes only; no SQL was applied.
+- **Critical:** A service-role caller can insert an event with `signature_verified=true` without actually verifying Paystack HMAC. The RPC is trusted only behind the authenticated, signature-checking webhook and tightly controlled service-role credentials. Never expose the RPC to browser clients.
+- **Critical:** The webhook event insert and RPC are still separate transactions. A verified event can remain pending if the RPC fails; a privileged replay worker is needed. Retry should use the same recorded event ID, not delete/reinsert.
+- **Critical:** For initial subscription checkout, event identity must match a unique provider transaction reference; recurring renewal events should match an unambiguous subscription code. No customer-code-only fallback.
+- Do not deploy until PostgreSQL test schema validation, malicious payload tests, and Paystack sandbox payment/renewal/cancellation tests pass.
