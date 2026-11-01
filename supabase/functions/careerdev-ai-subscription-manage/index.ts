@@ -26,16 +26,17 @@ Deno.serve(async request=>{
  const sub=subscriptions[0];
  if(sub.status==="non_renewing")return respond({ok:true,status:"non_renewing"});
  if(!sub.paystack_subscription_code)return respond({error:"Provider subscription is not yet linked; contact billing support"},409);
+ if(!sub.current_period_end||!Number.isFinite(Date.parse(sub.current_period_end))||Date.parse(sub.current_period_end)<=Date.now())return respond({error:"Paid-through date is not verified. Contact billing support before cancellation."},409);
  const headers={Authorization:"Bearer "+paystack,"Content-Type":"application/json"};
  try{
   const lookup=await fetch("https://api.paystack.co/subscription/"+encodeURIComponent(sub.paystack_subscription_code),{headers});
   const found=await lookup.json();
-  if(!lookup.ok||!found?.status||!found?.data?.email_token)return respond({error:"Could not verify Paystack subscription details"},502);
+  if(!lookup.ok||!found?.status||found?.data?.subscription_code!==sub.paystack_subscription_code||!found?.data?.email_token)return respond({error:"Could not verify Paystack subscription details"},502);
   const disable=await fetch("https://api.paystack.co/subscription/disable",{method:"POST",headers,body:JSON.stringify({code:sub.paystack_subscription_code,token:found.data.email_token})});
   const result=await disable.json();
   if(!disable.ok||!result?.status)return respond({error:"Paystack did not confirm cancellation"},502);
-  const {error:updateError}=await admin.from("ai_agent_subscriptions").update({status:"non_renewing"}).eq("id",sub.id).eq("user_id",user.id).eq("status","active");
-  if(updateError)return respond({error:"Paystack stopped renewals, but account synchronization needs support. Do not retry payment."},503);
+  const {data:updated,error:updateError}=await admin.from("ai_agent_subscriptions").update({status:"non_renewing"}).eq("id",sub.id).eq("user_id",user.id).eq("status","active").select("id").maybeSingle();
+  if(updateError||!updated)return respond({error:"Paystack stopped renewals, but account synchronization needs support. Do not retry payment."},503);
   return respond({ok:true,status:"non_renewing",current_period_end:sub.current_period_end});
  }catch{return respond({error:"Billing provider temporarily unavailable"},502)}
 });
