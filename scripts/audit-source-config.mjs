@@ -18,7 +18,7 @@ function walk(dir) {
 
 function inspect(path) {
   const text = readFileSync(path, "utf8");
-  const rel = relative(root, path);
+  const rel = relative(root, path).replaceAll('\\', '/');
   if (rel === "scripts/audit-source-config.mjs") return;
   const checks = [
     { label: "Supabase service-role secret", pattern: /SUPABASE_SERVICE_ROLE|service_role_secret|service_role_key/i },

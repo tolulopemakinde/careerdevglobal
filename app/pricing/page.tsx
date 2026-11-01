@@ -25,8 +25,8 @@ export default function PricingPage(){
     if(params.get('payment')==='return'&&reference){
       setMessage('Verifying your Paystack payment…');
       const {data,error}=await supabase.functions.invoke('careerdev-ai-subscription-verify',{body:{reference}});
-      if(error||!data?.status){setMessage(data?.error||error?.message||'Payment verification is still pending. Please refresh shortly.');}
-      else{setMessage('Payment verified. Your AI Agent subscription is now active.');window.history.replaceState({},'','/pricing');}
+      if(error||!data?.payment_verified){setMessage(data?.error||error?.message||'Payment verification is still pending. Please refresh shortly.');}
+      else{setMessage(data.access_active?'Payment verified. Your paid AI subscription is available.':'Payment verified. Your subscription status is '+data.status+'. Contact billing support if access is unexpected.');window.history.replaceState({},'','/pricing');}
     }
     const [{data:plansData},{data:serviceData},{data:subscription}]=await Promise.all([
       supabase.from('ai_agent_subscription_plans').select('plan_key,name,description,monthly_price,annual_price,monthly_price_ngn,annual_price_ngn,currency,monthly_credits,included_agents').eq('active',true).order('sort_order'),
@@ -39,6 +39,7 @@ export default function PricingPage(){
     setLoading(false);
   }
   async function subscribe(planKey:string){
+    if(currentPlan){window.location.assign('/account/ai-subscription');return;}
     setBusy(planKey);setMessage('');
     try{
       const {data:{user}}=await supabase.auth.getUser();

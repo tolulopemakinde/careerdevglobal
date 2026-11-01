@@ -1,70 +1,73 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "jsr:@supabase/supabase-js@2";
-const url=Deno.env.get("SUPABASE_URL")!;
-const service=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? (()=>{try{return JSON.parse(Deno.env.get("SUPABASE_SECRET_KEYS")??"{}").default}catch{return undefined}})();
-const secret=Deno.env.get("PAYSTACK_SECRET_KEY");
-const headers={"Content-Type":"application/json"};
-const reply=(b:unknown,s=200)=>new Response(JSON.stringify(b),{status:s,headers});
-function hex(a:ArrayBuffer){return Array.from(new Uint8Array(a)).map(b=>b.toString(16).padStart(2,"0")).join("")}
-async function hmac(s:string,b:Uint8Array){const k=await crypto.subtle.importKey("raw",new TextEncoder().encode(s),{name:"HMAC",hash:"SHA-512"},false,["sign"]);return hex(await crypto.subtle.sign("HMAC",k,b))}
-async function sha(b:Uint8Array){return hex(await crypto.subtle.digest("SHA-256",b))}
-function eq(a:string,b:string){if(a.length!==b.length)return false;let d=0;for(let i=0;i<a.length;i++)d|=a.charCodeAt(i)^b.charCodeAt(i);return d===0}
-async function ai(sb:any,event:any,type:string,eref:string,ref:string,hash:string){
- const d=event?.data??{}; const sc=String(d?.subscription_code??d?.subscription?.subscription_code??"").trim()||null;
- const cc=String(d?.customer?.customer_code??d?.customer_code??d?.subscription?.customer?.customer_code??"").trim()||null;
-
- let sub:any=null;
- if(ref){const r=await sb.from("ai_agent_subscriptions").select("*").eq("paystack_transaction_reference",ref).maybeSingle();if(r.error)throw new Error("Transaction correlation lookup failed");sub=r.data}
- if(sc){const r=await sb.from("ai_agent_subscriptions").select("*").eq("paystack_subscription_code",sc).maybeSingle();if(r.error)throw new Error("Subscription correlation lookup failed");if(sub&&r.data&&sub.id!==r.data.id)throw new Error("Conflicting subscription identifiers");if(!sub)sub=r.data}
- // Customer codes are not sufficient to identify one subscription; unmatched events are quarantined.
-
- const ins=await sb.from("ai_agent_subscription_webhook_events").insert({provider_key:"paystack",provider_event_reference:eref,event_type:type,signature_verified:true,processing_status:"verified",subscription_id:sub?.id??null,transaction_reference:ref||null,payload_hash:hash,payload:event}).select("id").single();
- if(ins.error){
-  const r=await sb.from("ai_agent_subscription_webhook_events").select("id,processing_status,payload_hash").eq("provider_key","paystack").eq("provider_event_reference",eref).maybeSingle();
-  if(r.error||!r.data)throw new Error("AI subscription webhook event could not be recorded");
-  if(r.data.payload_hash!==hash)throw new Error("Webhook event reference collision");
-  if(r.data.processing_status==="processed")return {received:true,duplicate:true,processed:true,ai_subscription:true,webhook_event_id:r.data.id};
-  if(!["verified","failed","unmatched"].includes(r.data.processing_status))throw new Error("Webhook event is not replayable");
-  const replay=await sb.rpc("apply_ai_subscription_webhook_state",{p_event_id:r.data.id});
-  if(replay.error)throw new Error("AI webhook replay requires reconciliation: "+replay.error.message);
-  if(!replay.data?.processed)throw new Error("AI webhook replay remains unmatched");
-  return {received:true,duplicate:true,processed:true,replayed:true,ai_subscription:true,webhook_event_id:r.data.id};
- }
- // Database RPC locks the event and subscription and commits both state changes atomically.
- // Never acknowledge a partial or unmatched event as processed.
- const {data:applied,error:applyError}=await sb.rpc("apply_ai_subscription_webhook_state",{p_event_id:ins.data.id});
- if(applyError)throw new Error("AI webhook requires reconciliation: "+applyError.message);
- if(!applied?.processed)return {processed:false,unmatched:true,ai_subscription:true,webhook_event_id:ins.data.id};
- return {processed:true,ai_subscription:true,webhook_event_id:ins.data.id,subscription_id:applied.subscription_id,event_type:type};
-}
-Deno.serve(async req=>{if(req.method!=="POST")return reply({error:"Method not allowed"},405);if(!service||!secret)return reply({error:"Webhook credentials are not configured"},503);try{
- const raw=new Uint8Array(await req.arrayBuffer()), sig=(req.headers.get("x-paystack-signature")??"").trim().toLowerCase();if(!sig)return reply({error:"Missing Paystack signature"},401);if(!eq(await hmac(secret,raw),sig))return reply({error:"Invalid Paystack signature"},401);
- const hash=await sha(raw);let event:any;try{event=JSON.parse(new TextDecoder().decode(raw))}catch{return reply({error:"Invalid JSON payload"},400)}
- const type=String(event?.event??"").trim().toLowerCase(),d=event?.data??{},ref=String(d?.reference??"").trim(),eref=type+":"+hash;if(!type)return reply({error:"Invalid Paystack event"},400);
- const sb=createClient(url,service);
- if(["subscription.create","subscription.disable","subscription.not_renew","invoice.create","invoice.payment_failed","invoice.update"].includes(type))return reply(await ai(sb,event,type,eref,ref,hash));
- // A successful charge can belong to either AI subscriptions or the marketplace.
- // Route only on exact provider identifiers, never on customer or shared plan codes.
- if(type==="charge.success"){
-  const sc=String(d?.subscription_code??d?.subscription?.subscription_code??"").trim();
-  let aiByRef:any=null,aiByCode:any=null;
-  if(ref){const r=await sb.from("ai_agent_subscriptions").select("id").eq("paystack_transaction_reference",ref).maybeSingle();if(r.error)throw new Error("AI charge correlation failed");aiByRef=r.data}
-  if(sc){const r=await sb.from("ai_agent_subscriptions").select("id").eq("paystack_subscription_code",sc).maybeSingle();if(r.error)throw new Error("AI subscription correlation failed");aiByCode=r.data}
-  if(aiByRef&&aiByCode&&aiByRef.id!==aiByCode.id)throw new Error("Conflicting subscription identifiers");
-  const aiId=aiByRef?.id??aiByCode?.id??null;
-  if(aiId){
-   const mt=await sb.from("marketplace_transactions").select("id").eq("provider_key","paystack").eq("provider_transaction_reference",ref).maybeSingle();
-   const mi=await sb.from("marketplace_payment_intents").select("transaction_id").eq("provider_key","paystack").eq("provider_intent_reference",ref).maybeSingle();
-   if(mt.error||mi.error)throw new Error("Marketplace charge correlation failed");
-   if(mt.data||mi.data)throw new Error("Charge matches AI subscription and marketplace");
-   return reply(await ai(sb,event,type,eref,ref,hash));
+import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
+import {createClient} from 'jsr:@supabase/supabase-js@2.117.3';
+import {applyRecordedEvent,exactSubscription,transactionReference} from '../_shared/ai-billing-reconcile.ts';
+const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
+const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers});
+const aiTypes=['subscription.create','subscription.disable','subscription.not_renew','invoice.create','invoice.payment_failed','invoice.update'];
+const marketplaceTypes=['charge.success','charge.failed','refund.processed'];
+function hex(bytes:ArrayBuffer){return Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('')}
+function same(a:string,b:string){if(a.length!==b.length)return false;let difference=0;for(let i=0;i<a.length;i++)difference|=a.charCodeAt(i)^b.charCodeAt(i);return difference===0}
+Deno.serve(async req=>{
+ if(req.method!=='POST')return reply({error:'Method not allowed'},405);
+ const url=Deno.env.get('SUPABASE_URL')!,service=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')??(()=>{try{return JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS')||'{}').default}catch{return undefined}})(),secret=Deno.env.get('PAYSTACK_SECRET_KEY');
+ if(!service||!secret)return reply({error:'Webhook unavailable'},503);
+ try{
+  const raw=new Uint8Array(await req.arrayBuffer()),signature=(req.headers.get('x-paystack-signature')??'').trim().toLowerCase();
+  if(!/^[a-f0-9]{128}$/.test(signature))return reply({error:'Invalid Paystack signature'},401);
+  const signingKey=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-512'},false,['sign']);
+  if(!same(hex(await crypto.subtle.sign('HMAC',signingKey,raw)),signature))return reply({error:'Invalid Paystack signature'},401);
+  let event:any;try{event=JSON.parse(new TextDecoder().decode(raw))}catch{return reply({error:'Invalid JSON'},400)}
+  const type=event?.event,data=event?.data;
+  if(typeof type!=='string'||!data||(!aiTypes.includes(type)&&!marketplaceTypes.includes(type)))return reply({error:'Unsupported event'},400);
+  const hash=hex(await crypto.subtle.digest('SHA-256',raw)),reference=transactionReference(data),code=String(data.subscription_code??data.subscription?.subscription_code??'');
+  const sb=createClient(url,service);
+  const sub=await exactSubscription(sb,reference,code);
+  let marketplaceId:string|null=null;
+  if(reference){
+   const [transaction,intent]=await Promise.all([
+    sb.from('marketplace_transactions').select('id').eq('provider_key','paystack').eq('provider_transaction_reference',reference).maybeSingle(),
+    sb.from('marketplace_payment_intents').select('transaction_id').eq('provider_key','paystack').eq('provider_intent_reference',reference).maybeSingle()
+   ]);
+   if(transaction.error||intent.error)throw new Error('Marketplace correlation failed');
+   if(transaction.data&&intent.data&&transaction.data.id!==intent.data.transaction_id)throw new Error('Conflicting marketplace identifiers');
+   marketplaceId=transaction.data?.id??intent.data?.transaction_id??null;
   }
-  // Unknown subscription-linked charges must not be silently processed as marketplace.
-  if(sc)return reply({error:"Unmatched subscription charge; manual reconciliation required"},409);
- }
- const {data:ex}=await sb.from("marketplace_payment_webhook_events").select("id").eq("provider_key","paystack").eq("provider_event_reference",eref).maybeSingle();if(ex)return reply({received:true,duplicate:true,webhook_event_id:ex.id});
- let tid:string|null=null;if(ref){const {data:tx}=await sb.from("marketplace_transactions").select("id").eq("provider_key","paystack").eq("provider_transaction_reference",ref).maybeSingle();tid=tx?.id??null;if(!tid){const {data:i}=await sb.from("marketplace_payment_intents").select("transaction_id").eq("provider_key","paystack").eq("provider_intent_reference",ref).maybeSingle();tid=i?.transaction_id??null}}
- const {data:ins,error:ie}=await sb.from("marketplace_payment_webhook_events").insert({provider_key:"paystack",provider_event_reference:eref,event_type:type,signature_verified:true,processing_status:"verified",transaction_id:tid,payload_hash:hash,payload:event}).select("id").single();if(ie){return reply({error:"Webhook event could not be recorded"},500)}
- const {data:applied,error:ae}=await sb.rpc("apply_paystack_webhook_state",{p_webhook_event_id:ins.id});if(ae){await sb.from("marketplace_payment_webhook_events").update({processing_status:"failed",error_message:ae.message}).eq("id",ins.id);return reply({received:true,processed:false,webhook_event_id:ins.id,error:"Payment state could not be applied"},500)}
- return reply({received:true,processed:true,webhook_event_id:ins.id,result:applied})
-}catch(e){return reply({error:"Webhook processing failed",detail:String(e)},500)}});
+  if(sub&&marketplaceId)return reply({error:'Conflicting AI and marketplace identity; reconciliation required'},409);
+  const isAi=aiTypes.includes(type)||!!sub||!!code||reference.startsWith('CDG-AI-');
+  // Refunds are quarantined for verified operator reconciliation; never route AI refunds into marketplace.
+  const aiRefund=isAi&&type==='refund.processed';
+  const table=isAi?'ai_agent_subscription_webhook_events':'marketplace_payment_webhook_events';
+  const eventIdentity=type+':'+hash;
+  if(!isAi){
+   // Recognize historical marketplace events without changing their ledger behavior.
+   const legacy=String(data.id??data.reference??'');
+   if(legacy){
+    const old=await sb.from(table).select('id,processing_status,event_type').eq('provider_key','paystack').eq('provider_event_reference',legacy).maybeSingle();
+    if(old.error)throw new Error('Legacy marketplace lookup failed');
+    if(old.data?.event_type===type&&old.data.processing_status==='processed')return reply({received:true,processed:true,duplicate:true});
+   }
+  }
+  const insert=await sb.from(table).insert({provider_key:'paystack',provider_event_reference:eventIdentity,event_type:type,signature_verified:true,processing_status:'verified',payload_hash:hash,payload:event,
+   ...(isAi?{subscription_id:sub?.id??null,transaction_reference:reference||null}:{transaction_id:marketplaceId})}).select('*').single();
+  let stored=insert.data;
+  if(insert.error){
+   const existing=await sb.from(table).select('*').eq('provider_key','paystack').eq('provider_event_reference',eventIdentity).maybeSingle();
+   if(existing.error||!existing.data||existing.data.payload_hash!==hash)throw new Error('Event could not be recorded');
+   stored=existing.data;
+  }
+  if(stored.processing_status==='processed')return reply({received:true,processed:true,duplicate:true});
+  if(aiRefund){
+   await sb.from(table).update({processing_status:'failed',error_message:'AI refund requires verified payment reversal reconciliation'}).eq('id',stored.id).neq('processing_status','processed');
+   return reply({received:true,processed:false,reconciliation_required:true},409);
+  }
+  try{
+   const applied=isAi?await applyRecordedEvent(sb,secret,stored):(await sb.rpc('apply_paystack_webhook_state',{p_webhook_event_id:stored.id}));
+   const result=isAi?applied:applied.data;
+   if(!isAi&&applied.error)throw new Error('Marketplace reconciliation failed');
+   return reply({received:true,processed:result?.processed===true,duplicate:result?.duplicate===true,reconciliation_required:result?.processed!==true},result?.processed?200:409);
+  }catch{
+   await sb.from(table).update({processing_status:'failed',error_message:'Provider or transactional verification pending'}).eq('id',stored.id).neq('processing_status','processed');
+   return reply({received:true,processed:false,reconciliation_required:true},503);
+  }
+ }catch{return reply({error:'Webhook reconciliation failed'},503)}
+});

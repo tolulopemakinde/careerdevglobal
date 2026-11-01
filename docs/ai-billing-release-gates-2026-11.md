@@ -1,39 +1,46 @@
-# Billing webhook release gate — 2026-11-01
+# AI billing release gates — 1 November 2026
 
-## Verified read-only production facts
-- `ai_agent_subscription_webhook_events(provider_key, provider_event_reference)` has a unique index.
-- `ai_agent_subscriptions.paystack_subscription_code` has a **nonunique** index; ambiguous subscription codes can make `maybeSingle()` fail.
-- `get_my_ai_subscription()` selects the current user's `active`, `non_renewing`, or `attention` subscription with an unexpired or NULL end date.
-- Subscription state constraint permits `pending`, `active`, `non_renewing`, `attention`, `cancelled`, `expired`.
+Production release is authorized by the owner only after all mandatory acceptance criteria pass. No further routine source-edit approval is required. This document records evidence, not a release waiver.
 
-## Implemented in draft PR
-- Route AI `charge.success` only after exact subscription identity lookup; reject conflicts with marketplace payment identity.
-- Do not acknowledge duplicate AI webhook events as successfully processed unless stored status is `processed`.
-- Guard subscription updates with `updated_at` optimistic concurrency; report conflicts for reconciliation.
-- Require verified paid-through date and matching provider subscription code before cancellation; detect a zero-row cancellation update.
+## Implemented
 
-## Blocking before production
-1. A durable retry/reconciliation worker is **not implemented**. Failed, unmatched, or verified-but-unprocessed events require an authenticated operator workflow. Paystack retries alone cannot resolve them with current insert-once logic.
-2. The webhook performs multiple DB writes without an atomic transaction. A failure after subscription update and before event acknowledgement can leave a partially applied event.
-3. Provider event ordering, timestamp validity, subscription-code uniqueness, and marketplace event routing require behavioral tests.
-4. Test checkout, cancellation, and renewal with Paystack sandbox credentials and test accounts. No real-customer charges.
-5. Test entitlement credits and access after cancellation, expiry, failed payment, and upgrade.
-6. Upgrade flow is not implemented; do not expose an upgrade action.
-7. Do not merge or deploy the draft webhook until all gates pass.
+- Server-scoped, serialized checkout using approved database prices and verified Paystack plan configuration.
+- Exact reference/code matching; conflicting customer, plan, currency and amount checks.
+- Payment receipt uniqueness plus atomic subscription/event updates in migration `20261101140853_ai_billing_lifecycle_safety.sql`.
+- Initial subscription/invoice creation alone cannot activate paid benefits.
+- Cancellation with durable provider-call claims, provider confirmation, and recovery after database synchronization failure.
+- Deferred replacement upgrade: stop old renewal, retain current benefits, require a new checkout after expiry. No proration or shared-plan update.
+- Audited staff/admin replay and service-only reconciliation/credit settlement.
+- Paid-period expiry checks, account/agent ownership checks, credit claims, exactly-once settlement, release on unsuccessful runtime operations.
+- Browser and server rollout gate defaults to disabled.
+- Marketplace identity collision rejection and historical-event recognition.
+- Owner-scoped management UI with confirmation dialogs, credit balance, plan comparison and verified payment history.
 
-## Operator note
-An HTTP error on a duplicate `verified`, `failed`, or `unmatched` event is intentional: it signals unresolved processing, **not** safe replay. Investigate event state and reconcile transactionally; do not delete the event to force another insert.
+## Executed evidence
 
-## 2026-11-01 RPC security review
-- Verified production event table constraints: primary key, foreign key to subscription (ON DELETE SET NULL), and unique (provider_key, provider_event_reference). There is no DB constraint on processing_status; do not assume arbitrary values are rejected by PostgreSQL.
-- The review-only RPC now checks `auth.role() = 'service_role'`, `provider_key='paystack'`, and an explicit supported event allowlist. These are source-review changes only; no SQL was applied.
-- **Critical:** A service-role caller can insert an event with `signature_verified=true` without actually verifying Paystack HMAC. The RPC is trusted only behind the authenticated, signature-checking webhook and tightly controlled service-role credentials. Never expose the RPC to browser clients.
-- **Critical:** The webhook event insert and RPC are still separate transactions. A verified event can remain pending if the RPC fails; a privileged replay worker is needed. Retry should use the same recorded event ID, not delete/reinsert.
-- **Critical:** For initial subscription checkout, event identity must match a unique provider transaction reference; recurring renewal events should match an unambiguous subscription code. No customer-code-only fallback.
-- Do not deploy until PostgreSQL test schema validation, malicious payload tests, and Paystack sandbox payment/renewal/cancellation tests pass.
+- 35 local tests: lifecycle specifications, shipped webhook behavior, provider normalization, upgrade eligibility and shipped runtime credit behavior.
+- 17 disposable PostgreSQL assertions, including rollback, entitlement expiry, credit consumption/release, and function/table privilege checks.
+- Entire consolidated migration rerun against a temporarily reset billing subset inside a transaction; all 17 assertions passed and the outer transaction rolled back.
+- 13 deployed test-endpoint/provider checks passed.
+- 14 Paystack test-mode paid lifecycle checks passed: payment, subscription creation, verification, duplicate verification, one receipt, credits, cancellation, provider renewal stop and deferred upgrade.
+- 4 signed HTTP concurrency checks passed: concurrent deliveries, one event identity, committed retry, unchanged paid period.
+- TypeScript, source audit and repository boundary/build-input checks passed.
+- Test callback configuration saved; PR branch preview is scoped to the isolated database.
 
-## 2026-11-01 recorded-event retry implementation
-- Draft webhook retries already recorded AI events with processing_status `verified`, `failed`, or `unmatched` through the atomic RPC, using the existing event ID. It rejects a payload hash mismatch and does not delete/reinsert records.
-- Replay can succeed only after the RPC SQL is deployed and tested. An unmatched event still requires exact provider identity reconciliation; the webhook must not infer ownership from a shared plan/customer code.
-- A race during the initial unique-key insert may produce an uncommitted conflicting row; the subsequent lookup must be validated in sandbox under concurrent delivery.
-- This does not constitute an operator replay queue or automated monitoring; add those before production.
+These counts do not mean every W01–W16 case passed at every layer. See the acceptance matrix and implementation report.
+
+## Still required before merge or production deployment
+
+1. Provider-origin recurring renewal and failed-renewal acceptance, including paid invoice event ordering and historical invoice replay.
+2. Complete higher-plan replacement checkout/activation after verified expiry; scheduling alone is not complete upgrade acceptance.
+3. Signed marketplace payment/refund regression through the real database, with state-sync ledger assertions.
+4. Authenticated client and coach UI testing on desktop/mobile, keyboard confirmations, loading/errors and expired sessions.
+5. Final exact-commit GitHub checks and healthy Vercel preview with the patched dependency lockfile.
+6. Verify full production/test schema provenance, all required function/default/trigger/policy contracts, and production provider webhook configuration.
+7. AI refund/reversal reconciliation is quarantined and requires a verified reversal policy; automatic paid entitlement reversal is not implemented.
+
+## Release and incident sequence
+
+Keep `ai_billing_release_config.self_service_enabled=false`. Capture current production function versions and the deployment/commit before release. Reconcile and apply the validated version-controlled migration, deploy the corresponding billing functions and credit runtime, verify permissions and backend compatibility, then deploy the application. Enable the gate only after mandatory evidence passes.
+
+If an incident occurs, disable the gate first. Preserve signed events, receipts, ledger entries and operation claims. Reconcile provider state before retrying a side effect. Frontend rollback may be performed independently while compatible backend fixes remain. Do not delete payment events to force replay, discard receipts, restore the unsafe marketplace trigger, or restore customer credit-settlement privileges.
