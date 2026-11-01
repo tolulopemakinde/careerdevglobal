@@ -20,23 +20,12 @@ async function ai(sb:any,event:any,type:string,eref:string,ref:string,hash:strin
 
  const ins=await sb.from("ai_agent_subscription_webhook_events").insert({provider_key:"paystack",provider_event_reference:eref,event_type:type,signature_verified:true,processing_status:"verified",subscription_id:sub?.id??null,transaction_reference:ref||null,payload_hash:hash,payload:event}).select("id").single();
  if(ins.error){const r=await sb.from("ai_agent_subscription_webhook_events").select("id,processing_status").eq("provider_key","paystack").eq("provider_event_reference",eref).maybeSingle();if(r.error||!r.data)throw new Error("AI subscription webhook event could not be recorded");if(r.data.processing_status!=="processed")throw new Error("Previously recorded AI webhook event requires reconciliation: "+r.data.processing_status);return {received:true,duplicate:true,processed:true,ai_subscription:true,webhook_event_id:r.data.id}}
- if(!sub){await sb.from("ai_agent_subscription_webhook_events").update({processing_status:"unmatched",error_message:"No matching AI subscription found",processed_at:new Date().toISOString()}).eq("id",ins.data.id);return {processed:false,unmatched:true,ai_subscription:true,webhook_event_id:ins.data.id}}
- const u:any={updated_at:new Date().toISOString(),metadata:{...(sub.metadata??{}),last_webhook_event:type,last_webhook_event_reference:eref}};
- if(sc)u.paystack_subscription_code=sc;if(cc)u.paystack_customer_code=cc;
- const np=d?.next_payment_date??d?.subscription?.next_payment_date??null, paid=d?.paid_at??null;
- const parseProviderDate=(value:unknown,label:string)=>{if(value==null||value==="")return null;if(typeof value!=="string"||!Number.isFinite(Date.parse(value)))throw new Error("Invalid provider "+label);return new Date(value).toISOString()};
- const nextEnd=parseProviderDate(np,"next_payment_date"), paidStart=parseProviderDate(paid,"paid_at");
- const isTerminal=sub.status==="cancelled"||sub.status==="expired";
- const canAdvanceEnd=nextEnd&&!isTerminal&&(!sub.current_period_end||Date.parse(nextEnd)>Date.parse(sub.current_period_end));
- if(type==="subscription.create"){if(!isTerminal&&sub.status!=="non_renewing")u.status="active";if(canAdvanceEnd)u.current_period_end=nextEnd}
- else if(type==="charge.success"){if(sub.status!=="non_renewing"&&sub.status!=="cancelled")u.status="active";if(paidStart&&!isTerminal&&(!sub.current_period_start||Date.parse(paidStart)>Date.parse(sub.current_period_start)))u.current_period_start=paidStart;if(canAdvanceEnd)u.current_period_end=nextEnd}
- else if(type==="invoice.payment_failed"){if(sub.status!=="non_renewing"&&sub.status!=="cancelled")u.status="attention"}
- else if(type==="subscription.not_renew"){if(!isTerminal)u.status="non_renewing"}
- else if(type==="subscription.disable"){if(!isTerminal)u.status=sub.current_period_end&&new Date(sub.current_period_end)>new Date()?"non_renewing":"cancelled"}
- else if(type==="invoice.update"){const st=String(d?.status??"").toLowerCase();if((st==="paid"||st==="success")&&sub.status!=="non_renewing"&&sub.status!=="cancelled")u.status="active";if(st==="failed"&&sub.status!=="non_renewing"&&sub.status!=="cancelled")u.status="attention"}
- const up=await sb.from("ai_agent_subscriptions").update(u).eq("id",sub.id).eq("updated_at",sub.updated_at).select("id").maybeSingle();if(up.error||!up.data){await sb.from("ai_agent_subscription_webhook_events").update({processing_status:"failed",error_message:up.error?.message??"Concurrent subscription update requires reconciliation"}).eq("id",ins.data.id);throw new Error("AI subscription state could not be updated")}
- const mark=await sb.from("ai_agent_subscription_webhook_events").update({processing_status:"processed",processed_at:new Date().toISOString()}).eq("id",ins.data.id);if(mark.error)throw new Error("AI webhook applied but event acknowledgement failed; manual reconciliation required");
- return {processed:true,ai_subscription:true,webhook_event_id:ins.data.id,subscription_id:sub.id,event_type:type}
+ // Database RPC locks the event and subscription and commits both state changes atomically.
+ // Never acknowledge a partial or unmatched event as processed.
+ const {data:applied,error:applyError}=await sb.rpc("apply_ai_subscription_webhook_state",{p_event_id:ins.data.id});
+ if(applyError)throw new Error("AI webhook requires reconciliation: "+applyError.message);
+ if(!applied?.processed)return {processed:false,unmatched:true,ai_subscription:true,webhook_event_id:ins.data.id};
+ return {processed:true,ai_subscription:true,webhook_event_id:ins.data.id,subscription_id:applied.subscription_id,event_type:type};
 }
 Deno.serve(async req=>{if(req.method!=="POST")return reply({error:"Method not allowed"},405);if(!service||!secret)return reply({error:"Webhook credentials are not configured"},503);try{
  const raw=new Uint8Array(await req.arrayBuffer()), sig=(req.headers.get("x-paystack-signature")??"").trim().toLowerCase();if(!sig)return reply({error:"Missing Paystack signature"},401);if(!eq(await hmac(secret,raw),sig))return reply({error:"Invalid Paystack signature"},401);
