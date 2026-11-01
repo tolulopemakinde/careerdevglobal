@@ -3,6 +3,7 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
 import {createSupabaseBrowserClient} from '../../../lib/supabase-browser';
 import {BillingPlan,eligibleUpgrade,planPrice} from '../../../lib/ai-billing-plans';
+import './billing.css';
 type Subscription={id:string;plan_key:string;status:string;billing_interval:string;currency:string;amount:number;current_period_start:string|null;current_period_end:string|null;metadata:{scheduled_upgrade_plan_key?:string|null}};
 type Credit={monthly_allowance:number;credits_remaining:number;credits_consumed:number;credits_reserved:number;period_end:string};
 type Payment={paid_at:string;amount_minor:number;currency:string;period_start:string;period_end:string};
@@ -60,10 +61,10 @@ export default function ManageAiSubscription(){
  const current=plans.find(p=>p.plan_key===subscription?.plan_key);
  const end=subscription?.current_period_end,paid=!!end&&Date.parse(end)>Date.now()&&!!subscription?.current_period_start&&Date.parse(subscription.current_period_start)<=Date.now();
  const canChange=enabled&&!loadError&&!!subscription&&['active','attention','non_renewing'].includes(subscription.status);
- return <main style={{maxWidth:960,margin:'32px auto',padding:24,color:'#09233f'}}>
-  <Link href={dashboard}>← Dashboard</Link><h1>Manage AI Subscription</h1>
+ return <main className="ai-billing-page" style={{maxWidth:960,margin:'32px auto',padding:24,color:'#09233f'}}>
+  <Link href={dashboard}>← Dashboard</Link><h1 style={{color:'#09233f',fontSize:'clamp(1.8rem,4vw,2.6rem)',lineHeight:1.15,margin:'20px 0'}}>Manage AI Subscription</h1>
   {message&&<p role="status" aria-live="polite">{message}</p>}
-  {loading?<p role="status">Loading billing details…</p>:loadError?<button onClick={()=>void load()}>Retry loading</button>:<>
+  {loading?<p role="status">Loading billing details…</p>:loadError?<button onClick={()=>{setMessage('');void load()}}>Retry loading</button>:<>
    {!enabled&&<p>Self-service billing changes are awaiting verification. <Link href="/support">Contact billing support</Link> for help.</p>}
    {!subscription?<><p>No subscription found.</p><Link href="/pricing">View available plans</Link></>:<>
     <section style={{border:'1px solid #c8d9e8',borderRadius:16,padding:24}}>
