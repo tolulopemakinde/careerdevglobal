@@ -1,0 +1,25 @@
+name: AI billing regression guards
+on:
+  pull_request:
+    paths:
+      - 'supabase/functions/careerdev-paystack-webhook/**'
+      - 'supabase/functions/careerdev-ai-subscription-manage/**'
+      - 'lib/ai-billing-lifecycle.mjs'
+      - 'tests/ai-*'
+      - 'package.json'
+      - '.github/workflows/ai-billing-tests.yml'
+  push:
+    branches: ['fix/ai-billing-lifecycle-safety-2026-11']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: AI billing unit and source regression tests
+        run: npm run test:ai-billing
