@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 const webhook=readFileSync(new URL('../supabase/functions/careerdev-paystack-webhook/index.ts',import.meta.url),'utf8');
 const cancel=readFileSync(new URL('../supabase/functions/careerdev-ai-subscription-manage/index.ts',import.meta.url),'utf8');
 const sql=readFileSync(new URL('../docs/sql/ai-subscription-atomic-webhook-proposal.sql',import.meta.url),'utf8');
-test('webhook acknowledges only processed duplicate events',()=>assert.match(webhook,/processing_status!=="processed"/));
+test('duplicate webhook events replay through atomic RPC only when permitted',()=>{assert.match(webhook,/processing_status==="processed"/);assert.match(webhook,/\["verified","failed","unmatched"\]/);assert.match(webhook,/p_event_id:r\.data\.id/);assert.match(webhook,/payload_hash!==hash/)});
 test('webhook delegates AI subscription updates to atomic RPC',()=>assert.match(webhook,/sb\.rpc\("apply_ai_subscription_webhook_state"/));
 test('atomic RPC locks event and subscription',()=>{assert.match(sql,/where id=p_event_id for update/);assert.match(sql,/where id=v_sub_id for update/)});
 test('atomic RPC validates signature and exact provider identity',()=>{assert.match(sql,/signature_verified/);assert.match(sql,/Conflicting provider identifiers/);assert.match(sql,/Ambiguous subscription code/)});
