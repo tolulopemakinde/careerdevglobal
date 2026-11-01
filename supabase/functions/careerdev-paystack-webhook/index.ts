@@ -14,8 +14,8 @@ async function ai(sb:any,event:any,type:string,eref:string,ref:string,hash:strin
  const cc=String(d?.customer?.customer_code??d?.customer_code??d?.subscription?.customer?.customer_code??"").trim()||null;
 
  let sub:any=null;
- if(ref){const r=await sb.from("ai_agent_subscriptions").select("*").eq("paystack_transaction_reference",ref).maybeSingle();sub=r.data}
- if(!sub&&sc){const r=await sb.from("ai_agent_subscriptions").select("*").eq("paystack_subscription_code",sc).maybeSingle();sub=r.data}
+ if(ref){const r=await sb.from("ai_agent_subscriptions").select("*").eq("paystack_transaction_reference",ref).maybeSingle();if(r.error)throw new Error("Transaction correlation lookup failed");sub=r.data}
+ if(sc){const r=await sb.from("ai_agent_subscriptions").select("*").eq("paystack_subscription_code",sc).maybeSingle();if(r.error)throw new Error("Subscription correlation lookup failed");if(sub&&r.data&&sub.id!==r.data.id)throw new Error("Conflicting subscription identifiers");if(!sub)sub=r.data}
  // Customer codes are not sufficient to identify one subscription; unmatched events are quarantined.
 
  const ins=await sb.from("ai_agent_subscription_webhook_events").insert({provider_key:"paystack",provider_event_reference:eref,event_type:type,signature_verified:true,processing_status:"verified",subscription_id:sub?.id??null,transaction_reference:ref||null,payload_hash:hash,payload:event}).select("id").single();
@@ -26,10 +26,10 @@ async function ai(sb:any,event:any,type:string,eref:string,ref:string,hash:strin
  const np=d?.next_payment_date??d?.subscription?.next_payment_date??null, paid=d?.paid_at??null;
  if(type==="subscription.create"){if(sub.status!=="non_renewing"&&sub.status!=="canceled")u.status="active";if(np)u.current_period_end=new Date(np).toISOString()}
  else if(type==="charge.success"){if(sub.status!=="non_renewing"&&sub.status!=="canceled")u.status="active";if(paid)u.current_period_start=new Date(paid).toISOString();if(np)u.current_period_end=new Date(np).toISOString()}
- else if(type==="invoice.payment_failed"){u.status="attention"}
+ else if(type==="invoice.payment_failed"){if(sub.status!=="non_renewing"&&sub.status!=="canceled")u.status="attention"}
  else if(type==="subscription.not_renew"){u.status="non_renewing"}
  else if(type==="subscription.disable"){u.status=sub.current_period_end&&new Date(sub.current_period_end)>new Date()?"non_renewing":"canceled"}
- else if(type==="invoice.update"){const st=String(d?.status??"").toLowerCase();if((st==="paid"||st==="success")&&sub.status!=="non_renewing"&&sub.status!=="canceled")u.status="active";if(st==="failed")u.status="attention"}
+ else if(type==="invoice.update"){const st=String(d?.status??"").toLowerCase();if((st==="paid"||st==="success")&&sub.status!=="non_renewing"&&sub.status!=="canceled")u.status="active";if(st==="failed"&&sub.status!=="non_renewing"&&sub.status!=="canceled")u.status="attention"}
  const up=await sb.from("ai_agent_subscriptions").update(u).eq("id",sub.id);if(up.error){await sb.from("ai_agent_subscription_webhook_events").update({processing_status:"failed",error_message:up.error.message}).eq("id",ins.data.id);throw new Error("AI subscription state could not be updated")}
  await sb.from("ai_agent_subscription_webhook_events").update({processing_status:"processed",processed_at:new Date().toISOString()}).eq("id",ins.data.id);
  return {processed:true,ai_subscription:true,webhook_event_id:ins.data.id,subscription_id:sub.id,event_type:type}
