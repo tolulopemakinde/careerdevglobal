@@ -52,7 +52,7 @@ Deno.serve(async req=>{
     if(old.data?.event_type===type&&old.data.processing_status==='processed')return reply({received:true,processed:true,duplicate:true});
    }
   }
-  const insert=await sb.from(table).insert({provider_key:'paystack',provider_event_reference:eventIdentity,event_type:type,signature_verified:true,processing_status:'verified',payload_hash:hash,payload:event,
+  const insert=await sb.from(table).insert({provider_key:'paystack',provider_event_reference:eventIdentity,event_type:type,signature_verified:true,verification_source:'webhook_hmac',processing_status:'verified',payload_hash:hash,payload:event,
    ...(isAi?{subscription_id:sub?.id??null,transaction_reference:reference||null}:{transaction_id:marketplaceId})}).select('*').single();
   let stored=insert.data;
   if(insert.error){
