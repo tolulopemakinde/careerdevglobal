@@ -53,3 +53,12 @@ Record redacted provider event ID, event status, subscription status, paid-throu
 1. Inspect test RPC, payment ledger schema, Edge Function code, and repository branch contracts in full (read-only).
 2. Reconcile PR webhook with provider verification requirements and idempotent credit grant, using source-only changes in PR #42.
 3. Execute isolated tests only after establishing ownership of existing test records and test-only credentials; preserve all six subscriptions and six events.
+
+## 2026-11-03 additional read-only verification
+
+- PR head `65b70e799041287b1abd72d1f498cd68a3276138`: GitHub source/types/build and both test checks completed successfully.
+- On the separate Supabase test project, `service_role` has EXECUTE while `anon` and `authenticated` do not, for `apply_ai_subscription_webhook_state(uuid)`, `reconcile_ai_subscription_event(uuid,uuid,text)`, and `apply_paystack_webhook_state(uuid)`.
+- All six existing AI webhook events are already processed: five `charge.success`, one `invoice.create`. There are no existing failed/unmatched events to replay without creating isolated fixtures.
+- The `ai_subscription_payments` ledger contains provider transaction ID, reference, amount_minor, currency, paid_at, period_start, and period_end. It is present in test; 5 rows were observed in the preceding audit.
+- No payment credentials or provider webhook routing were inspected. The database was queried read-only; no integration payment or mutation test was performed.
+- Release remains gated on controlled fixture creation, test-only Paystack routing, concurrent delivery, and exactly-once credit/entitlement verification.
