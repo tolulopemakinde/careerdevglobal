@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {normalizeVerifiedPayment,assertProviderSubscription} from '../supabase/functions/_shared/ai-billing-provider.ts';
-import {eligibleUpgrade} from '../lib/ai-billing-plans.ts';
+import {eligibleUpgrade,selectAccountSubscription} from '../lib/ai-billing-plans.ts';
 import {transactionReference} from '../supabase/functions/_shared/ai-billing-reconcile.ts';
 test('actual refund transaction_reference correlates to exact payment',()=>assert.equal(transactionReference({transaction_reference:'CDG-AI-refund'}),'CDG-AI-refund'));
 test('conflicting webhook reference fields fail closed',()=>assert.throws(()=>transactionReference({reference:'first',transaction_reference:'second'}),/Conflicting/));
@@ -22,3 +22,13 @@ const higher={...current,plan_key:'b',monthly_price:20,annual_price:200,monthly_
 test('higher credit and price tier with all current agents is eligible',()=>assert.equal(eligibleUpgrade(current,higher,'annual','NGN'),true));
 test('downgrade, equal-price tier and lost agents are not upgrades',()=>{assert.equal(eligibleUpgrade(higher,current,'monthly','USD'),false);assert.equal(eligibleUpgrade(current,{...higher,monthly_price:10},'monthly','USD'),false);assert.equal(eligibleUpgrade(current,{...higher,included_agents:['two']},'monthly','USD'),false)});
 test('unconfigured target currency is not eligible',()=>assert.equal(eligibleUpgrade(current,{...higher,monthly_price_ngn:null},'monthly','NGN'),false));
+
+const selectionNow=Date.parse('2026-11-03T12:00:00Z');
+const oldCancelled={id:'old',status:'non_renewing',current_period_end:'2026-11-01T12:00:00Z'};
+const replacement={id:'replacement',status:'active',current_period_end:'2026-12-03T12:00:00Z'};
+test('expired non-renewing history does not hide paid replacement',()=>assert.equal(selectAccountSubscription([replacement,oldCancelled],selectionNow)?.id,'replacement'));
+test('expired non-renewing history does not create duplicate-current error when returned first',()=>assert.equal(selectAccountSubscription([oldCancelled,replacement],selectionNow)?.id,'replacement'));
+test('two genuinely unexpired paid subscriptions still fail closed',()=>assert.throws(()=>selectAccountSubscription([replacement,{...oldCancelled,current_period_end:'2026-12-01T12:00:00Z'}],selectionNow),/Multiple billing records/));
+test('paid term ceases to be current at exact expiry',()=>assert.equal(selectAccountSubscription([oldCancelled],Date.parse(oldCancelled.current_period_end))?.id,'old'));
+test('invalid paid-through date cannot claim current subscription',()=>assert.equal(selectAccountSubscription([{...oldCancelled,current_period_end:'not-a-date'},replacement],selectionNow)?.id,'replacement'));
+test('pending subscription remains eligible for reconciliation guard',()=>assert.throws(()=>selectAccountSubscription([replacement,{id:'pending',status:'pending',current_period_end:null}],selectionNow),/Multiple billing records/));
