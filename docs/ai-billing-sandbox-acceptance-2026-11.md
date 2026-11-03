@@ -71,3 +71,19 @@ Record redacted provider event ID, event status, subscription status, paid-throu
 - The test project's Edge Function inventory does not include `careerdev-paystack-webhook`, `careerdev-ai-subscription-verify`, or `careerdev-ai-billing-reconcile`. Consequently W01–W16 cannot yet be considered end-to-end tested in this environment.
 - Deployment order once test-only credentials and authorization are confirmed: (1) validate existing test database function contracts; (2) deploy branch billing functions **to the test project only**; (3) run authenticated preflight; (4) configure a test-only webhook route without altering production Paystack settings; (5) create fresh isolated test identities; (6) execute W01–W16 and capture redacted evidence.
 - Existing test subscriptions, events, and provider configuration must not be overwritten or reused as fixtures. No Edge Function was deployed in this audit.
+
+## 2026-11-03 updated evidence reconciliation (read-only)
+
+**Supersedes the earlier Edge Function inventory note above:** A fresh Supabase inventory shows the test project now has deployed test versions of `careerdev-paystack-webhook`, `careerdev-ai-subscription-verify`, `careerdev-ai-billing-reconcile`, and dedicated sandbox test functions. The earlier claim that these were absent is stale.
+
+The test project contains 17 recorded `ai_billing_test_runs` entries: successful runs for provider checks, paid lifecycle, concurrency, marketplace isolation, replacement verification, historical replay, partial refund, and full refund. These are historical recorded outcomes, **not rerun during this audit**. Earlier attempts include failures; do not erase or count them as passes.
+
+Outstanding records:
+- `billing-provider-events-refund-20261103-a` is **incomplete** because Paystack provider webhook delivery configuration evidence is missing; the actual test partial refund was requested, but processed provider-event verification was pending in that run.
+- `billing-actual-full-refund-request-20261103-a` is **awaiting_provider**, with Paystack TEST refund pending at the time of that run; a separate later `billing-actual-full-refund-20261103-a` run is marked passed.
+- `billing-replacement-20261103-a` is **awaiting_payment** in its original run; a later `billing-replacement-verify-20261103-c` run is marked passed. Earlier replacement verification attempts failed, including one failure to stop a new test renewal.
+- `billing-paid-lifecycle-20261101-a` failed the old-plan/paid-through invariant; a later `-c` run is marked passed. Compare exact test assertions before concluding the regression is resolved.
+
+Security: All three test-project RPCs `apply_ai_subscription_webhook_state`, `reconcile_ai_subscription_event`, and `apply_paystack_webhook_state` grant EXECUTE to service_role and deny anon/authenticated (catalog privilege inspection).
+
+**Release remains blocked** pending explicit evidence of Paystack TEST webhook routing, mapping of each W01–W16 scenario to a successful isolated run, inspection of previously failed invariant assertions, and verification that the deployed test Edge Function sources correspond to PR #42. No test functions were invoked or payments created by this audit.
