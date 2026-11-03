@@ -87,3 +87,17 @@ Outstanding records:
 Security: All three test-project RPCs `apply_ai_subscription_webhook_state`, `reconcile_ai_subscription_event`, and `apply_paystack_webhook_state` grant EXECUTE to service_role and deny anon/authenticated (catalog privilege inspection).
 
 **Release remains blocked** pending explicit evidence of Paystack TEST webhook routing, mapping of each W01–W16 scenario to a successful isolated run, inspection of previously failed invariant assertions, and verification that the deployed test Edge Function sources correspond to PR #42. No test functions were invoked or payments created by this audit.
+
+## 2026-11-03 exact deployed-source parity audit — read-only
+
+**Release-blocking source drift confirmed** by comparing deployed Supabase Edge Function files to PR #42 branch source (normalizing CRLF to LF):
+
+| Test deployment | Entrypoint | Shared modules |
+|---|---|---|
+| `careerdev-paystack-webhook` v7 | Differs: branch explicitly sets `verification_source:'webhook_hmac'`; deployed relies on DB default | Shared reconcile/provider modules identical after trimming trailing blank lines |
+| `careerdev-ai-subscription-verify` v3 | Matches | Bundled provider module is older and lacks branch numeric transaction-ID safe-integer check |
+| `careerdev-ai-billing-reconcile` v3 | Matches | Bundled reconcile module is older: chooses first transaction reference rather than rejecting conflicting references; provider module also lacks numeric-ID validation |
+
+**Implication:** Historical passing test runs certify deployed snapshots, not the exact current PR #42 bundle. Before sign-off, deploy coherent bundles from one reviewed commit **to the test project only**, verify bundled source parity, and rerun critical provider, paid lifecycle, concurrency, marketplace, and replay tests. No production deployment authorized.
+
+The comparison did not execute Edge Functions, modify database rows, or change Paystack configuration.
