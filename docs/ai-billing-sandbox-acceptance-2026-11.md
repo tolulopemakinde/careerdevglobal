@@ -62,3 +62,12 @@ Record redacted provider event ID, event status, subscription status, paid-throu
 - The `ai_subscription_payments` ledger contains provider transaction ID, reference, amount_minor, currency, paid_at, period_start, and period_end. It is present in test; 5 rows were observed in the preceding audit.
 - No payment credentials or provider webhook routing were inspected. The database was queried read-only; no integration payment or mutation test was performed.
 - Release remains gated on controlled fixture creation, test-only Paystack routing, concurrent delivery, and exactly-once credit/entitlement verification.
+
+## 2026-11-03 Paystack sandbox deployment preflight — read-only
+
+- Existing test Edge Function `pilot-paystack-sandbox-preflight` (version 3) is active, JWT-protected, and checks the Supabase project hostname against `yyevuwvtrktrzwuzeddo.supabase.co`.
+- The preflight requires an authenticated active staff/admin profile and a `PAYSTACK_SECRET_KEY` starting with `sk_test_`. It calls Paystack's test-mode `GET /plan?perPage=1` endpoint and reports boolean authentication/reachability results without exposing the secret.
+- **Preflight was inspected, not invoked**: no authenticated staff token was available to this audit, so actual secret presence, provider authentication, and network reachability remain unverified.
+- The test project's Edge Function inventory does not include `careerdev-paystack-webhook`, `careerdev-ai-subscription-verify`, or `careerdev-ai-billing-reconcile`. Consequently W01–W16 cannot yet be considered end-to-end tested in this environment.
+- Deployment order once test-only credentials and authorization are confirmed: (1) validate existing test database function contracts; (2) deploy branch billing functions **to the test project only**; (3) run authenticated preflight; (4) configure a test-only webhook route without altering production Paystack settings; (5) create fresh isolated test identities; (6) execute W01–W16 and capture redacted evidence.
+- Existing test subscriptions, events, and provider configuration must not be overwritten or reused as fixtures. No Edge Function was deployed in this audit.
