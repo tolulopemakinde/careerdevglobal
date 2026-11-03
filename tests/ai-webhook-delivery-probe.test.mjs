@@ -1,0 +1,18 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {stripTypeScriptTypes} from 'node:module';
+import vm from 'node:vm';
+const source=stripTypeScriptTypes(readFileSync(new URL('./helpers/ai-billing-provider-delivery.ts.fixture',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,''));
+function boot({mode='test',gate=false,refundGate=false,initializeFails=false,url='https://yyevuwvtrktrzwuzeddo.supabase.co'}={}){
+ let handler,stored=null;const calls=[];
+ const sb={from(table){let action='select',value;const q={select(){return q},eq(){return q},insert(row){action='insert';value=row;return q},update(row){action='update';value=row;return q},async maybeSingle(){return {data:stored,error:null}},async single(){return {data:table==='ai_billing_release_config'?{self_service_enabled:gate}:{enabled:refundGate},error:null}},then(resolve){if(table==='ai_billing_test_runs'){if(action==='insert'){if(stored)return resolve({error:{message:'unique claim'}});stored=value;}else if(action==='update')stored={...stored,...value};}resolve({data:null,count:0,error:null});}};return q;}};
+ vm.runInNewContext(source,{Deno:{env:{get:name=>name==='SUPABASE_URL'?url:name==='PAYSTACK_SECRET_KEY'?(mode==='test'?'sk_test_offline_fixture':'sk_live_offline_fixture'):name==='CAREERDEV_APP_URL'?'https://careerdevglobal-git-fix-ai-billing-lif-9f3bbf-career-dev-global.vercel.app':'offline-config'},serve:fn=>handler=fn},createClient:()=>sb,paystackRequest:async(_key,path,body)=>{calls.push({path,body});if(path.startsWith('/transaction/verify/'))return {domain:'test',integration:123};if(path.startsWith('/integration/'))return [];if(initializeFails)throw Error('Provider response uncertain');return {reference:body.reference,authorization_url:'https://checkout.paystack.com/offline-fixture'};},providerPlanCode:value=>typeof value==='string'?value:value?.plan_code??null,Request,Response,URL,Date,crypto:globalThis.crypto});
+ return {calls,send:()=>handler(new Request(url,{method:'POST',body:JSON.stringify({action:'initialize'})}))};
+}
+test('standalone probe rejects live credentials before any provider call',async()=>{const h=boot({mode:'live'});assert.equal((await h.send()).status,403);assert.equal(h.calls.length,0)});
+test('standalone probe rejects any other project before provider calls',async()=>{const h=boot({url:'https://production.example.test'});assert.equal((await h.send()).status,403);assert.equal(h.calls.length,0)});
+test('standalone probe refuses an enabled billing gate',async()=>{const h=boot({gate:true});assert.equal((await h.send()).status,409);assert.equal(h.calls.length,0)});
+test('standalone probe refuses an enabled refund policy gate',async()=>{const h=boot({refundGate:true});assert.equal((await h.send()).status,409);assert.equal(h.calls.length,0)});
+test('uncertain provider outcome keeps its claim and never retries initialization',async()=>{const h=boot({initializeFails:true});assert.equal((await h.send()).status,409);assert.equal((await (await h.send()).json()).reused,true);assert.equal(h.calls.filter(x=>x.body!==undefined).length,1)});
+test('standalone initialization is bounded and never repeated',async()=>{const h=boot();assert.equal((await h.send()).status,200);const again=await h.send();assert.equal((await again.json()).reused,true);const writes=h.calls.filter(x=>x.body!==undefined);assert.equal(writes.length,1);assert.equal(writes[0].path,'/transaction/initialize');assert.equal(writes[0].body.amount,'10000');assert.equal(writes[0].body.currency,'NGN');assert.equal(writes[0].body.reference.startsWith('CDG-AI-'),false);assert.equal('plan' in writes[0].body,false);assert.equal('careerdev_ai_subscription_id' in writes[0].body.metadata,false)});

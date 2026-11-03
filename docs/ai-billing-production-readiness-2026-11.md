@@ -2,11 +2,13 @@
 
 ## Executive summary
 
+**Latest continuation:** Genuine Paystack TEST delivery is now verified by a new standalone NGN100 payment, exact provider destination, accepted HMAC and Edge logs. Six automatic provider attempts retain one unmatched event and leave financial hashes unchanged. Its HTTP503/Pending state follows the unmatched-order contract; it is not a matched subscription activation or successful delivery acknowledgement. See [the provider delivery report](ai-billing-provider-webhook-delivery-2026-11.md) and [redacted evidence](ai-billing-provider-webhook-delivery-2026-11.json). This supersedes the earlier connectivity blocker and owner webhook-configuration action below. The six full subscription acceptance scenarios remain BLOCKED, both gates stay false, and production remains unchanged.
+
 **BLOCKED — ACTION REQUIRED.** PR [#42](https://github.com/tolulopemakinde/careerdevglobal/pull/42) remains draft and unmerged on `fix/ai-billing-lifecycle-safety-2026-11`. Production was not modified. This execution fetched and fast-forwarded from `b7dbe7b` to the actual remote head `bd5a47c0041197b81b0150bf2406b9a101aa1f12` before work. GitHub reported no conflict with main `580032ffdb9cbff11c2b80bf1216cf35e9485529`.
 
 The five core sandbox bundles now use coherent source, including their imported modules. Two additional defects were reproduced and fixed: payment verification reported access without consulting the gated reversal policy or paid-period start, and the HMAC provenance change attempted to insert an AI-only column into marketplace events. Regression tests failed before each correction and pass afterward. The earlier account-page replacement selection defect was already fixed upstream; those commits and tests were retained.
 
-Remaining release risks are actual provider webhook routing, real recurring renewal outcomes, bank dispute evidence, production schema rehearsal and historical credit attribution, and complete authenticated browser coverage. Passing local/SQL/signed-HTTP checks do not establish those missing outcomes.
+Remaining release risks are matched subscription provider-event acceptance, real recurring renewal outcomes, bank dispute evidence, production schema rehearsal and historical credit attribution, and complete authenticated browser coverage. Standalone provider routing now passes; passing local/SQL/signed-HTTP checks alone does not establish the remaining outcomes.
 
 ## Environment readiness and execution
 
@@ -16,7 +18,7 @@ Remaining release risks are actual provider webhook routing, real recurring rene
 - Isolated callback is the explicit HTTPS billing branch preview URL. Both retained provider subscriptions report renewals stopped.
 - The documented webhook-events endpoint was queried with transaction category/resource filtering. The replacement transaction returned zero delivery events. This does not establish why delivery is absent or prove the merchant webhook setting is wrong.
 - The browser control attempt did not establish a usable Paystack settings session. No dashboard settings were changed. The available Computer Use skill forbids automating authentication dialogs; owner intervention remains necessary if login is required.
-- Billing and refund policy gates are disabled after testing. No new charge, refund request, provider cancellation or other provider write was issued during this continuation.
+- Billing and refund policy gates are disabled. No new charge, refund request, provider cancellation or other provider write was issued during the earlier implementation execution described in this section. The later provider-delivery continuation initialized the single explicitly authorized standalone TEST payment, as detailed in the linked report; no refund was reissued.
 
 ## Implementation and deployed versions
 
@@ -117,7 +119,7 @@ Advisors still report baseline findings, including public function EXECUTE warni
 
 ## Exact remaining actions
 
-1. Owner: open Paystack TEST developer API/webhook configuration, verify the merchant workspace, and set/confirm `https://yyevuwvtrktrzwuzeddo.supabase.co/functions/v1/careerdev-paystack-webhook`. Leave LIVE settings unchanged. Provide authenticated dashboard access if further help is desired; authentication dialogs must be completed by the owner. Then capture a provider-origin delivery and its destination/response, using an explicitly isolated event.
+1. Completed in the later continuation: provider-origin TEST delivery to `https://yyevuwvtrktrzwuzeddo.supabase.co/functions/v1/careerdev-paystack-webhook` is verified for standalone reference `CDG-WEBHOOK-TEST-20261103-86e31a7c0b2f4d99`. No further webhook URL configuration is required for this verified route. It remains safely unmatched, without a subscription/order or credit grant. Matched subscription provider acceptance remains open.
 2. Owner/provider support: supply a supported TEST recurring-failure/success and dispute/adjudicated-win exercise or approved evidence contract. No fake bank win, fake successful payment or clock-based renewal claim is acceptable.
 3. Owner/maintainer: provide authoritative schema export/provenance and a separate rehearsal target; resolve historical credit attribution and the retained database-only fixture before reuse.
 4. Complete expired-session, approved-coach and post-replacement desktop/mobile browser checks on final source. Browser authentication and any required TEST checkout must be completed through authorized controls.

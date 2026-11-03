@@ -1,5 +1,7 @@
 # AI billing release gates — 1 November 2026
 
+Latest evidence update, 3 November: standalone genuine Paystack TEST delivery now passes, including accepted HMAC, exact isolated destination, six automatic attempts/one unmatched event and unchanged financial hashes. Current local suite has 74 passes. This closes connectivity only; matched subscription acceptance, recurring/dispute evidence, schema rehearsal and remaining browser gates below still apply. Partial/full TEST refunds are already processed; older pending statements below are historical and must not cause a second refund request. See `docs/ai-billing-provider-webhook-delivery-2026-11.md` for the current W01–W16 matrix. Both gates remain false; no production release is authorized by this task.
+
 Production release is authorized by the owner only after all mandatory acceptance criteria pass. No further routine source-edit approval is required. This document records evidence, not a release waiver.
 
 ## Implemented

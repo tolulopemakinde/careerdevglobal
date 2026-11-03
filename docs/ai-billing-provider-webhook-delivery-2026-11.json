@@ -1,0 +1,234 @@
+{
+  "audited_base_commit": "3ceb525b3600868e8815fd71104682ef131ada32",
+  "baseline": {
+    "receipts": 9,
+    "ai_events": 22,
+    "captured_at": "2026-11-03T18:14:05.081043+00:00",
+    "credit_rows": 3,
+    "refund_gate": false,
+    "billing_gate": false,
+    "credits_hash": "16fbf98e30c0fb52c6237502205a35a2",
+    "receipts_hash": "da62aa3bf8accbda638668a42c4a0312",
+    "marketplace_hash": "2824df9de021b20a5f9b159117b03a2c",
+    "marketplace_events": 4,
+    "subscriptions_hash": "91ee8ed0c482cbef5aa4a19be19b67cc",
+    "synthetic_receipts": 4,
+    "marketplace_sync_hash": "f3a3347f358cf291012ef7d861286097"
+  },
+  "observation": {
+    "run_id": "billing-standalone-observe-7be02163-81d9-48d3-a277-0f1441ee344e",
+    "status": "provider_delivery_observed_safe_unmatched",
+    "reference": "CDG-WEBHOOK-TEST-20261103-86e31a7c0b2f4d99",
+    "transaction_id": "6726807449",
+    "provider_status": "success",
+    "domain": "test",
+    "amount_minor": 10000,
+    "currency": "NGN",
+    "created_at": "2026-11-03T18:17:31.000Z",
+    "paid_at": "2026-11-03T18:21:15.000Z",
+    "dedicated_test_customer_matches": true,
+    "no_subscription_plan": true,
+    "standalone_metadata_matches": true,
+    "local_subscription_links": 0,
+    "merchant_integration_id": null,
+    "merchant_matches_retained_test_workspace": null,
+    "same_test_secret_authenticated_retained_and_new_payment": true,
+    "deliveries": [
+      {
+        "event_id": "6aea261cc2ff06530f130f88",
+        "domain": "test",
+        "event_name": "charge.success",
+        "transaction_id": "6726807449",
+        "status": "Pending",
+        "response_code": 503,
+        "trial_count": 6,
+        "created_at": "2026-11-03T18:21:16.000Z",
+        "updated_at": "2026-11-03T18:41:00.000Z",
+        "endpoint_matches": true,
+        "webhook_url": "https://yyevuwvtrktrzwuzeddo.supabase.co/functions/v1/careerdev-paystack-webhook",
+        "payload_identity_matches": true
+      }
+    ],
+    "stored_events": [
+      {
+        "id": "effce232-de55-4b45-afa4-9316e632a252",
+        "provider_event_reference": "charge.success:6726807449",
+        "event_type": "charge.success",
+        "signature_verified": true,
+        "processing_status": "failed",
+        "transaction_id": null,
+        "error_message": "Provider or transactional verification pending"
+      }
+    ],
+    "after": {
+      "receipts": 9,
+      "subscriptions": 10,
+      "credit_rows": 3,
+      "marketplace_sync": 4,
+      "marketplace_events": 5,
+      "ai_events": 22,
+      "billing_gate": false,
+      "refund_gate": false
+    },
+    "financial_counts_unchanged": true,
+    "baseline": {
+      "receipts": 9,
+      "ai_events": 22,
+      "credit_rows": 3,
+      "refund_gate": false,
+      "billing_gate": false,
+      "subscriptions": 10,
+      "marketplace_sync": 4,
+      "marketplace_events": 4
+    }
+  },
+  "after": {
+    "receipts": 9,
+    "captured_at": "2026-11-03T18:55:54.491201+00:00",
+    "credit_rows": 3,
+    "refund_gate": false,
+    "billing_gate": false,
+    "credits_hash": "16fbf98e30c0fb52c6237502205a35a2",
+    "receipts_hash": "da62aa3bf8accbda638668a42c4a0312",
+    "marketplace_hash": "2824df9de021b20a5f9b159117b03a2c",
+    "marketplace_events": 5,
+    "subscriptions_hash": "91ee8ed0c482cbef5aa4a19be19b67cc",
+    "marketplace_sync_hash": "f3a3347f358cf291012ef7d861286097"
+  },
+  "financial_hashes_unchanged": true,
+  "core_functions": [
+    {
+      "name": "careerdev-paystack-webhook",
+      "version": 9,
+      "verify_jwt": false,
+      "match": true,
+      "bundle_sha256": "e20e2f5ef07c8084e087eaaa86e8775aa16ec3ba286f55661f5757e3ac0fcaf0"
+    },
+    {
+      "name": "careerdev-ai-subscription-manage",
+      "version": 4,
+      "verify_jwt": true,
+      "match": true,
+      "bundle_sha256": "4c150cb1a0923816341b46c7b45377549a21c0580bf3f722479d669968ec17c0"
+    },
+    {
+      "name": "careerdev-ai-billing-reconcile",
+      "version": 4,
+      "verify_jwt": true,
+      "match": true,
+      "bundle_sha256": "7dbe70d02152c7410fdf54319fed089e300f215b7aaa8974ee76c1076dcc1f9f"
+    },
+    {
+      "name": "careerdev-ai-subscription-verify",
+      "version": 5,
+      "verify_jwt": true,
+      "match": true,
+      "bundle_sha256": "5e80dd43f2cf52e3e6181e1bfe0e182bb6787f688b32a723369af3449aa32c54"
+    },
+    {
+      "name": "careerdev-ai-subscription-checkout",
+      "version": 5,
+      "verify_jwt": true,
+      "match": true,
+      "bundle_sha256": "76c2722a0180ab4647efaf869f270efc874cfc0fb4570d2400d6bf5d953cd215"
+    }
+  ],
+  "probe_function": {
+    "name": "billing-sandbox-provider-delivery",
+    "version": 4,
+    "verify_jwt": true,
+    "bundle_sha256": "c6271b7e7150b55084e3af1cbee8f684c671143e4bb65e3da2336c69751dadc2",
+    "source_match": true
+  },
+  "receipt_review": [
+    {
+      "reference": "CDG-AI-c3c49ff54bb84ccbbac646fbd821b0b0",
+      "provider_transaction_id": "6719051632",
+      "subscription_id": "c3c49ff5-4bb8-4ccb-bac6-46fbd821b0b0",
+      "amount_minor": 750000,
+      "currency": "NGN",
+      "classification": "provider_verification_required"
+    },
+    {
+      "reference": "CDG-AI-7b67181a061b4d72923fd1cae428f07c",
+      "provider_transaction_id": "6719139779",
+      "subscription_id": "7b67181a-061b-4d72-923f-d1cae428f07c",
+      "amount_minor": 750000,
+      "currency": "NGN",
+      "classification": "provider_verification_required"
+    },
+    {
+      "reference": "CDG-AI-0524464636684c1b8ce1aa7944ccb0d3",
+      "provider_transaction_id": "6719162392",
+      "subscription_id": "05244646-3668-4c1b-8ce1-aa7944ccb0d3",
+      "amount_minor": 750000,
+      "currency": "NGN",
+      "classification": "provider_verification_required"
+    },
+    {
+      "reference": "refund-race-20261103",
+      "provider_transaction_id": "refund-race-tx-20261103",
+      "subscription_id": "e515376f-bbac-4885-a9dd-69a98a65b568",
+      "amount_minor": 1000,
+      "currency": "USD",
+      "classification": "earlier_database_only_fixture"
+    },
+    {
+      "reference": "CDG-AI-c3fcaa6431b94d82bd4a348998512ad7",
+      "provider_transaction_id": "6725464259",
+      "subscription_id": "c3fcaa64-31b9-4d82-bd4a-348998512ad7",
+      "amount_minor": 1500000,
+      "currency": "NGN",
+      "classification": "provider_verification_required"
+    },
+    {
+      "reference": "refund-fixture",
+      "provider_transaction_id": "refund-tx",
+      "subscription_id": "c7a11b87-6684-42ed-ba24-2979f1ef3623",
+      "amount_minor": 1000,
+      "currency": "USD",
+      "classification": "tagged_database_simulation"
+    },
+    {
+      "reference": "refund-full-only",
+      "provider_transaction_id": "refund-full-tx",
+      "subscription_id": "adab0bb0-b008-40f9-a98f-3fbf9a263b2d",
+      "amount_minor": 1000,
+      "currency": "USD",
+      "classification": "tagged_database_simulation"
+    },
+    {
+      "reference": "CDG-AI-overlap2",
+      "provider_transaction_id": "overlap-tx2",
+      "subscription_id": "79fb3f80-b428-4d4b-9c95-fa67fa9beb6d",
+      "amount_minor": 499,
+      "currency": "USD",
+      "classification": "tagged_database_simulation"
+    },
+    {
+      "reference": "CDG-AI-overlap1",
+      "provider_transaction_id": "overlap-tx1",
+      "subscription_id": "73fde9e5-f7e7-45f2-95a5-6b0909aa4533",
+      "amount_minor": 499,
+      "currency": "USD",
+      "classification": "tagged_database_simulation"
+    }
+  ],
+  "receipt_summary": {
+    "tagged_database_simulations": 4,
+    "earlier_database_only_receipt": 1,
+    "historical_provider_reference_receipts": 4,
+    "new_standalone_ai_receipt": 0
+  },
+  "edge_logs": [
+    {
+      "execution_time_ms": "1820",
+      "function_id": "918d75ce-c7d1-4d86-88d4-207f7d4a3cbe",
+      "method": "POST",
+      "path": "/functions/v1/careerdev-paystack-webhook",
+      "response_code": "503",
+      "timestamp": "2026-11-03T18:21:18.338000",
+      "version": "9"
+    }
+  ]
+}
