@@ -22,10 +22,15 @@ begin
  if r->>'duplicate'<>'true' or (select count(*) from public.ai_payment_adjustments where payment_reference='refund-fixture')<>1 then raise exception 'Duplicate adjustment'; end if;
  results:=results||'[{"name":"partial refund preserves benefits and duplicate is idempotent","status":"pass"}]';
  evidence:=evidence||'{"action":"dispute_open","provider_object_id":"dispute:fixture1","amount_minor":1000}';
+ insert into public.ai_credit_ledger(user_id,subscription_id,plan_key,period_start,period_end,operation_key,credits,status,idempotency_key,payment_credit_lot_id) values(u,s,plan,date_trunc('month',now()),date_trunc('month',now())+interval '1 month',op,3,'reserved','refund-fixture-in-flight',lot);
  perform public.apply_ai_payment_adjustment(actor,'Verified fixture provider evidence',evidence);
  if (select frozen from public.ai_payment_credit_lots where id=lot) is not true then raise exception 'Dispute did not freeze credits'; end if;
  blocked:=false;begin insert into public.ai_credit_ledger(user_id,subscription_id,plan_key,period_start,period_end,operation_key,credits,status,idempotency_key,payment_credit_lot_id) values(u,s,plan,date_trunc('month',now()),date_trunc('month',now())+interval '1 month',op,1,'reserved','refund-fixture-blocked',lot);exception when others then blocked:=true;end;
  if not blocked then raise exception 'Frozen credits were reserved'; end if;
+ blocked:=false;begin update public.ai_credit_ledger set status='consumed' where user_id=u and idempotency_key='refund-fixture-in-flight';exception when others then blocked:=true;end;
+ if not blocked then raise exception 'In-flight reservation consumed after dispute freeze'; end if;
+ update public.ai_credit_ledger set status='released' where user_id=u and idempotency_key='refund-fixture-in-flight';
+ results:=results||'[{"name":"freeze-before-consumption blocks settlement and permits release","status":"pass"}]';
  results:=results||'[{"name":"open dispute freezes new usage","status":"pass"}]';
  perform public.apply_ai_payment_adjustment(actor,'Verified fixture provider evidence',evidence||'{"action":"dispute_won"}');
  if (select frozen or revoked from public.ai_payment_credit_lots where id=lot) then raise exception 'Won dispute did not restore credit availability'; end if;

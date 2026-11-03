@@ -21,7 +21,7 @@ No approved plan prices, credit costs, agent registry activation flags, governed
 
 | Layer | Actual result | Limit |
 |---|---|---|
-| Local automated behavior/specifications | 49 passed on 3 November | External services replaced in local handler tests |
+| Local automated behavior/specifications | 57 passed on 3 November | External services replaced in local handler tests |
 | Disposable PostgreSQL | 17 assertions passed | Focused billing schema; not proof of full production schema parity |
 | Consolidated migration | Applied in transaction, 17 assertions passed, rolled back | Development schema was also iterated using execute_sql; no production migration applied |
 | Deployed endpoint/provider checks | 13 passed | Initial checkout only; no renewal charge in this group |
@@ -45,14 +45,14 @@ One paid-lifecycle assertion initially compared ISO timestamp strings with diffe
 | W06 ambiguous code | Unique index rejects duplicate code | None for schema enforcement |
 | W07 wrong signature | Deployed HTTP 401 and local no-write assertion | None for tested HMAC boundary |
 | W08 late payment | SQL preserves terminal status | Provider-origin late delivery |
-| W09 stale date | SQL paid date never shortens | Provider-origin historical invoice replay |
+| W09 stale date | SQL paid date never shortens; new regression prevents old receipt granting a period twice | Provider-origin historical invoice replay |
 | W10 failure then renewal | SQL attention/success transitions | Actual provider failed and successful recurring renewal |
 | W11 cancellation during paid term | Real Paystack test disable; client and coach browser confirmation; retained paid date/credits | Provider-origin delivery |
 | W12 expiry | SQL denies credits and agent access | Browser expiry/session flow |
 | W13 marketplace collision | Local no-mutation test, 4 PostgreSQL assertions, 8 signed HTTP marketplace checks | Production schema compatibility |
 | W14 unmatched identity | SQL quarantine with no customer/plan fallback | Operator remediation of a real unmatched renewal |
 | W15 invalid dates | SQL rollback plus provider normalizer tests | Full signed malformed-payload matrix |
-| W16 upgrade | Real deferred scheduling; SQL no entitlement change/overlap | Replacement checkout and activation after expiry |
+| W16 upgrade | Real deferred scheduling, labelled local expiry simulation, actual Starter TEST checkout/payment, 9 deployed checks including 50 credits and new renewal stop | Naturally elapsed period and provider-origin event delivery |
 
 ## Database/security
 

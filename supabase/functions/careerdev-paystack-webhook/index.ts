@@ -5,6 +5,7 @@ const headers={'Content-Type':'application/json','Cache-Control':'no-store'};
 const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers});
 const aiTypes=['subscription.create','subscription.disable','subscription.not_renew','invoice.create','invoice.payment_failed','invoice.update'];
 const marketplaceTypes=['charge.success','charge.failed','refund.processed'];
+const disputeTypes=['charge.dispute.create','charge.dispute.remind','charge.dispute.resolve'];
 function hex(bytes:ArrayBuffer){return Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('')}
 function same(a:string,b:string){if(a.length!==b.length)return false;let difference=0;for(let i=0;i<a.length;i++)difference|=a.charCodeAt(i)^b.charCodeAt(i);return difference===0}
 Deno.serve(async req=>{
@@ -18,7 +19,7 @@ Deno.serve(async req=>{
   if(!same(hex(await crypto.subtle.sign('HMAC',signingKey,raw)),signature))return reply({error:'Invalid Paystack signature'},401);
   let event:any;try{event=JSON.parse(new TextDecoder().decode(raw))}catch{return reply({error:'Invalid JSON'},400)}
   const type=event?.event,data=event?.data;
-  if(typeof type!=='string'||!data||(!aiTypes.includes(type)&&!marketplaceTypes.includes(type)))return reply({error:'Unsupported event'},400);
+  if(typeof type!=='string'||!data||(!aiTypes.includes(type)&&!marketplaceTypes.includes(type)&&!disputeTypes.includes(type)))return reply({error:'Unsupported event'},400);
   const hash=hex(await crypto.subtle.digest('SHA-256',raw)),reference=transactionReference(data),code=String(data.subscription_code??data.subscription?.subscription_code??'');
   const sb=createClient(url,service);
   const sub=await exactSubscription(sb,reference,code);
@@ -34,8 +35,9 @@ Deno.serve(async req=>{
   }
   if(sub&&marketplaceId)return reply({error:'Conflicting AI and marketplace identity; reconciliation required'},409);
   const isAi=aiTypes.includes(type)||!!sub||!!code||reference.startsWith('CDG-AI-');
-  // Refunds are quarantined for verified operator reconciliation; never route AI refunds into marketplace.
-  const aiRefund=isAi&&type==='refund.processed';
+  // Reversals require provider verification and operator review; keep AI events out of marketplace.
+  const aiReversal=isAi&&(type==='refund.processed'||disputeTypes.includes(type));
+  if(!isAi&&disputeTypes.includes(type))return reply({received:true,processed:false,reconciliation_required:true},409);
   const table=isAi?'ai_agent_subscription_webhook_events':'marketplace_payment_webhook_events';
   // A marketplace transaction/refund keeps its identity even if JSON whitespace or key order changes.
   // Conflicting content under that identity is quarantined by the stored hash check.
@@ -60,8 +62,8 @@ Deno.serve(async req=>{
    stored=existing.data;
   }
   if(stored.processing_status==='processed')return reply({received:true,processed:true,duplicate:true});
-  if(aiRefund){
-   await sb.from(table).update({processing_status:'failed',error_message:'AI refund requires verified payment reversal reconciliation'}).eq('id',stored.id).neq('processing_status','processed');
+  if(aiReversal){
+   await sb.from(table).update({processing_status:'failed',error_message:'AI payment reversal requires verified operator reconciliation'}).eq('id',stored.id).neq('processing_status','processed');
    return reply({received:true,processed:false,reconciliation_required:true},409);
   }
   try{

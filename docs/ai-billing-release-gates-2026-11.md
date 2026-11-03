@@ -18,7 +18,7 @@ Production release is authorized by the owner only after all mandatory acceptanc
 
 ## Executed evidence
 
-- 49 local tests: lifecycle specifications, shipped webhook behavior, provider normalization, upgrade eligibility, refund/dispute normalization and shipped runtime credit behavior.
+- 57 local tests: lifecycle specifications, shipped webhook behavior, provider normalization, upgrade eligibility, refund/dispute normalization and shipped runtime credit behavior.
 - 17 disposable PostgreSQL assertions, including rollback, entitlement expiry, credit consumption/release, and function/table privilege checks.
 - Entire consolidated migration rerun against a temporarily reset billing subset inside a transaction; all 17 assertions passed and the outer transaction rolled back.
 - 13 deployed test-endpoint/provider checks passed.
@@ -32,12 +32,12 @@ These counts do not mean every W01–W16 case passed at every layer. See the acc
 ## Still required before merge or production deployment
 
 1. Provider-origin recurring renewal and failed-renewal acceptance, including paid invoice event ordering and historical invoice replay.
-2. Complete higher-plan replacement checkout/activation after verified expiry; scheduling alone is not complete upgrade acceptance.
+2. Replacement checkout/payment/activation now pass 9 deployed checks after an explicitly labelled local expiry simulation with old provider renewal confirmed stopped. This is actual TEST payment evidence, not a naturally elapsed billing month. Four SQL regression checks cover old receipt replay, overlapping late payments, one current subscription and cancellation of the replacement.
 3. Marketplace SQL and signed HTTP regression now pass (4 SQL and 8 HTTP checks); production compatibility remains required.
 4. Client and coach desktop/mobile billing checks and keyboard confirmations passed. Complete expired-session and approved-coach onboarding coverage.
 5. Final exact-commit GitHub checks and healthy Vercel preview with the patched dependency lockfile.
-6. Verify full production/test schema provenance, all required function/default/trigger/policy contracts, and production provider webhook configuration.
-7. Owner approved isolated refund-policy implementation/testing. The disabled policy now has payment-attributed lots, audited adjustments, provider-verifying operator endpoint, 7 SQL groups and a parallel consumption/refund check. Provider-origin refund/dispute tests, a verified final bank-win contract and production activation approval remain required. Historical unattributed credits require explicit review. Webhook refund events remain queued for operator review.
+6. Scoped production/test catalog comparison captured 128 production and 136 test tables. Copied missing policies and the production role/status guard into the isolated baseline. Missing function signatures and a different marketplace dispute constraint remain; this is not full schema parity. Production provider webhook configuration remains unverified.
+7. Owner approved isolated refund-policy implementation/testing. The disabled policy now has payment-attributed lots, audited adjustments, provider-verifying operator endpoint, 8 SQL groups and consumption/refund order checks. An actual TEST partial refund is processed; 4 deployed endpoint/authorization checks pass. The remaining refund is pending. Do not apply or reissue a pending refund. Provider-origin refund/dispute tests, a verified final bank-win contract and production activation approval remain required. Historical unattributed credits require explicit review. Refund/dispute webhooks remain queued for operator review.
 
 ## Release and incident sequence
 

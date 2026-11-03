@@ -1,5 +1,9 @@
 import {verifySubscriptionPayment} from './ai-billing-provider.ts';
-export function transactionReference(data:any){return String(data?.transaction?.reference??data?.reference??'').trim()}
+export function transactionReference(data:any){
+ const references=[data?.transaction?.reference,data?.transaction_reference,data?.reference].filter(x=>x!=null&&String(x).trim()).map(x=>String(x).trim());
+ if(new Set(references).size>1)throw new Error('Conflicting transaction references');
+ return references[0]??'';
+}
 export async function exactSubscription(sb:any,reference:string,code:string){
  let byReference:any=null,byCode:any=null;
  if(reference){

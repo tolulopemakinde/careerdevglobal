@@ -11,13 +11,15 @@ declare
  agent_id uuid; execution_id uuid; request_id uuid; reservation record; credit_key text;
 begin
  begin
-  select id into u1 from public.profiles where role='client' and status='active' limit 1;
-  select id into u2 from public.profiles where role='coach' and status='active' limit 1;
+  select p.id into u1 from public.profiles p where p.role='client' and p.status='active' and not exists(select 1 from public.ai_credit_ledger l where l.user_id=p.id and l.status in ('reserved','consumed')) limit 1;
+  select p.id into u2 from public.profiles p where p.role='coach' and p.status='active' and not exists(select 1 from public.ai_credit_ledger l where l.user_id=p.id and l.status in ('reserved','consumed')) limit 1;
   select id into op_user from public.profiles where role in ('admin','staff') and status='active' limit 1;
   perform pg_temp.billing_assert(u1 is not null and u2 is not null and op_user is not null,'isolated role fixtures exist');
   select * into plan from public.ai_agent_subscription_plans where active order by monthly_credits limit 1;
   select * into target from public.ai_agent_subscription_plans where active and monthly_credits>plan.monthly_credits and included_agents @> plan.included_agents order by monthly_credits limit 1;
   perform set_config('request.jwt.claims',jsonb_build_object('role','service_role','sub',op_user)::text,true);
+  -- Isolate fixture accounts from retained test subscriptions; outer fixture rollback restores them.
+  update public.ai_agent_subscriptions set status='expired' where user_id in (u1,u2);
   insert into public.ai_agent_subscriptions(id,user_id,plan_key,billing_interval,status,currency,amount,paystack_plan_code,paystack_subscription_code,paystack_customer_code,paystack_transaction_reference)
   values(s1,u1,plan.plan_key,'monthly','pending','USD',plan.monthly_price,'PLN_fixture','SUB_fixture_a','CUS_fixture_a','CDG-AI-fixture-a'),
         (s2,u2,plan.plan_key,'monthly','active','USD',plan.monthly_price,'PLN_fixture','SUB_fixture_b','CUS_fixture_b','CDG-AI-fixture-b');
