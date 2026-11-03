@@ -38,3 +38,18 @@ Record redacted provider event ID, event status, subscription status, paid-throu
 3. Ensure payment event ledger and AI credit grant are idempotent **within one transaction**, or separately demonstrate a safe exactly-once grant path.
 4. Confirm marketplace regressions, UI cancellation/upgrade paths, and build checks.
 5. Require explicit owner approval before production migration, Edge Function deployment, or UI activation.
+
+## 2026-11-03 infrastructure discovery — READ ONLY
+
+- Two Supabase projects were enumerated: production `careerdev-global` (`ufmhrmzumqkjvaezrmxf`) and separate `careerdevglobal-ai-test` (`yyevuwvtrktrzwuzeddo`). Both active. **Do not assume the latter is disposable.**
+- The test project already contains 6 AI subscriptions (1 active, 4 non_renewing, 1 pending) and 6 recorded webhook events. Do not delete or mutate these records.
+- Test project already has a more advanced `public.apply_ai_subscription_webhook_state(uuid)` SECURITY DEFINER function. Anonymous and authenticated roles have no EXECUTE privilege (verified read-only).
+- **Critical contract mismatch:** The existing test RPC requires `verification_source`, `verified_payment`, and a provider-verified Paystack payment record for successful charges; the PR #42 webhook currently inserts only `signature_verified`, event payload, and identifiers. The PR's review-only SQL proposal is less restrictive than the existing test RPC. Do not overwrite the test RPC with the proposal or deploy the current webhook unchanged.
+- The existing test RPC also references `ai_subscription_payments` and enforces amount/currency/plan/paid-period checks; the PR proposal lacks equivalent controls. Adopt the stronger verified-payment model after a complete contract audit, rather than downgrading protections.
+- Paystack test-secret presence and test-mode webhook routing have not been verified. Do not print or request raw secrets in chat.
+- No database write, Edge Function deployment, provider charge, or live webhook delivery was executed in this audit. W01–W16 remain pending integration execution; passing GitHub source tests do not count as sandbox acceptance.
+
+### Next safe work
+1. Inspect test RPC, payment ledger schema, Edge Function code, and repository branch contracts in full (read-only).
+2. Reconcile PR webhook with provider verification requirements and idempotent credit grant, using source-only changes in PR #42.
+3. Execute isolated tests only after establishing ownership of existing test records and test-only credentials; preserve all six subscriptions and six events.
