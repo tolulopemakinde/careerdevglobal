@@ -2,7 +2,7 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
 import {createSupabaseBrowserClient} from '../../../lib/supabase-browser';
-import {BillingPlan,eligibleUpgrade,planPrice} from '../../../lib/ai-billing-plans';
+import {BillingPlan,eligibleUpgrade,planPrice,selectAccountSubscription} from '../../../lib/ai-billing-plans';
 import './billing.css';
 type Subscription={id:string;plan_key:string;status:string;billing_interval:string;currency:string;amount:number;current_period_start:string|null;current_period_end:string|null;metadata:{scheduled_upgrade_plan_key?:string|null}};
 type Credit={monthly_allowance:number;credits_remaining:number;credits_consumed:number;credits_reserved:number;period_end:string};
@@ -32,9 +32,8 @@ export default function ManageAiSubscription(){
     db.from('ai_billing_release_config').select('self_service_enabled').eq('id',true).maybeSingle()
    ]);
    if(sub.error||available.error)throw new Error('Unable to load billing details. Please retry.');
-   const rows=(sub.data??[]) as Subscription[],current=rows.filter(row=>['active','attention','non_renewing','pending'].includes(row.status));
-   if(current.length>1)throw new Error('Multiple billing records require reconciliation. Contact support before making another payment.');
-   setSubscription(current[0]??rows[0]??null);setPlans(available.data as BillingPlan[]);
+   const rows=(sub.data??[]) as Subscription[];
+   setSubscription(selectAccountSubscription(rows));setPlans(available.data as BillingPlan[]);
    setCredits(credit.error?null:credit.data?.[0]??null);setHistory(payments.error?[]:payments.data??[]);
    setEnabled(!config.error&&config.data?.self_service_enabled===true&&!credit.error&&!payments.error);
   }catch(error){setLoadError(true);setEnabled(false);setMessage(error instanceof Error?error.message:'Unable to load billing details.')}
