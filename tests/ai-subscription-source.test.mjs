@@ -11,6 +11,7 @@ for(const [name,patch]of [['wrong amount',{amount:999}],['wrong currency',{curre
  test('reject '+name,()=>assert.throws(()=>normalize({...tx,...patch})));
 }
 test('shared customer and plan cannot establish invoice identity',()=>assert.throws(()=>normalize(tx,{...provider,most_recent_invoice:{...provider.most_recent_invoice,transaction:456}}),/invoice/));
+test('imprecise provider transaction IDs are rejected',()=>assert.throws(()=>normalize({...tx,id:Number.MAX_SAFE_INTEGER+1})));
 test('missing provider dates cannot activate entitlements',()=>assert.throws(()=>normalize(tx,{...provider,most_recent_invoice:{...provider.most_recent_invoice,period_end:null}})));
 test('cancellation validates customer and plan as well as subscription code',()=>{assert.doesNotThrow(()=>assertProviderSubscription(sub,provider));assert.throws(()=>assertProviderSubscription(sub,{...provider,customer:{customer_code:'CUS_b'}}));assert.throws(()=>assertProviderSubscription(sub,{...provider,plan:{plan_code:'PLN_b',currency:'USD'}}))});
 const current={plan_key:'a',name:'A',monthly_price:10,annual_price:100,monthly_price_ngn:10000,annual_price_ngn:100000,monthly_credits:10,included_agents:['one']};

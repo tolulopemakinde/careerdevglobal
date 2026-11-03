@@ -24,7 +24,7 @@ export function assertProviderSubscription(sub:any,provider:any){
 }
 export function normalizeVerifiedPayment(sub:any,transaction:any,provider:any,reference:string,mode:string){
   if(transaction?.status!=='success'||transaction.reference!==reference||transaction.domain!==mode)throw new Error('Successful transaction verification required');
-  if(!transaction.id||!Number.isSafeInteger(transaction.amount)||transaction.amount!==Math.round(Number(sub.amount)*100)||transaction.currency!==sub.currency)throw new Error('Payment amount or currency mismatch');
+  if(!transaction.id||(typeof transaction.id==='number'&&!Number.isSafeInteger(transaction.id))||!Number.isSafeInteger(transaction.amount)||transaction.amount!==Math.round(Number(sub.amount)*100)||transaction.currency!==sub.currency)throw new Error('Payment amount or currency mismatch');
   const customer=transaction.customer?.customer_code;
   if(!customer||provider.customer?.customer_code!==customer||(sub.paystack_customer_code&&sub.paystack_customer_code!==customer))throw new Error('Payment customer mismatch');
   if(providerPlanCode(provider.plan)!==sub.paystack_plan_code)throw new Error('Payment plan mismatch');

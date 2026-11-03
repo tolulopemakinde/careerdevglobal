@@ -21,7 +21,7 @@ No approved plan prices, credit costs, agent registry activation flags, governed
 
 | Layer | Actual result | Limit |
 |---|---|---|
-| Local automated behavior/specifications | 35 passed | External services replaced in local handler tests |
+| Local automated behavior/specifications | 49 passed on 3 November | External services replaced in local handler tests |
 | Disposable PostgreSQL | 17 assertions passed | Focused billing schema; not proof of full production schema parity |
 | Consolidated migration | Applied in transaction, 17 assertions passed, rolled back | Development schema was also iterated using execute_sql; no production migration applied |
 | Deployed endpoint/provider checks | 13 passed | Initial checkout only; no renewal charge in this group |
@@ -47,9 +47,9 @@ One paid-lifecycle assertion initially compared ISO timestamp strings with diffe
 | W08 late payment | SQL preserves terminal status | Provider-origin late delivery |
 | W09 stale date | SQL paid date never shortens | Provider-origin historical invoice replay |
 | W10 failure then renewal | SQL attention/success transitions | Actual provider failed and successful recurring renewal |
-| W11 cancellation during paid term | Real Paystack test disable, retained paid date/credits | Authenticated browser confirmation |
+| W11 cancellation during paid term | Real Paystack test disable; client and coach browser confirmation; retained paid date/credits | Provider-origin delivery |
 | W12 expiry | SQL denies credits and agent access | Browser expiry/session flow |
-| W13 marketplace collision | Shipped webhook local no-mutation test | Real marketplace state-sync ledger regression |
+| W13 marketplace collision | Local no-mutation test, 4 PostgreSQL assertions, 8 signed HTTP marketplace checks | Production schema compatibility |
 | W14 unmatched identity | SQL quarantine with no customer/plan fallback | Operator remediation of a real unmatched renewal |
 | W15 invalid dates | SQL rollback plus provider normalizer tests | Full signed malformed-payload matrix |
 | W16 upgrade | Real deferred scheduling; SQL no entitlement change/overlap | Replacement checkout and activation after expiry |
@@ -69,7 +69,13 @@ Cancellation verifies exact subscription/customer/plan/price against Paystack, c
 
 Upgrades use an explicit replacement after expiry. Old renewal stops now; paid access remains; the higher plan is not activated by scheduling. Shared provider plans are never edited.
 
-AI refunds are retained for verified operator handling. Automatic refund/reversal entitlement handling and historical provider-invoice retrieval require further implementation/testing before release.
+AI refund webhook events remain queued for operator review. A separate gated adjustment endpoint and payment-attributed credit lots were added on 3 November after owner approval for isolated implementation/testing. New verified receipts allocate monthly lots; historical attribution is never guessed. Privileged adjustments verify provider object/payment/currency/mode server-side. Full refunds revoke the funded lots, partial refunds preserve benefits and flag review, open disputes freeze lots, and final losses revoke them. SQL supports an explicitly verified win; the provider adapter deliberately sends ambiguous bank outcomes for review rather than treating a merchant's declined response as proof of a win. Provider-origin refund/dispute acceptance and a final bank-win evidence contract remain required before activation.
+
+Seven rollback-only SQL policy groups passed, including standalone and cumulative full refund, partial refund, duplicate identity, open/won/lost disputes, stale opens, history preservation and service-only privileges. One parallel real-database consumption/refund test committed consumption first, then revoked unused credits; the historical consumed row remained intact. This does not establish all race permutations. The 17 existing billing assertions also passed after the policy migration. The operator endpoint is deployed only in the isolated project as v1. The refund-policy and billing gates were verified false afterward.
+
+Authenticated client and coach browser checks on 1 November passed test checkout, verified payment, correct paid period/credits, renewal cancellation or deferred scheduling, and desktop/mobile layouts. Full approved-coach onboarding and expired-session testing remain separate gaps. Screenshots are retained in the task outputs directory.
+
+The marketplace regression exposed incompatible intent statuses in the existing RPC. Migration `20261101151009_fix_marketplace_intent_webhook_statuses.sql` changes only those mappings to funded/reversed and preserves service-only invocation. The signed HTTP retest also rejects conflicting payloads under one provider identity with 409 and no duplicate ledger receipt.
 
 ## Build/dependency findings
 

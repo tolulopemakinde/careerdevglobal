@@ -37,7 +37,10 @@ Deno.serve(async req=>{
   // Refunds are quarantined for verified operator reconciliation; never route AI refunds into marketplace.
   const aiRefund=isAi&&type==='refund.processed';
   const table=isAi?'ai_agent_subscription_webhook_events':'marketplace_payment_webhook_events';
-  const eventIdentity=type+':'+hash;
+  // A marketplace transaction/refund keeps its identity even if JSON whitespace or key order changes.
+  // Conflicting content under that identity is quarantined by the stored hash check.
+  const providerId=['string','number'].includes(typeof data.id)?String(data.id):'';
+  const eventIdentity=type+':'+(isAi?hash:(providerId||reference||hash));
   if(!isAi){
    // Recognize historical marketplace events without changing their ledger behavior.
    const legacy=String(data.id??data.reference??'');
@@ -52,7 +55,8 @@ Deno.serve(async req=>{
   let stored=insert.data;
   if(insert.error){
    const existing=await sb.from(table).select('*').eq('provider_key','paystack').eq('provider_event_reference',eventIdentity).maybeSingle();
-   if(existing.error||!existing.data||existing.data.payload_hash!==hash)throw new Error('Event could not be recorded');
+   if(existing.error||!existing.data)throw new Error('Event could not be recorded');
+   if(existing.data.payload_hash!==hash)return reply({error:'Conflicting event content; reconciliation required'},409);
    stored=existing.data;
   }
   if(stored.processing_status==='processed')return reply({received:true,processed:true,duplicate:true});

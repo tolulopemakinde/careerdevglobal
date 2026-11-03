@@ -18,7 +18,7 @@ Production release is authorized by the owner only after all mandatory acceptanc
 
 ## Executed evidence
 
-- 35 local tests: lifecycle specifications, shipped webhook behavior, provider normalization, upgrade eligibility and shipped runtime credit behavior.
+- 49 local tests: lifecycle specifications, shipped webhook behavior, provider normalization, upgrade eligibility, refund/dispute normalization and shipped runtime credit behavior.
 - 17 disposable PostgreSQL assertions, including rollback, entitlement expiry, credit consumption/release, and function/table privilege checks.
 - Entire consolidated migration rerun against a temporarily reset billing subset inside a transaction; all 17 assertions passed and the outer transaction rolled back.
 - 13 deployed test-endpoint/provider checks passed.
@@ -33,11 +33,11 @@ These counts do not mean every W01–W16 case passed at every layer. See the acc
 
 1. Provider-origin recurring renewal and failed-renewal acceptance, including paid invoice event ordering and historical invoice replay.
 2. Complete higher-plan replacement checkout/activation after verified expiry; scheduling alone is not complete upgrade acceptance.
-3. Signed marketplace payment/refund regression through the real database, with state-sync ledger assertions.
-4. Authenticated client and coach UI testing on desktop/mobile, keyboard confirmations, loading/errors and expired sessions.
+3. Marketplace SQL and signed HTTP regression now pass (4 SQL and 8 HTTP checks); production compatibility remains required.
+4. Client and coach desktop/mobile billing checks and keyboard confirmations passed. Complete expired-session and approved-coach onboarding coverage.
 5. Final exact-commit GitHub checks and healthy Vercel preview with the patched dependency lockfile.
 6. Verify full production/test schema provenance, all required function/default/trigger/policy contracts, and production provider webhook configuration.
-7. AI refund/reversal reconciliation is quarantined and requires a verified reversal policy; automatic paid entitlement reversal is not implemented.
+7. Owner approved isolated refund-policy implementation/testing. The disabled policy now has payment-attributed lots, audited adjustments, provider-verifying operator endpoint, 7 SQL groups and a parallel consumption/refund check. Provider-origin refund/dispute tests, a verified final bank-win contract and production activation approval remain required. Historical unattributed credits require explicit review. Webhook refund events remain queued for operator review.
 
 ## Release and incident sequence
 
