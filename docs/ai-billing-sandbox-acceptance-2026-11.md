@@ -101,3 +101,9 @@ Security: All three test-project RPCs `apply_ai_subscription_webhook_state`, `re
 **Implication:** Historical passing test runs certify deployed snapshots, not the exact current PR #42 bundle. Before sign-off, deploy coherent bundles from one reviewed commit **to the test project only**, verify bundled source parity, and rerun critical provider, paid lifecycle, concurrency, marketplace, and replay tests. No production deployment authorized.
 
 The comparison did not execute Edge Functions, modify database rows, or change Paystack configuration.
+
+## 2026-11-03 authorized execution continuation
+
+The later execution fetched `bd5a47c`, corrected sandbox bundle drift, and verified source after deployment. Final sandbox versions: webhook 9, verifier 5, reconcile 4, checkout 5, management 4; unchanged adjustment 1 and runtime 2. Payment access reporting and the marketplace-only column contract were corrected with failing-then-passing behavioral regressions. Final run `billing-source-parity-retest-20261103-d` passed 41 checks with one blocked provider-origin delivery check. Both billing gates are disabled.
+
+See [the production-readiness report](ai-billing-production-readiness-2026-11.md) and [bundle/source hashes](ai-billing-sandbox-source-parity-2026-11.json). They supersede earlier inventory and pending-refund observations above, preserve historical failures and document the SQL fixture containment incident. Production remains unchanged; PR #42 stays draft and unmerged.

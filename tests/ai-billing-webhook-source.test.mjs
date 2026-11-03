@@ -14,7 +14,7 @@ function boot({sub=null,marketplace=null,rpcResult={processed:true},apply=async(
  const sb={
   from(table){const query={select(){return query},eq(){return query},neq(){return query},update(){return query},
    async maybeSingle(){return {data:table==='marketplace_transactions'?marketplace:null,error:null}},
-   insert(row){rows.push({table,row});query.single=async()=>({data:{...row,id:'fixture-event'},error:null});return query},
+   insert(row){rows.push({table,row});query.single=async()=>table==='marketplace_payment_webhook_events'&&Object.hasOwn(row,'verification_source')?{data:null,error:{message:'Column verification_source does not exist in marketplace event schema'}}:{data:{...row,id:'fixture-event'},error:null};return query},
    async then(resolve){resolve({error:null})}
   };return query},
   async rpc(name,args){calls.push({name,args});return {data:rpcResult,error:null}}

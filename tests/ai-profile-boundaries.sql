@@ -1,4 +1,5 @@
--- Isolated project only. Run inside BEGIN/ROLLBACK.
+-- Isolated project only. This script rolls back all fixture writes.
+begin;
 create function pg_temp.test_ai_profile_boundary() returns jsonb language plpgsql as $$
 declare u uuid; blocked boolean;
 begin
@@ -11,3 +12,4 @@ begin
  return '{"role_self_promotion":"blocked","own_status_mutation":"blocked"}'::jsonb;
 end;$$;
 select pg_temp.test_ai_profile_boundary() as results;
+rollback;

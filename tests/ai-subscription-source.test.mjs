@@ -3,6 +3,23 @@ import assert from 'node:assert/strict';
 import {normalizeVerifiedPayment,assertProviderSubscription} from '../supabase/functions/_shared/ai-billing-provider.ts';
 import {eligibleUpgrade,selectAccountSubscription} from '../lib/ai-billing-plans.ts';
 import {transactionReference} from '../supabase/functions/_shared/ai-billing-reconcile.ts';
+import {readFileSync} from 'node:fs';
+import {stripTypeScriptTypes} from 'node:module';
+import vm from 'node:vm';
+const verifierSource=stripTypeScriptTypes(readFileSync(new URL('../supabase/functions/careerdev-ai-subscription-verify/index.ts',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,''));
+function verifier({paymentAccess=true,accessError=null,start=new Date(Date.now()-60000).toISOString()}={}){
+ let handler;
+ const subscription={id:'subscription',status:'active',plan_key:'starter',current_period_start:start,current_period_end:new Date(Date.now()+86400000).toISOString()};
+ const client={auth:{getUser:async()=>({data:{user:{id:'owner'}},error:null})},from(table){
+  const q={select(){return q},eq(){return q},insert(){return q},async maybeSingle(){return {data:table==='profiles'?{role:'client',status:'active'}:subscription,error:null}},async single(){return {data:table==='ai_agent_subscription_webhook_events'?{id:'event'}:subscription,error:null}}};return q;
+ },async rpc(name){return name==='ai_payment_access_allowed'?{data:paymentAccess,error:accessError}:{data:{processed:true},error:null}}};
+ vm.runInNewContext(verifierSource,{Deno:{env:{get:()=> 'fixture-config'},serve:fn=>handler=fn},createClient:()=>client,verifySubscriptionPayment:async()=>({subscription_code:'SUB_fixture'}),Request,Response,TextEncoder,URL,crypto:globalThis.crypto});
+ return ()=>handler(new Request('https://fixture.test/verify',{method:'POST',headers:{Authorization:'Bearer fixture-owner'},body:JSON.stringify({reference:'CDG-AI-'+'a'.repeat(32)})}));
+}
+test('verifier separates successful payment from revoked or frozen access',async()=>{const r=await verifier({paymentAccess:false})();const body=await r.json();assert.equal(r.status,200);assert.equal(body.payment_verified,true);assert.equal(body.access_active,false)});
+test('verifier fails closed when payment access cannot be checked',async()=>{const r=await verifier({accessError:{message:'unavailable'}})();assert.equal(r.status,409)});
+test('verifier does not report access before the verified paid term starts',async()=>{const r=await verifier({start:new Date(Date.now()+60000).toISOString()})();assert.equal((await r.json()).access_active,false)});
+test('verifier reports access for a currently valid permitted payment',async()=>{const r=await verifier()();assert.equal((await r.json()).access_active,true)});
 test('actual refund transaction_reference correlates to exact payment',()=>assert.equal(transactionReference({transaction_reference:'CDG-AI-refund'}),'CDG-AI-refund'));
 test('conflicting webhook reference fields fail closed',()=>assert.throws(()=>transactionReference({reference:'first',transaction_reference:'second'}),/Conflicting/));
 const sub={id:'a',amount:10,currency:'USD',paystack_plan_code:'PLN_a',paystack_subscription_code:'SUB_a',paystack_customer_code:'CUS_a'};

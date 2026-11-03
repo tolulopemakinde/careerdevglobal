@@ -29,8 +29,10 @@ Deno.serve(async req=>{
   if(insert.error){const found=await sb.from('ai_agent_subscription_webhook_events').select('id,payload_hash').eq('provider_key','paystack').eq('provider_event_reference',identity).single();if(found.error||found.data?.payload_hash!==hash)throw new Error('Verification identity conflict');id=found.data.id}
   const {data:applied,error:applyError}=await sb.rpc('apply_ai_subscription_webhook_state',{p_event_id:id});
   if(applyError||!applied?.processed)return reply({error:'Payment received; reconciliation is pending'},409);
-  const {data:latest,error:latestError}=await sb.from('ai_agent_subscriptions').select('status,current_period_end,plan_key').eq('id',sub.id).eq('user_id',user.id).single();
+  const {data:latest,error:latestError}=await sb.from('ai_agent_subscriptions').select('status,current_period_start,current_period_end,plan_key').eq('id',sub.id).eq('user_id',user.id).single();
   if(latestError)throw new Error('Account refresh failed');
-  return reply({payment_verified:true,status:latest.status,plan_key:latest.plan_key,current_period_end:latest.current_period_end,access_active:['active','non_renewing','attention'].includes(latest.status)&&Date.parse(latest.current_period_end)>Date.now()});
+  const {data:paymentAccess,error:accessError}=await client.rpc('ai_payment_access_allowed',{p_subscription_id:sub.id});
+  if(accessError)throw new Error('Payment access refresh failed');
+  return reply({payment_verified:true,status:latest.status,plan_key:latest.plan_key,current_period_end:latest.current_period_end,access_active:paymentAccess===true&&['active','non_renewing','attention'].includes(latest.status)&&Date.parse(latest.current_period_start)<=Date.now()&&Date.parse(latest.current_period_end)>Date.now()});
  }catch{return reply({error:'Payment verification is pending provider reconciliation. Do not pay again.'},409)}
 });
