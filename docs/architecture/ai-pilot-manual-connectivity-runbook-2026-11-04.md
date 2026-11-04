@@ -8,12 +8,22 @@
 - Isolated Supabase project `yyevuwvtrktrzwuzeddo` contains **21** auth accounts; an aggregate inspection found **zero** with explicit `raw_app_meta_data` `purpose` in `synthetic/test/pilot` or `is_test=true`. Missing markers do not prove accounts are real, and markers alone would not prove they are safe test fixtures. Do not process these accounts in live AI tests until the owner independently verifies them.
 - TEST `reserve_ai_credits` uses the patched execution/request/agent idempotency binding (MD5 `b9c0ffb6432e9f9da7d8010845df0e77`). Both billing release gates remain OFF. This does not establish production credit-settlement parity.
 
+## Verified vendor limits — distinguish budget alerts from enforced stops (4 November 2026)
+
+**OpenAI:** Project monthly spend limits can be alert-only. In API platform project **Limits**, configure an owner-approved budget and turn on **Enforce a hard limit**; an alert alone does not block usage. Enforcement can lag behind recorded usage, so cap overruns remain possible. Also restrict model access and rate limits. Reference: https://help.openai.com/en/articles/9186755-managing-projects-in-the-api-platform
+
+**Groq:** Paid-tier monthly spending limits are **organization-wide**, shared across all Groq projects and API keys, **not** separate per-key limits. They require paid-tier and organization-owner permissions. Go to **Settings → Billing → Limits**, add an organization monthly cap and alerts. Groq states usage is tracked with a **10–15 minute delay**, which can permit slight overshoot. Reference: https://console.groq.com/docs/spend-limits
+
+**Groq project isolation:** Use a separate *pilot project* with its own keys, limited model permissions and restrictive request rate limits, but these per-project rate limits are **not monetary hard caps**. The pilot should also use a separate Groq **organization from production** so a shared organization-wide cap cannot accidentally block the production workload. If that isolation is unavailable, leave this conservative preflight on **HOLD** instead of asserting it. Reference: https://console.groq.com/docs/projects
+
+This is a guard against accidental use. The environment attestations do **not** verify vendor settings automatically and are not evidence that such controls are active. Capture owner-reviewed settings/evidence privately, with any tokens, account IDs, emails and billing identifiers redacted.
+
 ## Stage A — read-only OpenAI/Groq model catalogue (no inference)
 
 This stage **may** be run manually only after the owner independently documents all of these conditions:
 
 1. Two separate provider-issued pilot-only credentials are created and stored securely, distinct from production and generic Preview keys. Do not paste key material into commits, chat, tickets or CI logs.
-2. The account/project owners independently verify restrictive provider-side spending safeguards for each credential and acceptable potential request charges. If a provider cannot provide a suitable spend limit, use a segregated limited-balance test account or do not proceed.
+2. Verify the **OpenAI project** limit has **Enforce a hard limit** enabled, not just an alert, and the **Groq pilot organization** has its own paid-tier monthly monetary limit (not just per-project RPM/TPM rate limits). Confirm the Groq pilot **project and organization are separate from production**. These vendor controls can lag, so a spending cap is not a guarantee against minor overages. If these controls cannot be independently confirmed, do not proceed.
 3. The owner explicitly approves the bounded catalogue-only trial and selected model IDs. This is **not** approval for paid inference or deployment.
 4. A local, isolated manual shell is used; never enable it in Vercel, GitHub Actions or `NODE_ENV=production`.
 
@@ -24,6 +34,10 @@ CAREERDEV_AI_MODEL_PREFLIGHT=true
 CAREERDEV_ISOLATED_TEST_PROJECT_REF=yyevuwvtrktrzwuzeddo
 CAREERDEV_PILOT_OWNER_APPROVED=true
 CAREERDEV_PILOT_BUDGET_CAP_VERIFIED=true
+CAREERDEV_OPENAI_ENFORCED_HARD_LIMIT_VERIFIED=true
+CAREERDEV_GROQ_ORG_SPEND_LIMIT_VERIFIED=true
+CAREERDEV_GROQ_PILOT_PROJECT_ISOLATED=true
+CAREERDEV_GROQ_PILOT_ORG_SEPARATE_FROM_PRODUCTION=true
 OPENAI_PILOT_API_KEY=<dedicated OpenAI test-only secret>
 GROQ_PILOT_API_KEY=<dedicated Groq test-only secret>
 OPENAI_PILOT_MODEL=<owner-approved model ID>
