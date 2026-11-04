@@ -11,6 +11,7 @@ export function forbiddenAiPilotChanges(paths) {
   const allowed = p => p===".github/workflows/phase1-validation.yml" ||
     p==="package.json" || p==="package-lock.json" ||
     p==="scripts/run-ai-model-connectivity.mjs" ||
+    p==="scripts/report-ai-pilot-readiness.mjs" ||
     p==="scripts/validate-ai-pilot-scope.mjs" ||
     p.startsWith("scripts/test-ai-") ||
     p.startsWith("lib/ai/pilot/") ||
