@@ -134,3 +134,16 @@ Added `lib/ai/pilot/agent-capability-gate.mjs` and `scripts/test-ai-agent-capabi
 ### Release checklist
 
 Current JSON evidence ledger: `docs/architecture/ai-provider-release-evidence-2026-11-04.json`. All 11 gates remain **unverified**. Passing the document's unit tests only proves fail-closed status evaluation, **not** readiness or live provider accessibility.
+
+## Synthetic account provenance check — 2026-11-04 (read-only aggregates)
+
+An aggregate-only inspection of the isolated Supabase AI test project (`yyevuwvtrktrzwuzeddo`) returned **21** records in `auth.users`, **11** records in `ai_agent_subscriptions`, **3** records in `ai_credit_ledger`, and **0** records in each of `ai_agent_execution_requests` and `ai_usage_events`. No individual user rows, names, email addresses, personal profiles, payment information or subscription details were retrieved.
+
+**These counts do not prove whether the accounts are synthetic.** Before any live inference or billing sandbox exercise, the owner must verify the origin of those accounts and confirm that the test environment has no copied production client data and no live provider/payment credentials. A read-only account-count query does not grant permission to reuse those records for test inference.
+
+## SDK retry elimination and transport verification — 2026-11-04
+
+- Vercel AI SDK `generateText` defaults to two automatic retries. The isolated adapter now sets `maxRetries:0` for each provider request so that retries are controlled exclusively by the application's one-primary/one-eligible-fallback policy. See https://ai-sdk.dev/docs/reference/ai-sdk-core/generate-text.
+- Added no-network integration tests that pass fake HTTP `Response` objects through **actual AI SDK provider constructors and `generateText`**, including OpenAI Responses success, Groq Chat Completions success, HTTP 503, HTTP 429 quota exhaustion, and full adapter routing from OpenAI to Groq. No real API credentials or live network are used.
+- GitHub Actions run [41806035860](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41806035860) passed **82 tests, 0 failures**, typecheck, source-secret audit, existing security/boundary checks, and application build for commit `7d170d5244dff39823b08d3ed7e7419d6a9ac645`.
+- This does **not** establish live API model eligibility, AI-quality parity, costs, or safe production credit billing. The release decision remains **HOLD**.
