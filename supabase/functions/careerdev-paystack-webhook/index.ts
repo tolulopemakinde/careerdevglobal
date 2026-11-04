@@ -24,12 +24,12 @@ async function ai(sb:any,event:any,type:string,eref:string,ref:string,hash:strin
  const u:any={updated_at:new Date().toISOString(),metadata:{...(sub.metadata??{}),last_webhook_event:type,last_webhook_event_reference:eref}};
  if(sc)u.paystack_subscription_code=sc;if(cc)u.paystack_customer_code=cc;
  const np=d?.next_payment_date??d?.subscription?.next_payment_date??null, paid=d?.paid_at??null;
- if(type==="subscription.create"){if(sub.status!=="non_renewing"&&sub.status!=="cancelled")u.status="active";if(np)u.current_period_end=new Date(np).toISOString()}
- else if(type==="charge.success"){if(sub.status!=="non_renewing"&&sub.status!=="cancelled")u.status="active";if(paid)u.current_period_start=new Date(paid).toISOString();if(np)u.current_period_end=new Date(np).toISOString()}
- else if(type==="invoice.payment_failed"){if(sub.status!=="non_renewing"&&sub.status!=="cancelled")u.status="attention"}
+ if(type==="subscription.create"){if(sub.status!=="non_renewing"&&sub.status!=="canceled")u.status="active";if(np)u.current_period_end=new Date(np).toISOString()}
+ else if(type==="charge.success"){if(sub.status!=="non_renewing"&&sub.status!=="canceled")u.status="active";if(paid)u.current_period_start=new Date(paid).toISOString();if(np)u.current_period_end=new Date(np).toISOString()}
+ else if(type==="invoice.payment_failed"){if(sub.status!=="non_renewing"&&sub.status!=="canceled")u.status="attention"}
  else if(type==="subscription.not_renew"){u.status="non_renewing"}
- else if(type==="subscription.disable"){u.status=sub.current_period_end&&new Date(sub.current_period_end)>new Date()?"non_renewing":"cancelled"}
- else if(type==="invoice.update"){const st=String(d?.status??"").toLowerCase();if((st==="paid"||st==="success")&&sub.status!=="non_renewing"&&sub.status!=="cancelled")u.status="active";if(st==="failed"&&sub.status!=="non_renewing"&&sub.status!=="cancelled")u.status="attention"}
+ else if(type==="subscription.disable"){u.status=sub.current_period_end&&new Date(sub.current_period_end)>new Date()?"non_renewing":"canceled"}
+ else if(type==="invoice.update"){const st=String(d?.status??"").toLowerCase();if((st==="paid"||st==="success")&&sub.status!=="non_renewing"&&sub.status!=="canceled")u.status="active";if(st==="failed"&&sub.status!=="non_renewing"&&sub.status!=="canceled")u.status="attention"}
  const up=await sb.from("ai_agent_subscriptions").update(u).eq("id",sub.id);if(up.error){await sb.from("ai_agent_subscription_webhook_events").update({processing_status:"failed",error_message:up.error.message}).eq("id",ins.data.id);throw new Error("AI subscription state could not be updated")}
  await sb.from("ai_agent_subscription_webhook_events").update({processing_status:"processed",processed_at:new Date().toISOString()}).eq("id",ins.data.id);
  return {processed:true,ai_subscription:true,webhook_event_id:ins.data.id,subscription_id:sub.id,event_type:type}
