@@ -10,6 +10,7 @@ test("allows only draft AI adapter, docs, tests and package lockfile",()=>{
    "docs/architecture/approved-high-priority-ai-integrations-2026-11-04.md",
    "examples/ai-pilot/sdk-executor.example.mjs",
    "scripts/run-ai-model-connectivity.mjs",
+   "scripts/report-ai-pilot-readiness.mjs",
    "scripts/validate-ai-pilot-scope.mjs",
  ];
  assert.deepEqual(forbiddenAiPilotChanges(paths),[]);
