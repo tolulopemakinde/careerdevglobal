@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import {spawnSync} from "node:child_process";
 import {assessManualAiPilotPreflight} from "../lib/ai/pilot/manual-preflight-policy.mjs";
 
 const configured=()=>({
@@ -87,4 +88,18 @@ test("cannot infer the exact pilot secret from report in any case",()=>{
 test("unsupported stage and absent env are rejected",()=>{
  assert.equal(assessManualAiPilotPreflight(null).allowed,false);
  assert.equal(assessManualAiPilotPreflight(configured(),"production").allowed,false);
+});
+
+test("manual model-catalogue command sends zero requests when run in CI even with fake attestations",()=>{
+ const env={...process.env,...configured(),CI:"true"};
+ const r=spawnSync(process.execPath,[new URL("./run-ai-model-connectivity.mjs",import.meta.url).pathname],{
+  env,encoding:"utf8",timeout:6000,
+ });
+ assert.equal(r.status,2);
+ const report=JSON.parse(r.stdout.trim());
+ assert.equal(report.status,"HOLD");
+ assert.equal(report.requestsSent,0);
+ assert.equal(report.productionAuthorized,false);
+ assert.ok(report.blockers.includes("AUTOMATED_OR_PRODUCTION_ENVIRONMENT_BLOCKED"));
+ assert.equal(JSON.stringify(report).includes("unit-only"),false);
 });
