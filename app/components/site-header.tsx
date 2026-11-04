@@ -1,13 +1,50 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { createSupabaseBrowserClient } from '../../lib/supabase-browser';
 
 export default function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const [logoutError, setLogoutError] = useState('');
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const closeMenu = () => setMenuOpen(false);
+
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (active) setSignedIn(Boolean(data.session));
+    }).catch(() => {
+      if (active) setSignedIn(false);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (active) setSignedIn(Boolean(session));
+    });
+    return () => {
+      active = false;
+      listener.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  const handleLogout = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    setLogoutError('');
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      closeMenu();
+      window.location.assign('/');
+    } catch {
+      setLogoutError('Unable to log out. Please try again.');
+      setSigningOut(false);
+    }
+  };
+
   return (
-    <header className={`site-header${menuOpen ? " mobile-menu-open" : ""}`}>
+    <header className={`site-header${menuOpen ? ' mobile-menu-open' : ''}`}>
       <div className="container nav-wrap">
         <a className="brand" href="/" aria-label="CareerDev Global home" onClick={closeMenu}>
           <Image className="site-brand-logo" src="/S2.svg" alt="CareerDev Global — Unleashing Your Potential" width={12618} height={4258} priority sizes="(max-width: 420px) 190px, (max-width: 700px) 210px, (max-width: 1100px) 250px, 300px" />
@@ -16,7 +53,13 @@ export default function SiteHeader() {
           <span className="mobile-menu-icon" aria-hidden="true">☰</span>
         </button>
         <nav id="main-navigation" className={menuOpen ? 'nav-open' : ''} aria-label="Main navigation">
-          <a href="/#services" onClick={closeMenu}>Services</a><a href="/#coaching" onClick={closeMenu}>Coaching</a><a href="/pricing" onClick={closeMenu}>Pricing</a><a href="/blog" onClick={closeMenu}>Blog</a><a href="/#about" onClick={closeMenu}>About</a><a className="nav-cta" href="/account" onClick={closeMenu}>Get Started</a>
+          <a href="/#services" onClick={closeMenu}>Services</a><a href="/#coaching" onClick={closeMenu}>Coaching</a><a href="/pricing" onClick={closeMenu}>Pricing</a><a href="/blog" onClick={closeMenu}>Blog</a><a href="/#about" onClick={closeMenu}>About</a><a className="nav-cta" href="/account" onClick={closeMenu}>{signedIn ? 'My Account' : 'Get Started'}</a>
+          {signedIn && (
+            <button type="button" className="nav-logout" onClick={handleLogout} disabled={signingOut} aria-label="Log out of CareerDev Global">
+              {signingOut ? 'Logging out…' : 'Log out'}
+            </button>
+          )}
+          {logoutError && <span role="alert" className="nav-logout-error">{logoutError}</span>}
         </nav>
       </div>
     </header>
