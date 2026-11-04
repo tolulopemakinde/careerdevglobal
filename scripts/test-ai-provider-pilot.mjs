@@ -112,12 +112,61 @@ test("both provider failures return sanitized error", async () => {
   assert.equal(calls, 2);
 });
 
-test("transient classifier supports only known failure states", () => {
-  assert.equal(isTransientProviderError({status:429}), true);
-  assert.equal(isTransientProviderError({name:"AbortError"}), true);
+test("transient classifier requires verified retryable signals", () => {
+  assert.equal(isTransientProviderError({status:429}), false);
+  assert.equal(isTransientProviderError({status:429,error:{code:"rate_limit_exceeded"}}), true);
+  assert.equal(isTransientProviderError({status:429,headers:{"retry-after":"3"}}), true);
+  assert.equal(isTransientProviderError({status:429,responseHeaders:new Headers({"retry-after":"2"})}), true);
+  assert.equal(isTransientProviderError({name:"AbortError",status:503}), false);
+  assert.equal(isTransientProviderError({name:"TimeoutError"}), true);
   assert.equal(isTransientProviderError({code:"ETIMEDOUT"}), true);
   assert.equal(isTransientProviderError({status:401}), false);
   assert.equal(isTransientProviderError(new Error("unknown")), false);
+});
+
+test("account credit exhaustion and spend limits never trigger Groq", async () => {
+  const fatalCodes=[
+    "insufficient_quota", "credit_balance_exhausted", "organization_spend_limit_exceeded",
+    "project_spend_limit_exceeded", "organization_usage_limit_exceeded",
+    "billing_hard_limit_reached",
+  ];
+  for (const code of fatalCodes) {
+    let calls=0;
+    await assert.rejects(() => runSyntheticProviderPilot(base({
+      invoke: async () => {
+        calls++;
+        throw Object.assign(new Error("untrusted sensitive text"), {
+          status:429, error:{code}, headers:{"retry-after":"1"},
+        });
+      },
+    })), e => e instanceof PilotProviderError);
+    assert.equal(calls,1,"quota failure may not consume second provider call: "+code);
+  }
+});
+
+test("nested AI SDK quota body blocks fallback even when error status is 503", async () => {
+  let calls=0;
+  await assert.rejects(() => runSyntheticProviderPilot(base({
+    invoke: async () => {
+      calls++;
+      throw Object.assign(new Error("API failed"), {
+        statusCode:503,
+        responseBody:JSON.stringify({error:{code:"insufficient_quota"}}),
+      });
+    },
+  })), e=>e.message==="PILOT_PROVIDER_FAILED");
+  assert.equal(calls,1);
+});
+
+test("user-initiated cancellation does not reissue a paid provider request", async () => {
+  let calls=0;
+  await assert.rejects(() => runSyntheticProviderPilot(base({
+    invoke: async () => {
+      calls++;
+      throw Object.assign(new Error("cancelled by caller"),{name:"AbortError",status:503});
+    },
+  })), e=>e instanceof PilotProviderError);
+  assert.equal(calls,1);
 });
 
 test("failed metrics writer never returns unrecorded output", async () => {
