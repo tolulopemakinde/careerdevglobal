@@ -21,17 +21,20 @@
     "test:ai-pilot": "node --test scripts/test-ai-provider-pilot.mjs scripts/test-ai-research-pilot.mjs"
   },
   "dependencies": {
+    "@ai-sdk/groq": "4.0.76",
+    "@ai-sdk/openai": "4.0.108",
     "@sentry/nextjs": "10.75.2",
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.117.3",
+    "ai": "7.0.162",
     "next": "16.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "typescript": "7.0.2",
     "@types/node": "26.6.5",
     "@types/react": "19.3.0",
-    "@types/react-dom": "19.3.0"
+    "@types/react-dom": "19.3.0",
+    "typescript": "7.0.2"
   }
 }
