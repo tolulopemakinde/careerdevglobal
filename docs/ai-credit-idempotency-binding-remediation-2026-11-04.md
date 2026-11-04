@@ -1,5 +1,13 @@
 # CareerDev Global — AI-credit idempotency binding remediation (2026-11-04)
 
+## Current isolated execution update
+
+The additive CLI scaffold20261104122023 is now completed from the authoritative deployed reserve definition and applied **only to the approved isolated TEST project**, history20261104123708. The task's tagged pending nonpayment fixture was verified to have no provider customer/subscription, receipts, credits or billing operation. The actual authenticated SQL-role test reproduced cross-execution reservation reuse before the fix, passed seven cases with candidate DDL inside a rollback transaction, and passed seven cases after the additive migration. Same execution/request remains idempotent; different owned execution/request is denied; one original reservation, exclusive runtime claim and duplicate settlement safety are preserved. All fixture changes roll back; no AI provider call or real payment is involved. The17-assertion lifecycle regression passes too.
+
+Definition hashb9c0ffb6432e9f9da7d8010845df0e77 and unchanged ACL were fetched after deployment. Function source drift is rejected by the migration. Existing payment-access, ownership, advisory-lock, expiry and search-path protections remain. The final local suite includes102 passes. This is verified TEST deployment, not production approval or a full production-shaped migration rehearsal. See [current execution report](ai-billing-webhook-reliability-execution-2026-11-04.md), [database regression](../tests/ai-credit-idempotency-binding-database.sql) and [fresh evidence](ai-billing-webhook-reliability-evidence-2026-11-04.json).
+
+## Historical source-only report — superseded by the execution update above
+
 **Location:** Draft [PR #42](https://github.com/tolulopemakinde/careerdevglobal/pull/42), branch `fix/ai-billing-lifecycle-safety-2026-11`.  
 **Status:** SQL **source remediation implemented** in the two existing draft migrations. **NOT** deployed to Supabase test or production. Runtime acceptance remains blocked.
 

@@ -8,6 +8,17 @@ const marketplaceTypes=['charge.success','charge.failed','refund.processed'];
 const disputeTypes=['charge.dispute.create','charge.dispute.remind','charge.dispute.resolve'];
 function hex(bytes:ArrayBuffer){return Array.from(new Uint8Array(bytes),b=>b.toString(16).padStart(2,'0')).join('')}
 function same(a:string,b:string){if(a.length!==b.length)return false;let difference=0;for(let i=0;i<a.length;i++)difference|=a.charCodeAt(i)^b.charCodeAt(i);return difference===0}
+// Transport acceptance is independent of financial settlement. Confirm quarantine
+// persistence before acknowledging it, and never downgrade a concurrent settlement.
+async function quarantine(sb:any,table:string,id:string,status:string,reason:string){
+ const updated=await sb.from(table).update({processing_status:status,error_message:reason}).eq('id',id).neq('processing_status','processed').select('id,processing_status').maybeSingle();
+ if(updated.error)throw new Error('Unable to retain event for review');
+ let row=updated.data;
+ if(!row){const current=await sb.from(table).select('id,processing_status').eq('id',id).single();if(current.error)throw new Error('Quarantine readback unavailable');row=current.data}
+ if(row?.processing_status==='processed')return reply({received:true,processed:true,duplicate:true});
+ if(!row||row.processing_status!==status)throw new Error('Quarantine persistence not confirmed');
+ return reply({received:true,processed:false,reconciliation_required:true});
+}
 Deno.serve(async req=>{
  if(req.method!=='POST')return reply({error:'Method not allowed'},405);
  const url=Deno.env.get('SUPABASE_URL')!,service=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')??(()=>{try{return JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS')||'{}').default}catch{return undefined}})(),secret=Deno.env.get('PAYSTACK_SECRET_KEY');
@@ -19,7 +30,7 @@ Deno.serve(async req=>{
   if(!same(hex(await crypto.subtle.sign('HMAC',signingKey,raw)),signature))return reply({error:'Invalid Paystack signature'},401);
   let event:any;try{event=JSON.parse(new TextDecoder().decode(raw))}catch{return reply({error:'Invalid JSON'},400)}
   const type=event?.event,data=event?.data;
-  if(typeof type!=='string'||!data||(!aiTypes.includes(type)&&!marketplaceTypes.includes(type)&&!disputeTypes.includes(type)))return reply({error:'Unsupported event'},400);
+  if(typeof type!=='string'||!data||typeof data!=='object'||Array.isArray(data)||(!aiTypes.includes(type)&&!marketplaceTypes.includes(type)&&!disputeTypes.includes(type)))return reply({error:'Unsupported event'},400);
   const hash=hex(await crypto.subtle.digest('SHA-256',raw)),reference=transactionReference(data),code=String(data.subscription_code??data.subscription?.subscription_code??'');
   const sb=createClient(url,service);
   const sub=await exactSubscription(sb,reference,code);
@@ -37,7 +48,6 @@ Deno.serve(async req=>{
   const isAi=aiTypes.includes(type)||!!sub||!!code||reference.startsWith('CDG-AI-');
   // Reversals require provider verification and operator review; keep AI events out of marketplace.
   const aiReversal=isAi&&(type==='refund.processed'||disputeTypes.includes(type));
-  if(!isAi&&disputeTypes.includes(type))return reply({received:true,processed:false,reconciliation_required:true},409);
   const table=isAi?'ai_agent_subscription_webhook_events':'marketplace_payment_webhook_events';
   // A marketplace transaction/refund keeps its identity even if JSON whitespace or key order changes.
   // Conflicting content under that identity is quarantined by the stored hash check.
@@ -62,17 +72,24 @@ Deno.serve(async req=>{
    stored=existing.data;
   }
   if(stored.processing_status==='processed')return reply({received:true,processed:true,duplicate:true});
-  if(aiReversal){
-   await sb.from(table).update({processing_status:'failed',error_message:'AI payment reversal requires verified operator reconciliation'}).eq('id',stored.id).neq('processing_status','processed');
-   return reply({received:true,processed:false,reconciliation_required:true},409);
-  }
+  if(aiReversal)return await quarantine(sb,table,stored.id,'failed','AI payment reversal requires verified operator reconciliation');
+  // Marketplace has no unmatched enum value. Its existing verified state plus
+  // a durable review reason represents authenticated but financially unapplied.
+  if(!isAi&&disputeTypes.includes(type))return await quarantine(sb,table,stored.id,'verified','Marketplace dispute requires verified operator reconciliation');
+  if(isAi&&!sub)return await quarantine(sb,table,stored.id,'unmatched','No exact subscription match; operator reconciliation required');
+  if(!isAi&&!marketplaceId)return await quarantine(sb,table,stored.id,'verified','No exact marketplace match; operator reconciliation required');
+  // A formerly unmatched row requires audited operator attribution; a retry
+  // must not silently bind it to a newly discovered transaction.
+  if(!isAi&&stored.transaction_id!==marketplaceId)return reply({received:true,processed:false,reconciliation_required:true},409);
   try{
    const applied=isAi?await applyRecordedEvent(sb,secret,stored):(await sb.rpc('apply_paystack_webhook_state',{p_webhook_event_id:stored.id}));
    const result=isAi?applied:applied.data;
    if(!isAi&&applied.error)throw new Error('Marketplace reconciliation failed');
+   if(isAi&&result?.unmatched===true)return await quarantine(sb,table,stored.id,'unmatched','No exact subscription match; operator reconciliation required');
    return reply({received:true,processed:result?.processed===true,duplicate:result?.duplicate===true,reconciliation_required:result?.processed!==true},result?.processed?200:409);
   }catch{
-   await sb.from(table).update({processing_status:'failed',error_message:'Provider or transactional verification pending'}).eq('id',stored.id).neq('processing_status','processed');
+   const failure=await sb.from(table).update({processing_status:'failed',error_message:'Provider or transactional verification pending'}).eq('id',stored.id).neq('processing_status','processed');
+   if(failure.error)throw new Error('Failure persistence unavailable');
    return reply({received:true,processed:false,reconciliation_required:true},503);
   }
  }catch{return reply({error:'Webhook reconciliation failed'},503)}

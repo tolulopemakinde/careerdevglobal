@@ -1,4 +1,4 @@
--- CareerDev Global. DRAFT ADDITIVE MIGRATION -- NOT APPLIED.
+-- CareerDev Global. ADDITIVE MIGRATION -- applied only to isolated TEST; production remains gated.
 -- Supabase CLI v2 generated this file on the billing draft branch on 2026-11-04.
 -- Derived from the inspected deployed TEST source, not from an older main-branch baseline.
 -- This SQL is deliberately pinned to the exact observed test function to prevent
@@ -21,8 +21,8 @@ BEGIN
     AND pg_get_function_identity_arguments(p.oid) LIKE 'p_operation_key text,%'
   LIMIT 1;
 
-  IF v_current IS NULL OR md5(v_current) <> '62d121ebc7076de1ac5aaf557e6d5749' THEN
-    RAISE EXCEPTION 'Credit replay migration blocked: deployed reserve_ai_credits source does not match audited test snapshot';
+  IF v_current IS NULL OR (md5(v_current) <> '62d121ebc7076de1ac5aaf557e6d5749' AND md5(v_current) <> 'b9c0ffb6432e9f9da7d8010845df0e77') THEN
+    RAISE EXCEPTION 'Credit replay migration blocked: deployed reserve_ai_credits source does not match audited test snapshot; source drift: review authoritative definition';
   END IF;
   IF position('public.ai_payment_access_allowed(s.id)' IN v_current)=0 OR
      position('pg_advisory_xact_lock' IN v_current)=0 THEN
@@ -72,7 +72,7 @@ begin
   if v_op.agent_key is not null and not (v_op.agent_key=any(v_plan.included_agents)) then return query select false,'agent_not_in_plan',null::uuid,0,0,0,0,0,now(),now(),v_sub.plan_key; return; end if;
   select l.* into v_existing from public.ai_credit_ledger l where l.user_id=v_user_id and l.idempotency_key=v_key limit 1;
   if found then
-    if v_existing.status='released' or v_existing.operation_key<>p_operation_key or v_existing.execution_id is distinct from p_execution_id or v_existing.request_id is distinct from p_request_id or v_existing.agent_key is distinct from v_op.agent_key or v_existing.period_end<=now() or v_existing.subscription_id<>v_sub.id then return query select false,'idempotency_key_not_reusable',null::uuid,0,0,0,0,0,now(),now(),v_sub.plan_key; return; end if;
+    if v_existing.status='released' or v_existing.operation_key<>p_operation_key or v_existing.period_end<=now() or v_existing.subscription_id<>v_sub.id or v_existing.execution_id is distinct from p_execution_id or v_existing.request_id is distinct from p_request_id or v_existing.agent_key is distinct from v_op.agent_key then return query select false,'idempotency_key_not_reusable',null::uuid,0,0,0,0,0,now(),now(),v_sub.plan_key; return; end if;
     select coalesce(sum(case when l.status='consumed' then l.credits else 0 end),0),coalesce(sum(case when l.status='reserved' then l.credits else 0 end),0)
       into v_consumed,v_reserved from public.ai_credit_ledger l where l.user_id=v_user_id and l.period_start=v_existing.period_start and l.period_end=v_existing.period_end;
     select p.monthly_credits into v_plan.monthly_credits from public.ai_agent_subscription_plans p where p.plan_key=v_existing.plan_key;

@@ -1,5 +1,5 @@
 /**
- * Source-level regression guard for both unapplied draft billing migrations.
+ * Source-level regression guard for the draft and additive billing migrations.
  *
  * These tests are NOT a substitute for authenticated, disposable-DB SQL
  * acceptance. They deliberately do not connect to Supabase or use real accounts.
@@ -11,6 +11,7 @@ import {readFileSync} from "node:fs";
 const paths=[
   "20261101140853_ai_billing_lifecycle_safety.sql",
   "20261101152243_ai_payment_refund_chargeback_policy.sql",
+  "20261104122023_bind_ai_credit_replay_to_execution.sql",
 ];
 
 function body(path){
@@ -56,6 +57,14 @@ for(const path of paths){
 test("refund/chargeback migration retains paid-entitlement gating",()=>{
   const src=body(paths[1]);
   assert.ok(src.includes("public.ai_payment_access_allowed(s.id)"));
+});
+
+test("additive replay remediation retains payment gating and rejects source drift",()=>{
+  assert.ok(body(paths[2]).includes("public.ai_payment_access_allowed(s.id)"));
+  const sql=readFileSync(new URL("../supabase/migrations/"+paths[2],import.meta.url),"utf8");
+  assert.match(sql,/pg_get_functiondef/);
+  assert.match(sql,/md5\(v_current\)/);
+  assert.match(sql,/source drift: review authoritative definition/);
 });
 test("SQL three-valued logic needs IS DISTINCT FROM for null bindings",()=>{
   // An ordinary <> comparison would evaluate to UNKNOWN with NULL, not true.

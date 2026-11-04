@@ -1,0 +1,415 @@
+{
+  "audited_base_commit": "b0401aada123a5646f7055306ca1cc4c4bea44a9",
+  "captured_at": "2026-11-03T19:43:50.530418+00:00",
+  "baseline": {
+    "at": "2026-11-03T19:26:22.243108+00:00",
+    "credits": 3,
+    "receipts": 9,
+    "refund_gate": false,
+    "billing_gate": false,
+    "credits_hash": "16fbf98e30c0fb52c6237502205a35a2",
+    "receipts_hash": "da62aa3bf8accbda638668a42c4a0312",
+    "subscriptions": 10,
+    "marketplace_hash": "2824df9de021b20a5f9b159117b03a2c",
+    "subscriptions_hash": "91ee8ed0c482cbef5aa4a19be19b67cc",
+    "marketplace_sync_hash": "f3a3347f358cf291012ef7d861286097"
+  },
+  "after": {
+    "at": "2026-11-03T19:35:51.39043+00:00",
+    "credits": 3,
+    "receipts": 9,
+    "refund_gate": false,
+    "billing_gate": false,
+    "credits_hash": "16fbf98e30c0fb52c6237502205a35a2",
+    "receipts_hash": "da62aa3bf8accbda638668a42c4a0312",
+    "subscriptions": 11,
+    "unprocessed_ai": 7,
+    "marketplace_hash": "2824df9de021b20a5f9b159117b03a2c",
+    "subscriptions_hash": "91ee8ed0c482cbef5aa4a19be19b67cc",
+    "marketplace_sync_hash": "f3a3347f358cf291012ef7d861286097",
+    "unprocessed_marketplace": 2
+  },
+  "synthetic_http": {
+    "http": 200,
+    "run_id": "billing-acknowledgment-20261103-a-synthetic_checks",
+    "status": "passed",
+    "results": [
+      {
+        "name": "Invalid HMAC rejected",
+        "status": "pass"
+      },
+      {
+        "name": "Signed malformed JSON rejected",
+        "status": "pass"
+      },
+      {
+        "name": "Concurrent synthetic unmatched deliveries acknowledged without settlement",
+        "status": "pass"
+      },
+      {
+        "name": "One durable unmatched marketplace event",
+        "status": "pass"
+      },
+      {
+        "name": "Conflicting content rejected with original hash preserved",
+        "status": "pass"
+      },
+      {
+        "name": "Synthetic unmatched AI lifecycle acknowledged without payment",
+        "status": "pass"
+      },
+      {
+        "name": "Synthetic refund.processed is acknowledged only for operator review",
+        "status": "pass"
+      },
+      {
+        "name": "Synthetic charge.dispute.create is acknowledged only for operator review",
+        "status": "pass"
+      },
+      {
+        "name": "Matched synthetic AI nonpayment event processed then deduplicated",
+        "status": "pass"
+      },
+      {
+        "name": "Invoice alone leaves fixture pending with no receipt",
+        "status": "pass",
+        "actual": {
+          "fixture_subscription_id": "fd310d20-d1b7-48e2-99b9-37219571407a"
+        }
+      },
+      {
+        "name": "Matched synthetic marketplace failure processed once without funding",
+        "status": "pass",
+        "actual": {
+          "fixture_transaction_id": "39d3ff3c-437b-4428-a999-044cc051cda8"
+        }
+      }
+    ]
+  },
+  "historical_provider_reads": {
+    "http": 200,
+    "run_id": "billing-acknowledgment-20261103-a-read_history",
+    "status": "passed",
+    "results": [
+      {
+        "name": "Retained payment exact TEST identity reverified d821b0b0",
+        "status": "pass",
+        "actual": {
+          "provider_status": "success"
+        }
+      },
+      {
+        "name": "Retained provider renewal remains stopped d821b0b0",
+        "status": "pass"
+      },
+      {
+        "name": "Retained payment exact TEST identity reverified 98512ad7",
+        "status": "pass",
+        "actual": {
+          "provider_status": "reversed"
+        }
+      },
+      {
+        "name": "Retained provider renewal remains stopped 98512ad7",
+        "status": "pass"
+      },
+      {
+        "name": "Existing TEST refund remains processed 18971821",
+        "status": "pass"
+      },
+      {
+        "name": "Existing TEST refund remains processed 18972336",
+        "status": "pass"
+      }
+    ]
+  },
+  "genuine_provider_observation": {
+    "http": 200,
+    "run_id": "billing-acknowledgment-20261103-a-observation-fa1f6a8a-6cbf-4510-8930-62dc25966cb7",
+    "event_id": "6aea261cc2ff06530f130f88",
+    "transaction_id": "6726807449",
+    "domain": "test",
+    "endpoint_matches": true,
+    "payload_identity_matches": true,
+    "status": "Pending",
+    "response_code": 503,
+    "trial_count": 6,
+    "updated_at": "2026-11-03T18:41:00.000Z",
+    "stored_events": [
+      {
+        "id": "effce232-de55-4b45-afa4-9316e632a252",
+        "provider_event_reference": "charge.success:6726807449",
+        "signature_verified": true,
+        "transaction_id": null,
+        "processing_status": "failed",
+        "payload_hash": "09b372109a25f8b8f731df171f8aac74ea48f50128e593df7987ba5bba1f57d3",
+        "error_message": "Provider or transactional verification pending",
+        "processed_at": null
+      }
+    ]
+  },
+  "resend_attempt": {
+    "http": 409,
+    "run_id": "billing-acknowledgment-20261103-a-failure-91f6a3ff-c225-4cb3-81ab-3be02b185a16",
+    "stage": "provider_resend",
+    "status": "failed",
+    "results": [
+      {
+        "name": "Documented resend is restricted to one unlinked TEST event",
+        "status": "pass",
+        "actual": {
+          "event_id": "6aea261cc2ff06530f130f88",
+          "previous_trials": 6
+        }
+      }
+    ]
+  },
+  "sql": {
+    "lifecycle_sql": [
+      {
+        "results": [
+          {
+            "id": "W01",
+            "layer": "database",
+            "status": "pass"
+          },
+          {
+            "id": "W04",
+            "layer": "database",
+            "status": "pass"
+          },
+          {
+            "id": "W03",
+            "layer": "database",
+            "status": "pass"
+          },
+          {
+            "id": "W05",
+            "layer": "database",
+            "status": "pass"
+          },
+          {
+            "id": "W06",
+            "layer": "database",
+            "status": "pass"
+          },
+          {
+            "id": "unsigned-event",
+            "layer": "database",
+            "status": "pass"
+          },
+          {
+            "id": "W08",
+            "layer": "database",
+            "status": "pass"
+          },
+          {
+            "id": "W09",
+            "layer": "database",
+            "status": "pass"
+          },
+          {
+            "id": "W15",
+            "layer": "database",
+            "status": "pass"
+          },
+          {
+            "id": "W14",
+            "layer": "database",
+            "status": "pass"
+          },
+          {
+            "id": "W11",
+            "layer": "database",
+            "status": "pass"
+          },
+          {
+            "id": "W12",
+            "layer": "database",
+            "status": "pass"
+          },
+          {
+            "id": "W16",
+            "layer": "database",
+            "status": "pass"
+          },
+          {
+            "id": "credit-reserve-consume-release",
+            "layer": "database",
+            "status": "pass"
+          },
+          {
+            "id": "W10",
+            "layer": "database",
+            "status": "pass"
+          },
+          {
+            "id": "direct-privileges",
+            "layer": "database",
+            "status": "pass"
+          },
+          {
+            "id": "fixture-rollback",
+            "layer": "database",
+            "status": "pass"
+          }
+        ]
+      }
+    ],
+    "marketplace_sql": [
+      {
+        "results": [
+          {
+            "name": "marketplace success with payment intent",
+            "status": "pass"
+          },
+          {
+            "name": "marketplace duplicate receipt",
+            "status": "pass"
+          },
+          {
+            "name": "marketplace refund preserves intent constraint",
+            "status": "pass"
+          },
+          {
+            "name": "marketplace fixture rollback",
+            "status": "pass"
+          }
+        ]
+      }
+    ],
+    "replacement_sql": [
+      {
+        "results": [
+          {
+            "name": "historical receipt cannot revive prior paid period",
+            "status": "pass"
+          },
+          {
+            "name": "late payment overlap requires reconciliation with no receipt side effects",
+            "status": "pass"
+          },
+          {
+            "name": "one current paid subscription after replacement",
+            "status": "pass"
+          },
+          {
+            "name": "cancellation selects current replacement despite expired history",
+            "status": "pass"
+          }
+        ]
+      }
+    ],
+    "profile_sql": [
+      {
+        "results": {
+          "own_status_mutation": "blocked",
+          "role_self_promotion": "blocked"
+        }
+      }
+    ],
+    "security_sql": [
+      {
+        "rls_results": {
+          "cross_owner_credit_ledger_hidden": true,
+          "cross_owner_subscriptions_hidden": true
+        }
+      }
+    ]
+  },
+  "http_logs": {
+    "result": [
+      {
+        "event_message": "POST | 401 | https://yyevuwvtrktrzwuzeddo.supabase.co/functions/v1/careerdev-paystack-webhook",
+        "function_id": "918d75ce-c7d1-4d86-88d4-207f7d4a3cbe",
+        "timestamp": "2026-11-03T19:35:28.475000",
+        "version": "10"
+      },
+      {
+        "event_message": "GET | 405 | https://yyevuwvtrktrzwuzeddo.supabase.co/functions/v1/careerdev-paystack-webhook",
+        "function_id": "918d75ce-c7d1-4d86-88d4-207f7d4a3cbe",
+        "timestamp": "2026-11-03T19:35:27.899000",
+        "version": "10"
+      },
+      {
+        "event_message": "POST | 200 | https://yyevuwvtrktrzwuzeddo.supabase.co/functions/v1/careerdev-paystack-webhook",
+        "function_id": "918d75ce-c7d1-4d86-88d4-207f7d4a3cbe",
+        "timestamp": "2026-11-03T19:30:28.829000",
+        "version": "10"
+      },
+      {
+        "event_message": "POST | 200 | https://yyevuwvtrktrzwuzeddo.supabase.co/functions/v1/careerdev-paystack-webhook",
+        "function_id": "918d75ce-c7d1-4d86-88d4-207f7d4a3cbe",
+        "timestamp": "2026-11-03T19:30:28.116000",
+        "version": "10"
+      },
+      {
+        "event_message": "POST | 200 | https://yyevuwvtrktrzwuzeddo.supabase.co/functions/v1/careerdev-paystack-webhook",
+        "function_id": "918d75ce-c7d1-4d86-88d4-207f7d4a3cbe",
+        "timestamp": "2026-11-03T19:30:26.760000",
+        "version": "10"
+      },
+      {
+        "event_message": "POST | 200 | https://yyevuwvtrktrzwuzeddo.supabase.co/functions/v1/careerdev-paystack-webhook",
+        "function_id": "918d75ce-c7d1-4d86-88d4-207f7d4a3cbe",
+        "timestamp": "2026-11-03T19:30:26.178000",
+        "version": "10"
+      },
+      {
+        "event_message": "POST | 200 | https://yyevuwvtrktrzwuzeddo.supabase.co/functions/v1/careerdev-paystack-webhook",
+        "function_id": "918d75ce-c7d1-4d86-88d4-207f7d4a3cbe",
+        "timestamp": "2026-11-03T19:30:24.773000",
+        "version": "10"
+      },
+      {
+        "event_message": "POST | 200 | https://yyevuwvtrktrzwuzeddo.supabase.co/functions/v1/careerdev-paystack-webhook",
+        "function_id": "918d75ce-c7d1-4d86-88d4-207f7d4a3cbe",
+        "timestamp": "2026-11-03T19:30:23.629000",
+        "version": "10"
+      },
+      {
+        "event_message": "POST | 200 | https://yyevuwvtrktrzwuzeddo.supabase.co/functions/v1/careerdev-paystack-webhook",
+        "function_id": "918d75ce-c7d1-4d86-88d4-207f7d4a3cbe",
+        "timestamp": "2026-11-03T19:30:22.846000",
+        "version": "10"
+      },
+      {
+        "event_message": "POST | 409 | https://yyevuwvtrktrzwuzeddo.supabase.co/functions/v1/careerdev-paystack-webhook",
+        "function_id": "918d75ce-c7d1-4d86-88d4-207f7d4a3cbe",
+        "timestamp": "2026-11-03T19:30:21.780000",
+        "version": "10"
+      },
+      {
+        "event_message": "POST | 200 | https://yyevuwvtrktrzwuzeddo.supabase.co/functions/v1/careerdev-paystack-webhook",
+        "function_id": "918d75ce-c7d1-4d86-88d4-207f7d4a3cbe",
+        "timestamp": "2026-11-03T19:30:20.546000",
+        "version": "10"
+      },
+      {
+        "event_message": "POST | 200 | https://yyevuwvtrktrzwuzeddo.supabase.co/functions/v1/careerdev-paystack-webhook",
+        "function_id": "918d75ce-c7d1-4d86-88d4-207f7d4a3cbe",
+        "timestamp": "2026-11-03T19:30:20.321000",
+        "version": "10"
+      },
+      {
+        "event_message": "POST | 400 | https://yyevuwvtrktrzwuzeddo.supabase.co/functions/v1/careerdev-paystack-webhook",
+        "function_id": "918d75ce-c7d1-4d86-88d4-207f7d4a3cbe",
+        "timestamp": "2026-11-03T19:30:19.124000",
+        "version": "10"
+      },
+      {
+        "event_message": "POST | 401 | https://yyevuwvtrktrzwuzeddo.supabase.co/functions/v1/careerdev-paystack-webhook",
+        "function_id": "918d75ce-c7d1-4d86-88d4-207f7d4a3cbe",
+        "timestamp": "2026-11-03T19:30:18.038000",
+        "version": "10"
+      }
+    ]
+  },
+  "financial_hash_comparison_excludes_only_new_fixtures": {
+    "ai_subscription": "fd310d20-d1b7-48e2-99b9-37219571407a",
+    "marketplace_transaction": "39d3ff3c-437b-4428-a999-044cc051cda8"
+  },
+  "no_schema_change": true,
+  "no_new_provider_transaction": true,
+  "no_production_mutation": true
+}

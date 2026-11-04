@@ -230,5 +230,21 @@
       "timestamp": "2026-11-03T18:21:18.338000",
       "version": "9"
     }
-  ]
+  ],
+  "acknowledgment_continuation": {
+    "current_report": "docs/ai-billing-webhook-reliability-execution-2026-11.md",
+    "evidence": "docs/ai-billing-webhook-acknowledgment-evidence-2026-11.json",
+    "webhook_version": 10,
+    "genuine_post_fix_200_confirmed": false,
+    "no_new_payment": true
+  },
+  "resume_2026_11_04": {
+    "current_report": "docs/ai-billing-webhook-reliability-execution-2026-11-04.md",
+    "evidence": "docs/ai-billing-webhook-reliability-evidence-2026-11-04.json",
+    "genuine_post_fix_200_confirmed": true,
+    "event_id": "6aea261cc2ff06530f130f88",
+    "status": "Delivered",
+    "response_code": 200,
+    "trial_count": 7
+  }
 }

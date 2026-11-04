@@ -1,0 +1,536 @@
+{
+  "verified_on": "2026-11-04",
+  "integrated_parent": "dbb40ee2a3efbb31eface7a635bbd83bb65b972d",
+  "provider_log": {
+    "result": [
+      {
+        "event_message": "POST | 200 | https://yyevuwvtrktrzwuzeddo.supabase.co/functions/v1/careerdev-paystack-webhook",
+        "timestamp": "2026-11-03T20:07:36.221000",
+        "version": "10"
+      }
+    ]
+  },
+  "after": {
+    "at": "2026-11-04T12:37:43.345373+00:00",
+    "credits": 3,
+    "receipts": 9,
+    "refund_gate": false,
+    "reserve_acl": [
+      "=X/postgres",
+      "postgres=X/postgres",
+      "anon=X/postgres",
+      "authenticated=X/postgres",
+      "service_role=X/postgres"
+    ],
+    "billing_gate": false,
+    "credits_hash": "16fbf98e30c0fb52c6237502205a35a2",
+    "reserve_hash": "b9c0ffb6432e9f9da7d8010845df0e77",
+    "receipts_hash": "da62aa3bf8accbda638668a42c4a0312",
+    "subscriptions": 11,
+    "fixture_status": "pending",
+    "marketplace_hash": "2824df9de021b20a5f9b159117b03a2c",
+    "subscriptions_hash": "91ee8ed0c482cbef5aa4a19be19b67cc",
+    "marketplace_sync_hash": "f3a3347f358cf291012ef7d861286097"
+  },
+  "fixture_provenance": {
+    "fixture": {
+      "id": "fd310d20-d1b7-48e2-99b9-37219571407a",
+      "status": "pending",
+      "user_id": "9a2da0b0-6418-4ca0-994e-a1f4c8947250",
+      "metadata": {
+        "synthetic": true,
+        "acceptance_run": "billing-acknowledgment-20261103-a",
+        "last_webhook_event": "invoice.create",
+        "no_provider_payment": true,
+        "last_webhook_event_reference": "invoice.create:c28b35ea4e20953e032fa5678053f9aa0332bf32f3494524712fdf635efde818"
+      },
+      "no_credit": true,
+      "no_receipt": true,
+      "no_operation": true,
+      "profile_role": "client",
+      "profile_status": "active",
+      "no_provider_customer": true,
+      "no_provider_subscription": true
+    },
+    "reserve_acl": {
+      "anon": true,
+      "proacl": [
+        "=X/postgres",
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "service_role": true,
+      "authenticated": true
+    },
+    "request_indexes": [
+      "CREATE UNIQUE INDEX ai_agent_execution_requests_pkey ON public.ai_agent_execution_requests USING btree (id)",
+      "CREATE INDEX idx_ai_agent_exec_requests_status ON public.ai_agent_execution_requests USING btree (status, created_at DESC)",
+      "CREATE INDEX idx_ai_agent_exec_requests_agent ON public.ai_agent_execution_requests USING btree (agent_id, created_at DESC)"
+    ],
+    "request_constraints": [
+      "FOREIGN KEY (agent_id) REFERENCES ai_agent_registry(id) ON DELETE RESTRICT",
+      "FOREIGN KEY (execution_id) REFERENCES ai_agent_executions(id) ON DELETE SET NULL",
+      "PRIMARY KEY (id)",
+      "FOREIGN KEY (requested_by) REFERENCES auth.users(id) ON DELETE RESTRICT",
+      "CHECK ((status = ANY (ARRAY['requested'::text, 'authorized'::text, 'prepared'::text, 'running'::text, 'awaiting_quality'::text, 'awaiting_human_review'::text, 'completed'::text, 'blocked'::text, 'failed'::text, 'cancelled'::text])))",
+      "FOREIGN KEY (workflow_id) REFERENCES ai_agent_workflows(id) ON DELETE SET NULL"
+    ]
+  },
+  "credit_red": "{\"error\":{\"name\":\"HttpException\",\"message\":\"Failed to run sql query: ERROR:  P0001: Different owned execution reused reservation\\nCONTEXT:  PL/pgSQL function pg_temp_27.test_credit_replay_binding() line 41 at RAISE\\n\"}}",
+  "credit_rehearsal": [
+    {
+      "results": [
+        {
+          "name": "authenticated initial reservation",
+          "status": "pass"
+        },
+        {
+          "name": "same execution and request reuse one reservation",
+          "status": "pass"
+        },
+        {
+          "name": "different owned execution denied",
+          "status": "pass"
+        },
+        {
+          "name": "different owned request denied",
+          "status": "pass"
+        },
+        {
+          "name": "one unchanged original reservation",
+          "status": "pass"
+        },
+        {
+          "name": "runtime claims reservation once",
+          "status": "pass"
+        },
+        {
+          "name": "duplicate settlement consumes once",
+          "status": "pass"
+        }
+      ]
+    }
+  ],
+  "credit_green": [
+    {
+      "results": [
+        {
+          "name": "authenticated initial reservation",
+          "status": "pass"
+        },
+        {
+          "name": "same execution and request reuse one reservation",
+          "status": "pass"
+        },
+        {
+          "name": "different owned execution denied",
+          "status": "pass"
+        },
+        {
+          "name": "different owned request denied",
+          "status": "pass"
+        },
+        {
+          "name": "one unchanged original reservation",
+          "status": "pass"
+        },
+        {
+          "name": "runtime claims reservation once",
+          "status": "pass"
+        },
+        {
+          "name": "duplicate settlement consumes once",
+          "status": "pass"
+        }
+      ]
+    }
+  ],
+  "migration_history": {
+    "migrations": [
+      {
+        "version": "20261028020002",
+        "name": "pilot_isolated_unrecorded_table_structures"
+      },
+      {
+        "version": "20261028020010",
+        "name": "baseline_20260914233715_create_careerdev_global_core_schema_v2"
+      },
+      {
+        "version": "20261028020011",
+        "name": "baseline_20260914233725_seed_careerdev_global_catalog"
+      },
+      {
+        "version": "20261028020013",
+        "name": "baseline_20260914233737_harden_careerdev_global_rls"
+      },
+      {
+        "version": "20261028020014",
+        "name": "baseline_20260914233742_lock_profile_role_trigger"
+      },
+      {
+        "version": "20261028020015",
+        "name": "baseline_20260914233747_revoke_public_trigger_function_execution"
+      },
+      {
+        "version": "20261028020039",
+        "name": "baseline_20260915011531_build_08_career_intelligence_foundation"
+      },
+      {
+        "version": "20261028020040",
+        "name": "baseline_20260915011550_build_08_career_intelligence_rls"
+      },
+      {
+        "version": "20261028020042",
+        "name": "baseline_20260915011557_harden_career_intelligence_trigger_function"
+      },
+      {
+        "version": "20261028020116",
+        "name": "baseline_batch_8_33"
+      },
+      {
+        "version": "20261028020129",
+        "name": "baseline_batch_33_58"
+      },
+      {
+        "version": "20261028020144",
+        "name": "baseline_batch_58_83"
+      },
+      {
+        "version": "20261028020252",
+        "name": "baseline_batch_83_108"
+      },
+      {
+        "version": "20261028020309",
+        "name": "baseline_batch_108_133"
+      },
+      {
+        "version": "20261028020328",
+        "name": "baseline_batch_133_158"
+      },
+      {
+        "version": "20261028020348",
+        "name": "baseline_batch_158_183"
+      },
+      {
+        "version": "20261028020415",
+        "name": "baseline_governed_test_finalize_drift"
+      },
+      {
+        "version": "20261028020421",
+        "name": "baseline_batch_183_208"
+      },
+      {
+        "version": "20261028020959",
+        "name": "pilot_scoped_live_table_column_reconciliation"
+      },
+      {
+        "version": "20261028021250",
+        "name": "pilot_scoped_live_constraints"
+      },
+      {
+        "version": "20261103103049",
+        "name": "ai_payment_refund_chargeback_policy"
+      },
+      {
+        "version": "20261103112714",
+        "name": "prevent_ai_replacement_overlap"
+      },
+      {
+        "version": "20261104123708",
+        "name": "bind_ai_credit_replay_to_execution"
+      }
+    ]
+  },
+  "advisors": {
+    "security": {
+      "rules": [
+        {
+          "name": "rls_enabled_no_policy",
+          "level": "INFO",
+          "title": "RLS Enabled No Policy",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy",
+          "detail_summary": ""
+        },
+        {
+          "name": "function_search_path_mutable",
+          "level": "WARN",
+          "title": "Function Search Path Mutable",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable",
+          "detail_summary": ""
+        },
+        {
+          "name": "extension_in_public",
+          "level": "WARN",
+          "title": "Extension in Public",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public",
+          "detail_summary": ""
+        },
+        {
+          "name": "anon_security_definer_function_executable",
+          "level": "WARN",
+          "title": "Public Can Execute SECURITY DEFINER Function",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable",
+          "detail_summary": ""
+        },
+        {
+          "name": "authenticated_security_definer_function_executable",
+          "level": "WARN",
+          "title": "Signed-In Users Can Execute SECURITY DEFINER Function",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable",
+          "detail_summary": ""
+        },
+        {
+          "name": "auth_leaked_password_protection",
+          "level": "WARN",
+          "title": "Leaked Password Protection Disabled",
+          "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection",
+          "detail_summary": ""
+        }
+      ]
+    },
+    "performance": {
+      "rules": [
+        {
+          "name": "unindexed_foreign_keys",
+          "level": "INFO",
+          "title": "Unindexed foreign keys",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys",
+          "detail_summary": ""
+        },
+        {
+          "name": "auth_rls_initplan",
+          "level": "WARN",
+          "title": "Auth RLS Initialization Plan",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan",
+          "detail_summary": ""
+        },
+        {
+          "name": "unused_index",
+          "level": "INFO",
+          "title": "Unused Index",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index",
+          "detail_summary": ""
+        },
+        {
+          "name": "multiple_permissive_policies",
+          "level": "WARN",
+          "title": "Multiple Permissive Policies",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
+          "detail_summary": ""
+        },
+        {
+          "name": "duplicate_index",
+          "level": "WARN",
+          "title": "Duplicate Index",
+          "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0009_duplicate_index",
+          "detail_summary": ""
+        }
+      ]
+    }
+  },
+  "provider_observation": {
+    "http": 200,
+    "run_id": "billing-acknowledgment-20261103-a-observation-2ef94f51-f2c1-4d88-84f5-052d534dc8c0",
+    "event_id": "6aea261cc2ff06530f130f88",
+    "transaction_id": "6726807449",
+    "domain": "test",
+    "endpoint_matches": true,
+    "payload_identity_matches": true,
+    "status": "Delivered",
+    "response_code": 200,
+    "trial_count": 7,
+    "updated_at": "2026-11-03T20:07:36.000Z",
+    "stored_events": [
+      {
+        "id": "effce232-de55-4b45-afa4-9316e632a252",
+        "provider_event_reference": "charge.success:6726807449",
+        "signature_verified": true,
+        "transaction_id": null,
+        "processing_status": "verified",
+        "payload_hash": "09b372109a25f8b8f731df171f8aac74ea48f50128e593df7987ba5bba1f57d3",
+        "error_message": "No exact marketplace match; operator reconciliation required",
+        "processed_at": null
+      }
+    ]
+  },
+  "scope": "Isolated TEST only; provider observation is genuine; credit fixture changes rolled back",
+  "lifecycle_regression_after_credit_fix": [
+    {
+      "results": [
+        {
+          "id": "W01",
+          "layer": "database",
+          "status": "pass"
+        },
+        {
+          "id": "W04",
+          "layer": "database",
+          "status": "pass"
+        },
+        {
+          "id": "W03",
+          "layer": "database",
+          "status": "pass"
+        },
+        {
+          "id": "W05",
+          "layer": "database",
+          "status": "pass"
+        },
+        {
+          "id": "W06",
+          "layer": "database",
+          "status": "pass"
+        },
+        {
+          "id": "unsigned-event",
+          "layer": "database",
+          "status": "pass"
+        },
+        {
+          "id": "W08",
+          "layer": "database",
+          "status": "pass"
+        },
+        {
+          "id": "W09",
+          "layer": "database",
+          "status": "pass"
+        },
+        {
+          "id": "W15",
+          "layer": "database",
+          "status": "pass"
+        },
+        {
+          "id": "W14",
+          "layer": "database",
+          "status": "pass"
+        },
+        {
+          "id": "W11",
+          "layer": "database",
+          "status": "pass"
+        },
+        {
+          "id": "W12",
+          "layer": "database",
+          "status": "pass"
+        },
+        {
+          "id": "W16",
+          "layer": "database",
+          "status": "pass"
+        },
+        {
+          "id": "credit-reserve-consume-release",
+          "layer": "database",
+          "status": "pass"
+        },
+        {
+          "id": "W10",
+          "layer": "database",
+          "status": "pass"
+        },
+        {
+          "id": "direct-privileges",
+          "layer": "database",
+          "status": "pass"
+        },
+        {
+          "id": "fixture-rollback",
+          "layer": "database",
+          "status": "pass"
+        }
+      ]
+    }
+  ],
+  "local_http_recheck": [
+    {
+      "name": "careerdev-ai-subscription-checkout",
+      "method": "POST",
+      "expected": 401,
+      "actual": 401,
+      "pass": true
+    },
+    {
+      "name": "careerdev-ai-subscription-verify",
+      "method": "POST",
+      "expected": 401,
+      "error": "URLError",
+      "pass": false
+    },
+    {
+      "name": "careerdev-ai-subscription-manage",
+      "method": "POST",
+      "expected": 401,
+      "error": "URLError",
+      "pass": false
+    },
+    {
+      "name": "careerdev-ai-billing-reconcile",
+      "method": "POST",
+      "expected": 401,
+      "error": "URLError",
+      "pass": false
+    },
+    {
+      "name": "careerdev-ai-payment-adjustment",
+      "method": "POST",
+      "expected": 401,
+      "error": "TimeoutError",
+      "pass": false
+    },
+    {
+      "name": "careerdev-paystack-webhook",
+      "method": "GET",
+      "expected": 405,
+      "error": "URLError",
+      "pass": false
+    },
+    {
+      "name": "careerdev-paystack-webhook",
+      "method": "POST",
+      "expected": 401,
+      "error": "URLError",
+      "pass": false
+    }
+  ],
+  "final_merged_guard_rehearsal": [
+    {
+      "results": [
+        {
+          "name": "authenticated initial reservation",
+          "status": "pass"
+        },
+        {
+          "name": "same execution and request reuse one reservation",
+          "status": "pass"
+        },
+        {
+          "name": "different owned execution denied",
+          "status": "pass"
+        },
+        {
+          "name": "different owned request denied",
+          "status": "pass"
+        },
+        {
+          "name": "one unchanged original reservation",
+          "status": "pass"
+        },
+        {
+          "name": "runtime claims reservation once",
+          "status": "pass"
+        },
+        {
+          "name": "duplicate settlement consumes once",
+          "status": "pass"
+        }
+      ]
+    }
+  ],
+  "migration_source_sha256": "c28b2889468b0c088e14a27997c31f89c78bf0b59249e1972cdaac3c36b8397d"
+}

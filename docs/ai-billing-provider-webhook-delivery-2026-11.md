@@ -1,5 +1,23 @@
 # Paystack TEST webhook delivery — 3 November 2026
 
+## Current evidence — 4 November 2026
+
+**PARTIALLY COMPLETE — BLOCKED for production.** Genuine Paystack delivery of the original event now reports **Delivered / HTTP200 / attempt7** (3November21:07:36WAT), independently matched by webhookv10 Edge logs. The same signed event remains unassigned and unprocessed, with no financial mutation. No payment/refund/cancellation or resend was initiated during this resume.
+
+The remote branch credit-security edits were preserved, its additive replay migration was completed from the deployed definition, and isolated database rehearsal plus seven post-apply authenticated-role checks pass. Source20261104122023 is recorded as TEST history20261104123708; current definition hashb9c0ffb6432e9f9da7d8010845df0e77 and ACL are verified. No production migration. Both gates remainfalse. All nine TEST bundles/20 files match reviewed source; final local suite102 passes. The earlier11 synthetic HTTP and six provider GET checks remain3November evidence. Six current local HTTP checks encountered transport errors rather than returning a result.
+
+Read [the current full execution report with W01–W16 layers and owner actions](ai-billing-webhook-reliability-execution-2026-11-04.md), [fresh evidence](ai-billing-webhook-reliability-evidence-2026-11-04.json) and [acknowledgment contract](ai-billing-webhook-acknowledgment-contract-2026-11.md). W01/W08/W10/W11/W12/W16, client/approved-coach/expired-session acceptance, policy-enabled reversal tests and authoritative schema rehearsal still block production. Historical sections below retain earlier snapshots.
+
+
+## 3 November acknowledgment continuation — historical snapshot
+
+**PARTIALLY COMPLETE — BLOCKED.** Isolated webhookv10 now durably quarantines safe unmatched/manual-review events before HTTP200/processed:false. Invalid HMAC, conflicts and infrastructure/provider failures retain rejection/retry semantics. No schema change.88 local tests,11 deployed synthetic checks,6 fresh provider GET checks,7 endpoint boundaries and rollback-only SQL pass. Seven application bundles plus TEST helperv3 were fetched and match source. Both gates remainfalse.
+
+The original genuine TEST event still reports Pending/503/six attempts; no post-fix provider200 is confirmed. One safety-checked documented resend did not confirm success; its uncertain claim is preserved and was not retried. No new charge/refund/cancellation was initiated. Coach mobile visual review now passes; client/approved-coach/true-expired-session acceptance and W01/W08/W10/W11/W12/W16 remain open. Existing financial hashes are unchanged, excluding only newly tagged nonpayment/failure fixtures.
+
+Read [the current full execution report and W01–W16 layer matrix](ai-billing-webhook-reliability-execution-2026-11.md), [acknowledgment contract/operator recovery](ai-billing-webhook-acknowledgment-contract-2026-11.md), [redacted fresh evidence](ai-billing-webhook-acknowledgment-evidence-2026-11.json) and [proposed separately approved matched TEST checkout](ai-billing-next-test-checkout-plan-2026-11.md). Selected catalog comparison is not a production-shaped rehearsal. Historical sections below are retained; their503-by-design, mobile-capture and version9 notes describe earlier snapshots.
+
+
 ## Overall decision
 
 **PARTIALLY COMPLETE — BLOCKED for production release. Genuine provider-to-Supabase delivery and safe standalone handling are verified.** This closes the earlier connectivity evidence gap. It does not establish a successful matched subscription activation, renewal, cancellation or replacement on the final bundles.
