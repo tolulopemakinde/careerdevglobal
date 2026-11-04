@@ -1,6 +1,6 @@
 # AI billing: sandbox concurrency and reconciliation acceptance plan
 
-**Status:** Test specification only; not an execution report.
+**Status:** Original test specification, with historical audit notes below. For current executed results and release blockers, see [production readiness](ai-billing-production-readiness-2026-11.md) and [genuine Paystack TEST delivery evidence](ai-billing-provider-webhook-delivery-2026-11.md). Earlier read-only observations are retained for chronology and may have been superseded.
 
 ## Prerequisites
 - Disposable Supabase project with the exact production schema copied without customer data.
@@ -44,7 +44,7 @@ Record redacted provider event ID, event status, subscription status, paid-throu
 - Two Supabase projects were enumerated: production `careerdev-global` (`ufmhrmzumqkjvaezrmxf`) and separate `careerdevglobal-ai-test` (`yyevuwvtrktrzwuzeddo`). Both active. **Do not assume the latter is disposable.**
 - The test project already contains 6 AI subscriptions (1 active, 4 non_renewing, 1 pending) and 6 recorded webhook events. Do not delete or mutate these records.
 - Test project already has a more advanced `public.apply_ai_subscription_webhook_state(uuid)` SECURITY DEFINER function. Anonymous and authenticated roles have no EXECUTE privilege (verified read-only).
-- **Critical contract mismatch:** The existing test RPC requires `verification_source`, `verified_payment`, and a provider-verified Paystack payment record for successful charges; the PR #42 webhook currently inserts only `signature_verified`, event payload, and identifiers. The PR's review-only SQL proposal is less restrictive than the existing test RPC. Do not overwrite the test RPC with the proposal or deploy the current webhook unchanged.
+- **Historical contract concern (superseded):** The test RPC requires `verification_source`, `verified_payment`, and provider-verified Paystack payment evidence. Subsequent PR #42 source inspection confirmed the shared reconciliation path obtains and records `verified_payment` before applying a successful charge; later test deployment and reports supersede the initial assumption that verification was absent. Do not replace the stronger test RPC with the older review-only SQL proposal.
 - The existing test RPC also references `ai_subscription_payments` and enforces amount/currency/plan/paid-period checks; the PR proposal lacks equivalent controls. Adopt the stronger verified-payment model after a complete contract audit, rather than downgrading protections.
 - Paystack test-secret presence and test-mode webhook routing have not been verified. Do not print or request raw secrets in chat.
 - No database write, Edge Function deployment, provider charge, or live webhook delivery was executed in this audit. W01–W16 remain pending integration execution; passing GitHub source tests do not count as sandbox acceptance.
