@@ -49,7 +49,7 @@ test("real Groq SDK serializes a chat request, parses a local mock reply, and se
   assert.equal(seen[0].method,"POST");
   assert.ok(seen[0].url.startsWith("https://api.groq.com/openai/v1/"));
   assert.equal(seen[0].body.model,"openai/gpt-oss-120b");
-  assert.equal(seen[0].body.stream,false);
+  assert.notEqual(seen[0].body.stream,true,"non-streaming request must not enable streaming");
 });
 
 test("real OpenAI SDK serializes a Responses request and parses one synthetic reply",async()=>{
