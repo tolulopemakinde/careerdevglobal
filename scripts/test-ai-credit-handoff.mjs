@@ -6,7 +6,7 @@ import {runSdkSyntheticPilot} from "../lib/ai/pilot/sdk-executor.mjs";
 function scenario(overrides={}){
   const calls={reserve:[],claim:[],settle:[],models:[],validated:0,persisted:0};
   const creditPort={
-    reserve:async key=>{calls.reserve.push(key);return {allowed:true,ledgerId:"ledger-00123"};},
+    reserve:async key=>{calls.reserve.push(key);return {allowed:true,ledgerId:"ledger-00123",creditsRequired:1};},
     claim:async(ledger,key)=>{calls.claim.push([ledger,key]);return true;},
     settle:async(ledger,outcome,key)=>{calls.settle.push([ledger,outcome,key]);return {status:outcome,duplicate:false};},
   };
@@ -168,7 +168,7 @@ test("atomic claim simulation permits exactly one winner for simultaneous same-k
   let claimed=false;
   x.simulation.creditPort.reserve=async key=>{
     x.calls.reserve.push(key);
-    return {allowed:true,ledgerId:"ledger-00123"};
+    return {allowed:true,ledgerId:"ledger-00123",creditsRequired:1};
   };
   x.simulation.creditPort.claim=async (ledger,key)=>{
     x.calls.claim.push([ledger,key]);
@@ -234,7 +234,7 @@ test("synthetic handoff orders reserve claim providers validation persistence an
   const events=[];
   const x=scenario();
   const creditPort={
-    reserve:async key=>{events.push("reserve");return {allowed:true,ledgerId:"ledger-00123"};},
+    reserve:async key=>{events.push("reserve");return {allowed:true,ledgerId:"ledger-00123",creditsRequired:1};},
     claim:async()=>{events.push("claim");return true;},
     settle:async(_ledger,outcome)=>{events.push("settle:"+outcome);return {status:outcome,duplicate:false};},
   };
@@ -321,4 +321,53 @@ test("boolean settlement without sandbox RPC status is rejected",async()=>{
   };
   await assert.rejects(()=>run(x.simulation),e=>e.code==="CREDIT_SETTLEMENT_UNCONFIRMED");
   assert.equal(x.calls.settle.length,1);
+});
+
+
+test("staff no-customer-credit authorization cannot be promoted to billable AI inference",async()=>{
+  const x=scenario();
+  x.simulation.creditPort.reserve=async key=>{
+    x.calls.reserve.push(key);
+    return {allowed:true,ledgerId:null,creditsRequired:0,reason:"internal_staff_usage_no_customer_credit"};
+  };
+  await assert.rejects(()=>run(x.simulation),e=>e.code==="NON_BILLABLE_OPERATION_REQUIRES_SEPARATE_AUTH");
+  assert.equal(x.calls.reserve.length,1);
+  assert.equal(x.calls.claim.length,0);
+  assert.equal(x.calls.models.length,0);
+  assert.equal(x.calls.settle.length,0);
+});
+
+test("zero-cost plan operation cannot be treated as a paid credit reservation",async()=>{
+  const x=scenario();
+  x.simulation.creditPort.reserve=async key=>{
+    x.calls.reserve.push(key);
+    return {allowed:true,ledgerId:null,creditsRequired:0,reason:"no_customer_credit_required"};
+  };
+  await assert.rejects(()=>run(x.simulation),e=>e.code==="NON_BILLABLE_OPERATION_REQUIRES_SEPARATE_AUTH");
+  assert.equal(x.calls.claim.length,0);
+  assert.equal(x.calls.models.length,0);
+  assert.equal(x.calls.settle.length,0);
+});
+
+test("missing or ambiguous credit cost must not invoke an AI provider",async()=>{
+  for(const cost of [undefined,null,-1,0.5,NaN,Infinity]){
+    const x=scenario();
+    x.simulation.creditPort.reserve=async key=>{
+      x.calls.reserve.push(key);
+      return {allowed:true,ledgerId:"ledger-00123",creditsRequired:cost};
+    };
+    await assert.rejects(()=>run(x.simulation),e=>e.code==="CHARGEABLE_CREDIT_COST_UNCONFIRMED");
+    assert.equal(x.calls.claim.length,0);
+    assert.equal(x.calls.models.length,0);
+    assert.equal(x.calls.settle.length,0);
+  }
+});
+
+test("zero credit cost with a ledger ID cannot disguise a chargeable reservation",async()=>{
+  const x=scenario();
+  x.simulation.creditPort.reserve=async()=>({allowed:true,ledgerId:"ledger-00123",creditsRequired:0});
+  await assert.rejects(()=>run(x.simulation),e=>e.code==="NON_BILLABLE_OPERATION_REQUIRES_SEPARATE_AUTH");
+  assert.equal(x.calls.claim.length,0);
+  assert.equal(x.calls.models.length,0);
+  assert.equal(x.calls.settle.length,0);
 });
