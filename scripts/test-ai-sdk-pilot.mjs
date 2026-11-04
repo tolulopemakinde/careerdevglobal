@@ -58,6 +58,8 @@ test("SDK routes through real provider constructors with mocked, non-network gen
   const invoked=[];
   const result=await runSdkSyntheticPilot(base({
     generate:async input=>{
+      assert.equal(input.maxRetries,0,"SDK must not perform hidden retries");
+      assert.equal(input.maxOutputTokens,400);
       invoked.push(input.model.modelId);
       return {text:"Synthesized test-only result",usage:{inputTokens:6,outputTokens:7}};
     },
@@ -72,6 +74,7 @@ test("SDK falls back once on transient failure and records two provider events",
   const output=await runSdkSyntheticPilot(base({
     record:async x=>audit.push(x.outcome),
     generate:async input=>{
+      assert.equal(input.maxRetries,0,"each provider attempt must be non-retrying");
       models.push(input.model.modelId);
       if(models.length===1) throw Object.assign(new Error("simulated"),{statusCode:503});
       return {text:"synthetic Groq fallback result",usage:{}};
