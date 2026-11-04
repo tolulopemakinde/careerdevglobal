@@ -93,3 +93,44 @@ Vercel environment **name-only** inspection found `GROQ_API_KEY` targeted to Pre
 - [ ] Run full QA and owner review before changing any existing production AI-agent traffic.
 
 **Release decision:** HOLD. Do not merge, deploy, modify database grants, change Supabase runtime code, or enable automatic live fallback from this PR.
+
+## Follow-up assessment — 2026-11-04
+
+### Security advisors (read-only)
+
+Supabase security advisors returned the following grouped findings:
+
+| Advisor | Production | AI test |
+|---|---:|---:|
+| `anon_security_definer_function_executable` | 1 | 9 |
+| `authenticated_security_definer_function_executable` | 52 | 44 |
+| `rls_enabled_no_policy` (INFO) | 16 | 32 |
+| `function_search_path_mutable` | 0 | 4 |
+| `extension_in_public` | 0 | 2 |
+
+These are **advisory counts, not validated exploits**. Service-only tables can intentionally have RLS enabled without client policies, and public-coach discovery functions may intentionally be callable anonymously. Inspect invocation boundaries and actual function bodies before any grant/DDL changes.
+
+- Test project's `reserve_ai_credits` was flagged as anonymous-executable SECURITY DEFINER, while the production grant is narrower. A read-only inspection of its test function source found `auth.uid()` validation, active-profile checks and owned-execution checks. It must still undergo least-privilege review; no exploit has been demonstrated.
+- Security advisor references: https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable and https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy
+
+### Provider compatibility boundary (official documentation checked)
+
+The deployed runtime sends an OpenAI Responses API request with `web_search` and strict `json_schema`. Groq currently supports GPT-OSS 120B and 20B with strict structured output, but its Structured Outputs documentation warns that **streaming and tool use are not supported together with Structured Outputs**. Although the Groq Responses API supports browser search independently, a single-call combination with strict JSON is **not assumed equivalent**. See:
+
+- https://console.groq.com/docs/structured-outputs
+- https://console.groq.com/docs/responses-api
+- https://console.groq.com/docs/models
+
+The safest **candidate architecture for isolated comparison** is a two-stage workflow: first fetch and separately validate cited career/employer facts with Exa or Tavily; then pass bounded, reviewed factual excerpts to a strict JSON Groq generation step without model-side tools. Exa and Tavily request formats were cross-checked against current official references (https://exa.ai/docs/reference/search and https://docs.tavily.com/documentation/api-reference/endpoint/search). This design still requires an explicitly scoped test and may have different latency/cost from single-call OpenAI.
+
+Added `lib/ai/pilot/agent-capability-gate.mjs` and `scripts/test-ai-agent-capabilities.mjs` to **block unsafe inferred equivalence** in the draft test policy. These are review/planning safeguards and do not authorize live runtime use.
+
+### Cross-PR integration constraints
+
+- Draft PR #42 contains a separately proposed AI credit/claim/settle runtime, migrations and billing tests. It must remain the source of truth for billing fixes; do **not** duplicate or overwrite its work in PR #43.
+- Draft PR #39 modifies the AI pilot runtime and provider boundaries; reconcile that scope before any integration with live agents.
+- Draft PR #36 covers schema source-of-truth recovery; this audit alone is not sufficient to regenerate schema/migrations.
+
+### Release checklist
+
+Current JSON evidence ledger: `docs/architecture/ai-provider-release-evidence-2026-11-04.json`. All 11 gates remain **unverified**. Passing the document's unit tests only proves fail-closed status evaluation, **not** readiness or live provider accessibility.
