@@ -62,3 +62,27 @@ Prior aggregate-only inspections found **21 auth users** whose provenance as pur
 - The targeted migration is intentionally not applied: existing test accounts (21 in previous aggregate read) have not been independently confirmed as synthetic; live payment/provider credentials and test data provenance remain outstanding.
 
 **Safeguarded next step:** After explicit approval of synthetic-account provenance and financial/test environment isolation, take a source snapshot, review the migration, execute only against the intended isolated database, then run real authenticated idempotency and concurrent claim tests. *A passing CI build and read-only fingerprint match are not database integration evidence.*
+
+## Independent disposable PostgreSQL integration proof — 4 November 2026
+
+The same SQL migration body was exercised against a **fresh GitHub Actions PostgreSQL 16 service** with fictional accounts, operations, subscriptions, execution requests, and a mock payment-access function. No connection to Supabase, Paystack or OpenAI/Groq was made; no sensitive user records or secrets were accessed.
+
+**Source under test:** `supabase/migrations/20261104122023_bind_ai_credit_replay_to_execution.sql`, with its exact `CREATE OR REPLACE FUNCTION public.reserve_ai_credits` body extracted after the source-specific preflight. A disposable database does not have the original audited Supabase source, so the test intentionally skips only the fingerprint preflight; the function body itself is executed unchanged.
+
+**Verified SQL behavior:**
+
+- An initial owned execution reserves one credit.
+- An exact replay of that execution/request and idempotency key returns the same ledger.
+- An alternative owned execution using the same key is rejected.
+- A different owned request with the same execution and key is rejected.
+- A different agent operation with the same key is rejected.
+- Only one ledger row exists afterward, attributed to the original execution/request.
+- Disabling the fixture's payment entitlement prevents reservation.
+- Switching the authenticated fixture identity to another user rejects the owned request.
+- Fixture changes are rolled back, and the test PostgreSQL container is discarded.
+
+**Evidence:** [GitHub Actions billing run 41829622295](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41829622295), SQL integration job **success**; log contains the `SQL-FIXTURE: ... PASSED` notice and `ROLLBACK`. The same run's billing unit job passed **83/83** tests; [Phase 1 validation 41829630872](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41829630872) passed the build and source/security checks. [Exact-commit Vercel preview](https://careerdevglobal-l24d2m00w-career-dev-global.vercel.app) is READY.
+
+Files: `tests/ai-credit-replay-disposable-schema.sql`, `tests/ai-credit-replay-disposable-cases.sql`, and the new `postgres-replay-fixture` job in `.github/workflows/ai-billing-tests.yml`. The job uses dummy credentials only and requires **no Supabase secrets**.
+
+**Interpretation:** This validates actual PostgreSQL function execution in an isolated synthetic environment. It does **not** validate authenticated RLS or concurrent workload against the real Supabase project, the source-fingerprint preflight under DDL application, payment-provider delivery, or financial reconciliation. Do not deploy to the existing AI test project or production until ownership/provenance and the existing PR #42 release gates are resolved.
