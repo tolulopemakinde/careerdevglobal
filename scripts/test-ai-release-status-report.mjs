@@ -41,7 +41,7 @@ test("complete-but-unverified references still require independent human approva
 });
 test("CLI emits stable status without network access, credentials or private account data",()=>{
   const p=spawnSync(process.execPath,[new URL("../scripts/report-ai-pilot-readiness.mjs",import.meta.url).pathname],{
-    encoding:"utf8",env:{...process.env,OPENAI_API_KEY:"must-not-appear-openai",GROQ_API_KEY:"must-not-appear-groq"},timeout:5000,
+    encoding:"utf8",env:{...process.env,SYNTHETIC_AUDIT_SENTINEL:"must-not-appear"},timeout:5000,
   });
   assert.equal(p.status,0);
   const r=JSON.parse(p.stdout);
