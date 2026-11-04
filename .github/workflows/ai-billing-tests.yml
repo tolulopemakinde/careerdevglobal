@@ -32,3 +32,50 @@ jobs:
           node-version: '22'
       - name: AI billing unit and source regression tests
         run: npm run test:ai-billing
+
+  postgres-replay-fixture:
+    name: Disposable PostgreSQL credit replay integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: fixture-only-not-production
+          POSTGRES_DB: synthetic_ai_fixture
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d synthetic_ai_fixture"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=8
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: fixture-only-not-production
+      PGDATABASE: synthetic_ai_fixture
+    steps:
+      - name: Checkout billing draft branch
+        uses: actions/checkout@v4
+      - name: Ensure PostgreSQL client is available
+        shell: bash
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq postgresql-client
+          fi
+          psql --version
+      - name: Build isolated fictional schema
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/ai-credit-replay-disposable-schema.sql
+      - name: Load exact proposed function body from unapplied migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          awk 'index($0,"CREATE OR REPLACE FUNCTION public.reserve_ai_credits(")==1 {copy=1} copy {print} copy && $0=="$function$;" {exit}' supabase/migrations/20261104122023_bind_ai_credit_replay_to_execution.sql > /tmp/credit_replay_function.sql
+          grep -q '^CREATE OR REPLACE FUNCTION public.reserve_ai_credits(' /tmp/credit_replay_function.sql
+          grep -q '^\$function\$;' /tmp/credit_replay_function.sql
+          psql -X -v ON_ERROR_STOP=1 -f /tmp/credit_replay_function.sql
+      - name: Verify actual PostgreSQL reservation, denial, ownership and payment semantics
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/ai-credit-replay-disposable-cases.sql
