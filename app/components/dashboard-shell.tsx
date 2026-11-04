@@ -25,6 +25,8 @@ export default function DashboardShell({ role, children }: { role: DashboardRole
   const [collapsed, setCollapsed] = useState(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState('overview');
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState('');
   const trigger = useRef<HTMLButtonElement>(null);
   const drawer = useRef<HTMLElement>(null);
   const content = useRef<HTMLDivElement>(null);
@@ -95,6 +97,22 @@ export default function DashboardShell({ role, children }: { role: DashboardRole
     };
   }, [open]);
 
+  async function handleSignOut() {
+    if (signingOut) return;
+    setSigningOut(true);
+    setSignOutError('');
+    try {
+      const { error } = await createSupabaseBrowserClient().auth.signOut();
+      if (error) throw error;
+      setOpen(false);
+      router.replace(`/${role}/login`);
+      router.refresh();
+    } catch {
+      setSignOutError('Unable to log out. Please try again.');
+      setSigningOut(false);
+    }
+  }
+
   function navigate(id: string) {
     setActive(id);
     setOpen(false);
@@ -113,6 +131,14 @@ export default function DashboardShell({ role, children }: { role: DashboardRole
       <button className="dashboard-menu-button dashboard-desktop-toggle" aria-label={collapsed ? 'Expand dashboard navigation' : 'Collapse dashboard navigation'} aria-expanded={!collapsed} aria-controls="dashboard-destinations" title={collapsed ? 'Expand navigation' : 'Collapse navigation'} onClick={() => setCollapsed(value => !value)}><span className="dashboard-hamburger" aria-hidden="true"><i/><i/><i/></span><span className="dashboard-sidebar-copy">Collapse menu</span></button>
       <button className="dashboard-menu-button dashboard-drawer-close" onClick={close} aria-label="Close dashboard navigation">✕ <span>Close menu</span></button>
       <nav id="dashboard-destinations" aria-label={`${role} dashboard sections`}>{destinations.map(item => <a key={item.id} href={`${pathname}#${item.id}`} className="dashboard-destination" aria-current={active === item.id ? 'location' : undefined} aria-label={item.label} title={item.label} onClick={event => { if (!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) navigate(item.id); }}><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[item.icon]}/></svg><span className="dashboard-sidebar-copy">{item.label}</span><span className="dashboard-tooltip" aria-hidden="true">{item.label}</span></a>)}</nav>
+      <div className="dashboard-sidebar-actions">
+        <button type="button" className="dashboard-destination dashboard-logout" onClick={handleSignOut} disabled={signingOut} aria-label="Log out" title="Log out">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 17l5-5-5-5m5 5H3m9-9h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7"/></svg>
+          <span className="dashboard-sidebar-copy">{signingOut ? 'Logging out…' : 'Log out'}</span>
+          <span className="dashboard-tooltip" aria-hidden="true">Log out</span>
+        </button>
+        {signOutError && <span className="dashboard-signout-error" role="alert">{signOutError}</span>}
+      </div>
       <Link className="dashboard-destination dashboard-home" href="/" aria-label="CareerDev Global homepage" title="CareerDev Global homepage"><span aria-hidden="true">↗</span><span className="dashboard-sidebar-copy">CareerDev Global home</span></Link>
     </aside>
     <div ref={content} className="dashboard-content">{children}</div>
