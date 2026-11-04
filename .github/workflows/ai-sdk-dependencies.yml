@@ -1,0 +1,58 @@
+name: Pin AI SDK provider dependencies (draft pilot)
+
+on:
+  push:
+    branches:
+      - design-groq-research-gateway-2026-11-04
+    paths:
+      - .github/workflows/ai-sdk-dependencies.yml
+
+permissions:
+  contents: write
+
+jobs:
+  pin-packages:
+    if: github.repository == 'tolulopemakinde/careerdevglobal' && github.ref == 'refs/heads/design-groq-research-gateway-2026-11-04'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      SENTRY_SILENT: 'true'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install and pin AI SDK providers
+        run: npm install --save-exact --ignore-scripts --no-audit --no-fund ai @ai-sdk/openai @ai-sdk/groq
+      - name: Check provider package versions and imports
+        run: |
+          node -e "for (const p of ['ai','@ai-sdk/openai','@ai-sdk/groq']) console.log(p, require(p + '/package.json').version)"
+          node --input-type=module -e "import {generateText} from 'ai'; import {createOpenAI} from '@ai-sdk/openai'; import {createGroq} from '@ai-sdk/groq'; if (![generateText, createOpenAI, createGroq].every(x => typeof x === 'function')) process.exit(1)"
+      - name: Run existing and synthetic tests
+        run: |
+          npm run test:ai-pilot
+          npm run typecheck
+          npm run audit:source
+          npm run check:build-inputs
+          npm run build
+      - name: Commit generated manifest and lockfile on draft branch only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code -- . ':!package.json' ':!package-lock.json'
+          git diff --check
+          git add package.json package-lock.json
+          if git diff --cached --quiet; then
+            echo "No dependency changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(ai-pilot): pin verified AI SDK provider dependencies"
+          git push origin HEAD:refs/heads/design-groq-research-gateway-2026-11-04
