@@ -3,7 +3,7 @@
 **Decision date:** 2026-11-04  
 **Status:** Architecture and risk-gated implementation plan; **not deployed**  
 **Repository baseline:** `main`, audited read-only 2026-11-04  
-**Decision:** Only Groq, one of Exa/Tavily, Vercel AI SDK, and LiteLLM are in scope. Other proposed integrations are deferred.
+**Decision:** Prioritize Groq, Vercel AI SDK, and **one** career research provider (Exa or Tavily). Retain OpenAI as primary. **Suspend LiteLLM** and all other proposed integrations.
 
 ## 1. Approved scope
 
@@ -13,16 +13,16 @@
 | GroqCloud | Test as secondary inference provider | GPT-OSS 120B/20B candidates; verify account enablement and task compatibility |
 | Exa **or** Tavily | Grounded career, employer and job-market research | Select one provider after comparative evaluation; do not silently activate both |
 | Vercel AI SDK (`ai`) | Typed, uniform application-side generation/streaming | Introduce to new Next.js server-only adapter first; no broad rewrite |
-| LiteLLM Gateway | Centralized model routing, budgets, logs, provider retry/fallback | Separate managed/self-hosted gateway; not assumed to run inside a Vercel serverless function |
+| LiteLLM Gateway | **Deferred** | No hosting, database, credentials, service setup, or gateway dependencies in the pilot |
 | Calendly | Existing booking and Google Calendar sync | Keep authoritative scheduling integration; no Groq Google Workspace MCP |
 
-**Explicitly deferred:** Google Workspace connectors (Gmail, Calendar, Drive), LangGraph, Composio, LiveKit, other research tools and unrelated AI integrations.
+**Explicitly deferred:** LiteLLM, Google Workspace connectors (Gmail, Calendar, Drive), LangGraph, Composio, LiveKit, other research tools and unrelated AI integrations. Revisit LiteLLM only if measured requirements justify a separate gateway.
 
 ## 2. Current evidence and constraints
 
 - `package.json` on `main` lists Next.js 16.4.0, React 19.3.0, Supabase and Sentry but **does not list** Vercel AI SDK, Groq, LiteLLM, Exa or Tavily.
 - `supabase/functions/careerdev-coach-matching/index.ts` currently uses `new Supabase.ai.Session("gte-small")`; embeddings and retrieval must **not** be routed blindly to chat-completion models.
-- Existing billing, subscription/AI credit, authorization, rate-limit, and RLS protections are separate authorities and must not be bypassed by an AI gateway.
+- Existing billing, subscription/AI credit, authorization, rate-limit, and RLS protections remain authoritative; the new Next.js adapter must enforce them before any provider request.
 - Other active draft PRs cover billing, schema recovery, AI governance and pilot agent runtime. Preserve their scopes and avoid touching those features in this plan.
 - The source-of-truth Supabase migration history and isolated test environment require independent verification before any production migration.
 
@@ -40,18 +40,18 @@ Next.js server-side AI endpoint (Vercel AI SDK)
     |       |-- verified source URLs, publication/fetch timestamps, provenance
     |       '-- no automated job guarantee or fabricated employer claims
     |
-    '-- LiteLLM virtual key -> gateway
+    '-- Server-side provider router (Vercel AI SDK + application policy)
               |-- OpenAI (primary)
-              '-- Groq (eligible alternative)
+              '-- Groq (eligible alternative only)
                      |
-                 Structured output validated against agent schema
+                Structured output validated against agent schema
                      |
         Existing AI credit finalize / refund logic
                      |
            Coach review where required; audit record
 ```
 
-**Do not expose** OpenAI, Groq, Exa/Tavily, LiteLLM, Supabase service-role keys or OAuth secrets in client code. Do not let the gateway enforce paid entitlements on its own. Its budgets are a secondary cost-control layer, not the business source of truth.
+**Do not expose** OpenAI, Groq, Exa/Tavily, Supabase service-role keys or OAuth secrets in client code. Implement routing, retries, logging and spending caps inside the authorized server-side adapter; Supabase remains the business source of truth for paid entitlements and AI credits. The AI SDK is a toolkit, not a hosted model router or automatic failover service. A separate gateway is **not** part of this pilot.
 
 ## 4. Provider-specific guardrails
 
@@ -62,7 +62,7 @@ Next.js server-side AI endpoint (Vercel AI SDK)
 5. **Quality:** CV/assessment fields require consent and minimum necessary disclosure; no real client data used in the initial proof-of-concept; human review for consequential recommendations.
 6. **Resilience:** Fail closed for unauthorized calls; return clear temporary error or existing no-AI fallback when both providers are unavailable. Never downgrade to an unapproved model.
 7. **Observability:** Correlate request ID, agent, provider, model, latency, token count, cost, search retrieval and credit transaction, without raw CV/email logging.
-8. **LiteLLM infrastructure:** Prefer an isolated managed container with authenticated endpoint, database-backed budgets, network restrictions, secret rotation, backups and uptime checks. Verify gateway availability before redirecting customer traffic. LiteLLM without a connected database does **not** enforce virtual-key budgets.
+8. **No new gateway infrastructure:** Do not deploy LiteLLM, its database, Redis or any proxy server. Implement only minimal server-side routing, configuration and usage audit needs. Evaluate optional gateway products separately only if later justified.
 9. **Source control:** Package installation and lockfile updates must occur in an authenticated, reproducible development environment. Never hand-edit lockfiles based on guesses.
 10. **Release boundary:** No production secrets, database changes, merges or deployments until tests and human review have passed.
 
@@ -77,9 +77,9 @@ Next.js server-side AI endpoint (Vercel AI SDK)
 
 ### Phase B — baseline provider adapter and test harness (development only)
 
-- Install `ai` plus the version-appropriate SDK provider(s) and `@ai-sdk/openai-compatible` after checking actual package/lockfile and bundled docs.
+- Install `ai` and the version-appropriate OpenAI and Groq SDK provider packages after checking the actual package/lockfile and bundled docs. Use only verified APIs and model IDs.
 - Add a new internal-only endpoint or test harness with deterministic synthetic career profiles.
-- Configure LiteLLM gateway with named model aliases mapping explicitly to OpenAI and Groq; access through authenticated server-side calls only.
+- Add a small application-owned, server-side provider router mapping agent-specific allowlisted models to OpenAI (primary) and Groq (eligible alternative), with bounded retries, request IDs, server-side usage logging and circuit-breaking as needed.
 - Keep all existing live agent routes untouched, and enable test access only under a default-off feature flag.
 - Validate JSON/schema quality, latency, timeouts, concurrency, provider exhaustion, invalid keys, and fallback correctness.
 
@@ -100,13 +100,13 @@ Next.js server-side AI endpoint (Vercel AI SDK)
 ## 6. Non-negotiable release checklist
 
 - [ ] Credentials are in secure environment configuration only; none committed.
-- [ ] Isolated non-production Supabase and gateway test infrastructure validated.
+- [ ] Isolated non-production application and Supabase test infrastructure validated; no separate AI gateway introduced.
 - [ ] Up-to-date package versions and lockfile produced by package manager.
 - [ ] All agents evaluated against capability compatibility; unsupported agents remain unchanged.
 - [ ] Research source provenance, job freshness and prompt-injection controls verified.
 - [ ] Idempotent AI credit accounting on retries/fallback proven.
 - [ ] Authorization, RLS, tenancy and rate-limit tests pass.
-- [ ] Gateway budgets persist across restarts and outages.
+- [ ] Existing server-side AI-credit accounting, request limits and spending controls persist correctly across retries, restarts and provider failures.
 - [ ] Dependency, typecheck, build and applicable validation scripts pass.
 - [ ] Preview and rollback evidence reviewed; explicit production approval obtained.
 
@@ -114,8 +114,6 @@ Next.js server-side AI endpoint (Vercel AI SDK)
 
 - Vercel AI SDK providers: https://ai-sdk.dev/providers/ai-sdk-providers
 - Groq models: https://console.groq.com/docs/models
-- LiteLLM gateway: https://docs.litellm.ai/docs/simple_proxy
-- LiteLLM gateway budgets: https://docs.litellm.ai/docs/proxy/docker_quick_start
 - Exa pricing: https://exa.ai/pricing
 - Tavily pricing: https://www.tavily.com/pricing
 
