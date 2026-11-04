@@ -5,6 +5,20 @@
 **Repository baseline:** `main`, audited read-only 2026-11-04  
 **Decision:** Prioritize Groq, Vercel AI SDK, and **one** career research provider (Exa or Tavily). Retain OpenAI as primary. **Suspend LiteLLM** and all other proposed integrations.
 
+## Implementation checkpoint — 2026-11-04
+
+The following **development-only, inactive scaffolding** has now been added on this draft branch:
+
+- \`lib/ai/pilot/provider-routing.mjs\`: explicit OpenAI primary / Groq fallback policy for synthetic career profiles only, with default-off gate, bounded requests, transient-only retry conditions, sanitized errors and metadata-only audit callback.
+- \`lib/ai/pilot/research-normalizer.mjs\`: source normalization for the Exa/Tavily comparison; deduplicates citations, bounds excerpts, rejects common unsafe links and never claims a listed job is verified open.
+- \`scripts/test-ai-provider-pilot.mjs\` and \`scripts/test-ai-research-pilot.mjs\`: dependency-free Node test suites. Run with \`npm run test:ai-pilot\`.
+- \`examples/ai-pilot/sdk-executor.example.mjs\`: inactive AI SDK integration reference, **not imported by an application endpoint**. It requires installation and validation of the real version-matched \`ai\`, \`@ai-sdk/openai\`, \`@ai-sdk/groq\` packages before execution.
+- \`docs/architecture/exa-vs-tavily-evaluation-2026-11-04.md\`: objective benchmark and source-validation criteria; no research provider has been selected.
+
+**Validation performed:** Eight injected-executor routing checks passed against the tracked module in a connector JavaScript harness; five research-normalization cases passed in a local Node 22 check using a separately reproduced copy of the module. These are **partial synthetic checks, not an execution of the full committed Node test suites, app typecheck or live API tests**. The restricted GitHub connector cannot run \`npm ci\`, and the local container cannot resolve the GitHub/npm hosts to install packages or obtain a source checkout.
+
+**Still blocked:** a reproducible checkout; \`npm ci\` / \`npm install ai @ai-sdk/openai @ai-sdk/groq\` with matching lockfile; full Node test suite, TypeScript typecheck/build, isolated credentials and live OpenAI/Groq comparison, Exa/Tavily API-key tests, Supabase runtime/entitlement compatibility audit, and an authenticated preview deployment. **No agent or paid user traffic is routed by this branch.**
+
 ## 1. Approved scope
 
 | Component | Purpose | Implementation boundary |
