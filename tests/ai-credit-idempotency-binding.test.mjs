@@ -65,3 +65,45 @@ test("SQL three-valued logic needs IS DISTINCT FROM for null bindings",()=>{
   assert.equal(isDistinctFrom("exec-001","exec-002"),true);
   assert.equal(isDistinctFrom("exec-001","exec-001"),false);
 });
+
+
+const additiveMigrationPath="../supabase/migrations/20261104122023_bind_ai_credit_replay_to_execution.sql";
+function additiveMigration(){
+  return readFileSync(new URL(additiveMigrationPath,import.meta.url),"utf8");
+}
+test("additive migration is sourced from the audited test function and fails closed on drift",()=>{
+  const sql=additiveMigration();
+  assert.match(sql,/DO \$ai_credit_replay_preflight\$/);
+  assert.match(sql,/md5\(v_current\) <> '[a-f0-9]{32}'/);
+  assert.match(sql,/source does not match audited test snapshot/);
+  assert.match(sql,/public\.ai_payment_access_allowed\(s\.id\)/);
+  assert.match(sql,/pg_advisory_xact_lock/);
+  assert.equal((sql.match(/CREATE OR REPLACE FUNCTION public\.reserve_ai_credits\(/g)||[]).length,1);
+  assert.equal((sql.match(/public\.reserve_ai_credits\(/g)||[]).length,1);
+});
+test("additive migration guards same execution, request, operation and paid entitlement",()=>{
+  const sql=additiveMigration().toLowerCase();
+  for(const required of [
+    "v_existing.execution_id is distinct from p_execution_id",
+    "v_existing.request_id is distinct from p_request_id",
+    "v_existing.agent_key is distinct from v_op.agent_key",
+    "v_existing.operation_key<>p_operation_key",
+    "v_existing.subscription_id<>v_sub.id",
+    "public.ai_payment_access_allowed(s.id)",
+    "r.requested_by=v_user_id",
+    "security definer",
+    "set search_path to ''",
+  ])assert.ok(sql.includes(required),"missing critical guard: "+required);
+});
+test("additive migration makes no unrelated schema or privilege changes",()=>{
+  const sql=additiveMigration();
+  for(const disallowed of [
+    /\bDROP\s+(TABLE|FUNCTION|SCHEMA)\b/i,
+    /\bTRUNCATE\s+/i,
+    /\bALTER\s+TABLE\b/i,
+    /\bGRANT\s+(?:EXECUTE|ALL)\b/i,
+    /\bREVOKE\s+(?:EXECUTE|ALL)\b/i,
+    /\bDELETE\s+FROM\s+public\./i,
+    /\bUPDATE\s+auth\.users\b/i,
+  ]) assert.doesNotMatch(sql,disallowed);
+});
