@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { generateText } from "ai";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
+import { runSdkSyntheticPilot } from "../lib/ai/pilot/sdk-executor.mjs";
 
 /**
  * Exercises the REAL AI SDK HTTP request/response parsing with injected local
@@ -91,4 +92,66 @@ test("OpenAI HTTP 429 quota failure is not retried by SDK",async()=>{
   });
   await assert.rejects(()=>invoke(openai("synthetic-test-openai")));
   assert.equal(calls,1);
+});
+
+const isolatedPilot={
+  enabled:true,environment:"isolated-test",
+  openaiKey:"synthetic-openai-key",groqKey:"synthetic-groq-key",
+  openaiModelId:"synthetic-test-openai",groqModelId:"openai/gpt-oss-120b",
+  openaiModelAllowlist:["synthetic-test-openai"],
+  groqModelAllowlist:["openai/gpt-oss-120b"],
+  groqFallbackEnabled:true,
+};
+
+test("complete isolated adapter makes exactly one OpenAI call then one Groq fallback",async()=>{
+  const requests=[],events=[];
+  const result=await runSdkSyntheticPilot({
+    prompt:"SYNTHETIC: create a fictional skills roadmap without external claims.",
+    config:isolatedPilot,
+    record:async event=>events.push(event),
+    testOnlyFetch:async(url,init)=>{
+      requests.push({url:String(url),method:init.method});
+      return String(url).includes("api.openai.com")
+        ? jsonResponse({error:{message:"mock temporary outage",type:"server_error",code:"server_error"}},503)
+        : jsonResponse(groqFixture);
+    },
+  });
+  assert.equal(result.provider,"groq");
+  assert.equal(result.attempts,2);
+  assert.deepEqual(requests.map(x=>x.url.includes("api.openai.com")?"openai":"groq"),["openai","groq"]);
+  assert.deepEqual(events.map(x=>x.outcome),["transient_failure","success"]);
+  assert.ok(events.every(x=>!("prompt" in x)&&!("text" in x)));
+});
+
+test("complete isolated adapter never retries or switches provider on quota exhaustion",async()=>{
+  const urls=[],events=[];
+  await assert.rejects(()=>runSdkSyntheticPilot({
+    prompt:"SYNTHETIC: hypothetical career task.",
+    config:isolatedPilot,
+    record:async e=>events.push(e),
+    testOnlyFetch:async(url)=>{
+      urls.push(String(url));
+      return jsonResponse({error:{message:"mock quota exhausted",type:"insufficient_quota",code:"insufficient_quota"}},429);
+    },
+  }),e=>e.message==="PILOT_PROVIDER_FAILED");
+  assert.equal(urls.length,1);
+  assert.ok(urls[0].includes("api.openai.com"));
+  assert.deepEqual(events.map(x=>x.outcome),["permanent_failure"]);
+});
+
+test("complete isolated adapter leaves fallback unused when OpenAI reply succeeds",async()=>{
+  const urls=[];
+  const result=await runSdkSyntheticPilot({
+    prompt:"SYNTHETIC: fictional career skills analysis.",
+    config:isolatedPilot,
+    record:async()=>{},
+    testOnlyFetch:async(url)=>{
+      urls.push(String(url));
+      return jsonResponse(openaiFixture);
+    },
+  });
+  assert.equal(result.provider,"openai");
+  assert.equal(result.attempts,1);
+  assert.equal(urls.length,1);
+  assert.ok(urls[0].includes("api.openai.com"));
 });
