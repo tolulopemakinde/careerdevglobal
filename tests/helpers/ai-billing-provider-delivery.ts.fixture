@@ -1,0 +1,81 @@
+// TEST-only one-shot standalone probe. Never deploy this helper to production.
+// Fixed amount/reference; no caller-selected provider writes or financial linkage.
+import {createClient} from 'jsr:@supabase/supabase-js@2.117.3';
+import {paystackRequest,providerPlanCode} from './_shared/ai-billing-provider.ts';
+const run='billing-standalone-delivery-20261103-a';
+const reference='CDG-WEBHOOK-TEST-20261103-86e31a7c0b2f4d99';
+const expectedUrl='https://yyevuwvtrktrzwuzeddo.supabase.co';
+const endpoint=expectedUrl+'/functions/v1/careerdev-paystack-webhook';
+Deno.serve(async req=>{
+ const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+ const url=Deno.env.get('SUPABASE_URL'),secret=Deno.env.get('PAYSTACK_SECRET_KEY'),service=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+ if(req.method!=='POST'||url!==expectedUrl||!secret?.startsWith('sk_test_')||!service)return reply({error:'Named isolated TEST environment required'},403);
+ const sb=createClient(url,service);
+ const count=async(table:string)=>{const r=await sb.from(table).select('*',{head:true,count:'exact'});if(r.error)throw Error('Snapshot unavailable');return r.count;};
+ const snapshot=async()=>{
+  const [billing,refund]=await Promise.all([sb.from('ai_billing_release_config').select('self_service_enabled').eq('id',true).single(),sb.from('ai_refund_policy_config').select('enabled').eq('id',true).single()]);
+  if(billing.error||refund.error||billing.data.self_service_enabled!==false||refund.data.enabled!==false)throw Error('Both billing gates must remain disabled');
+  return {receipts:await count('ai_subscription_payments'),subscriptions:await count('ai_agent_subscriptions'),credit_rows:await count('ai_credit_ledger'),marketplace_sync:await count('marketplace_payment_state_sync_events'),marketplace_events:await count('marketplace_payment_webhook_events'),ai_events:await count('ai_agent_subscription_webhook_events'),billing_gate:false,refund_gate:false};
+ };
+ let stage='request_validation';
+ try{
+  const body=await req.json();
+  if(body.action==='initialize'){
+   const prior=await sb.from('ai_billing_test_runs').select('status,results').eq('run_id',run).maybeSingle();
+   if(prior.error)throw Error('Initialization claim lookup failed');
+   if(prior.data)return reply({run_id:run,reference,...prior.data,reused:true});
+   stage='baseline';const baseline=await snapshot();
+   for(const [table,column] of [['ai_agent_subscriptions','paystack_transaction_reference'],['marketplace_transactions','provider_transaction_reference'],['marketplace_payment_intents','provider_intent_reference']]){
+    const found=await sb.from(table).select('*',{head:true,count:'exact'}).eq(column,reference);if(found.error||found.count!==0)throw Error('Reference is already linked');
+   }
+   stage='retained_merchant_verification';const old=await paystackRequest(secret,'/transaction/verify/CDG-AI-c3c49ff54bb84ccbbac646fbd821b0b0');
+   if(old.domain!=='test')throw Error('Retained merchant TEST evidence required');
+   const merchant=typeof old.integration==='object'?old.integration?.id:old.integration;
+   const merchantId=merchant?String(merchant):null;
+   stage='provider_event_baseline';const history=await paystackRequest(secret,'/integration/webhooks/events?category=transactions&limit=20');
+   stage='durable_claim';const claimed=await sb.from('ai_billing_test_runs').insert({run_id:run,status:'initialization_claimed',results:[{name:'baseline',baseline,merchant_integration_id:merchantId,retained_test_payment_verified_with_same_secret:true,provider_history_count:Array.isArray(history)?history.length:null,reference,amount_minor:10000,currency:'NGN',standalone:true,at:new Date().toISOString()}]});
+   if(claimed.error)return reply({error:'Initialization already claimed; observe existing reference'},409);
+   // Claim stays durable even if provider outcome is uncertain. Never issue a second initialization.
+   const app=Deno.env.get('CAREERDEV_APP_URL');
+   if(app!=='https://careerdevglobal-git-fix-ai-billing-lif-9f3bbf-career-dev-global.vercel.app')throw Error('Isolated callback required');
+   stage='provider_initialize';const initialized=await paystackRequest(secret,'/transaction/initialize',{email:'webhook-probe-86e31a7c0b2f4d99@example.com',amount:'10000',currency:'NGN',reference,channels:['card'],callback_url:new URL('/pricing?standalone_webhook_test='+reference,app).href,metadata:{standalone_webhook_probe:true,acceptance_run:run,no_entitlements:true}});
+   if(initialized.reference!==reference||typeof initialized.authorization_url!=='string'||new URL(initialized.authorization_url).origin!=='https://checkout.paystack.com')throw Error('Unexpected checkout response');
+   const result={reference,amount_minor:10000,currency:'NGN',authorization_url:initialized.authorization_url,standalone:true,merchant_integration_id:merchantId,created_at:new Date().toISOString()};
+   stage='persist_checkout';const saved=await sb.from('ai_billing_test_runs').update({status:'awaiting_test_checkout',results:[{name:'baseline',baseline,merchant_integration_id:merchantId,retained_test_payment_verified_with_same_secret:true,provider_history_count:Array.isArray(history)?history.length:null},{name:'one_standalone_test_checkout_initialized',...result}]}).eq('run_id',run).eq('status','initialization_claimed');
+   if(saved.error)return reply({error:'Provider response persistence uncertain; do not initialize again',reference},503);
+   return reply({run_id:run,status:'awaiting_test_checkout',...result});
+  }
+  if(body.action!=='observe')return reply({error:'Only initialize or observe is supported'},400);
+  stage='observe_initialization';const initialized=await sb.from('ai_billing_test_runs').select('status,results').eq('run_id',run).single();
+  if(initialized.error)return reply({error:'Probe has not been initialized'},409);
+  stage='observe_provider_transaction';const tx=await paystackRequest(secret,'/transaction/verify/'+reference);
+  if(tx.reference!==reference||tx.domain!=='test'||tx.amount!==10000||tx.currency!=='NGN')throw Error('Standalone TEST identity mismatch');
+  if(typeof tx.id==='number'&&!Number.isSafeInteger(tx.id))throw Error('Unsafe provider transaction identity');
+  const dedicatedCustomer=tx.customer?.email==='webhook-probe-86e31a7c0b2f4d99@example.com';
+  const noPlan=!providerPlanCode(tx.plan)&&!providerPlanCode(tx.plan_object)&&!tx.subscription_code&&!tx.subscription?.subscription_code;
+  const standaloneMetadata=tx.metadata?.standalone_webhook_probe===true&&tx.metadata?.acceptance_run===run&&!tx.metadata?.careerdev_ai_subscription_id;
+  if(!dedicatedCustomer||!noPlan||!standaloneMetadata)throw Error('Standalone customer and metadata verification required');
+  const linked=await sb.from('ai_agent_subscriptions').select('id',{head:true,count:'exact'}).eq('paystack_customer_code',tx.customer.customer_code);
+  if(linked.error||linked.count!==0)throw Error('Standalone customer is linked to a subscription');
+  const merchantValue=typeof tx.integration==='object'?tx.integration?.id:tx.integration,merchant=merchantValue?String(merchantValue):null;
+  const baselineMerchant=initialized.data.results.find((x:any)=>x.name==='baseline')?.merchant_integration_id;
+  stage='observe_provider_events';const listed=await paystackRequest(secret,'/integration/webhooks/events?category=transactions&category_row_id='+encodeURIComponent(tx.id)+'&limit=100');
+  const deliveries=[];
+  for(const item of (Array.isArray(listed)?listed:[]).slice(0,20)){
+   stage='observe_provider_event_detail';const event=await paystackRequest(secret,'/integration/webhooks/events/'+encodeURIComponent(item._id));
+   const payload=event.event_payload?.data;
+   deliveries.push({event_id:event._id,domain:event.domain,event_name:event.event_name,transaction_id:String(event.category_row_id),status:event.status,response_code:event.response_code,trial_count:event.trial_count,created_at:event.createdAt,updated_at:event.updatedAt,endpoint_matches:event.webhook_url===endpoint,webhook_url:event.webhook_url===endpoint?endpoint:'different endpoint (redacted)',payload_identity_matches:payload?.reference===reference&&String(payload?.id)===String(tx.id)&&payload?.domain==='test'&&payload?.amount===10000&&payload?.currency==='NGN'});
+  }
+  stage='observe_stored_event';const stored=await sb.from('marketplace_payment_webhook_events').select('id,provider_event_reference,event_type,signature_verified,processing_status,transaction_id,error_message').eq('provider_key','paystack').eq('provider_event_reference','charge.success:'+String(tx.id));
+  if(stored.error)throw Error('Stored provider event lookup failed');
+  stage='observe_after_snapshot';const after=await snapshot();
+  const baseline=initialized.data.results.find((x:any)=>x.name==='baseline')?.baseline;
+  const intact=['receipts','subscriptions','credit_rows','marketplace_sync','ai_events'].every(k=>after[k]===baseline[k]);
+  const result={reference,transaction_id:String(tx.id),provider_status:tx.status,domain:tx.domain,amount_minor:tx.amount,currency:tx.currency,created_at:tx.created_at,paid_at:tx.paid_at,dedicated_test_customer_matches:dedicatedCustomer,no_subscription_plan:noPlan,standalone_metadata_matches:standaloneMetadata,local_subscription_links:linked.count,merchant_integration_id:merchant,merchant_matches_retained_test_workspace:merchant&&baselineMerchant?merchant===String(baselineMerchant):null,same_test_secret_authenticated_retained_and_new_payment:true,deliveries,stored_events:stored.data,after,financial_counts_unchanged:intact,baseline};
+  const observed=deliveries.some(d=>d.domain==='test'&&d.endpoint_matches&&d.payload_identity_matches&&Number(d.trial_count)>0)&&stored.data.some(e=>e.signature_verified===true&&e.transaction_id===null);
+  const status=tx.status!=='success'?'awaiting_test_checkout':observed&&intact?'provider_delivery_observed_safe_unmatched':'awaiting_provider_delivery';
+  const observationRun='billing-standalone-observe-'+crypto.randomUUID();
+  stage='observe_save_evidence';const saved=await sb.from('ai_billing_test_runs').insert({run_id:observationRun,status,results:[{name:'redacted_provider_observation',...result}]});if(saved.error)throw Error('Observation evidence could not be preserved');
+  return reply({run_id:observationRun,status,...result});
+ }catch(error){return reply({error:'Probe validation unavailable; do not repeat provider initialization',reference,stage,...(error instanceof Error&&/^provider_[0-9]{3}_[a-z]+$/.test(error.message)?{provider_error_code:error.message}:{})},409);}
+});

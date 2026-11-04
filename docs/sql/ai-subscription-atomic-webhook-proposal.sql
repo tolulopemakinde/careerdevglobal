@@ -1,0 +1,5 @@
+-- Superseded by the authoritative version-controlled migration:
+-- supabase/migrations/20261101140853_ai_billing_lifecycle_safety.sql
+-- The earlier proposal activated subscription.create without verified payment
+-- and did not cover the legacy marketplace trigger or credit-settlement boundary.
+-- Do not apply the old proposal separately.

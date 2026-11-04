@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {normalizePaymentAdjustment} from '../supabase/functions/_shared/ai-payment-adjustments.ts';
+const payment={reference:'r',provider_transaction_id:'123',currency:'USD',amount_minor:1000};
+const refund={id:12,domain:'test',transaction:123,currency:'USD',status:'processed',amount:1000};
+const normalize=(p=refund,kind='refund')=>normalizePaymentAdjustment(payment,p,kind,'12','test');
+test('full and partial refunds use exact verified provider objects',()=>{assert.equal(normalize().amount_minor,1000);assert.equal(normalize({...refund,amount:300}).amount_minor,300)});
+for(const [name,patch] of [['unprocessed',{status:'pending'}],['other payment',{transaction:456}],['other mode',{domain:'live'}],['other currency',{currency:'NGN'}],['excess refund',{amount:1001}],['unsafe provider identity',{id:Number.MAX_SAFE_INTEGER+1}],['zero refund',{amount:0}]])test('reject '+name,()=>assert.throws(()=>normalize({...refund,...patch})));
+test('open and accepted chargeback are distinguished',()=>{assert.equal(normalize({...refund,status:'pending'},'dispute').action,'dispute_open');assert.equal(normalize({...refund,status:'resolved',resolution:'merchant-accepted'},'dispute').action,'dispute_lost')});
+test('merchant declined is not treated as a won bank dispute',()=>assert.throws(()=>normalize({...refund,status:'resolved',resolution:'declined'},'dispute'),/review/));
+test('conflicting nested provider currency is rejected',()=>assert.throws(()=>normalize({...refund,transaction:{id:123,currency:'NGN'}}),/Currency/));
+test('conflicting nested provider mode is rejected',()=>assert.throws(()=>normalize({...refund,transaction:{id:123,domain:'live'}}),/mode/));

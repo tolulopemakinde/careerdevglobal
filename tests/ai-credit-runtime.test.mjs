@@ -1,0 +1,22 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {stripTypeScriptTypes} from 'node:module';
+import vm from 'node:vm';
+const source=stripTypeScriptTypes(readFileSync(new URL('../supabase/functions/careerdev-ai-agent-runtime/index.ts',import.meta.url),'utf8').replace(/^import .*;\r?\n/gm,''));
+function boot({providerOk=true,providerBody={output_parsed:{summary:'fixture'}},claim=true,owner='owner',openai=true,missingSnapshots=false}={}){
+ let handler,providerCalls=0;const calls=[];
+ const state={profiles:{role:'client',status:'active'},ai_agent_execution_requests:{id:'request',status:'prepared',requested_by:owner,execution_id:'execution',input_payload:{},trigger_source:'manual'},ai_agent_executions:{id:'execution',agent_id:'agent'},ai_agent_registry:{id:'agent',agent_key:'career_discovery_agent',name:'Fixture',active:true,ai_dependency_mode:'ai_optional'}};
+ const client={auth:{getUser:async()=>({data:{user:{id:'owner'}},error:null})},from(table){const q={select(){return q},eq(){return q},update(){return q},insert(){return q},async maybeSingle(){return {data:state[table],error:null}},then(resolve){resolve({data:table==='ai_agent_configuration_snapshots'?(missingSnapshots?[]:[{config_type:'prompt',configuration:{}},{config_type:'model',configuration:{model:'fixture'}}]):null,error:null})}};return q},async rpc(name,args){calls.push({name,args});if(name==='get_my_ai_agent_access')return {data:[{allowed:true}],error:null};if(name==='reserve_ai_credits')return {data:[{allowed:true,ledger_id:'ledger',credits_required:1}],error:null};if(name==='claim_ai_runtime_credit')return {data:claim,error:null};if(name==='settle_ai_credit_charge')return {data:{status:args.p_outcome},error:null};return {data:{},error:null}}};
+ const sandbox={Deno:{env:{get:name=>name==='OPENAI_API_KEY'?(openai?'fixture-openai':undefined):name==='SENTRY_DSN'?undefined:'fixture-config'},serve:fn=>handler=fn},createClient:()=>client,
+  fetch:async()=>{providerCalls++;return {ok:providerOk,status:providerOk?200:503,text:async()=>typeof providerBody==='string'?providerBody:JSON.stringify(providerBody)}},Request,Response,TextEncoder,URL,crypto:globalThis.crypto,console};
+ vm.runInNewContext(source,sandbox);
+ return {send:()=>handler(new Request('https://fixture.test/runtime',{method:'POST',headers:{Authorization:'Bearer fixture-user'},body:JSON.stringify({request_id:'request'})})),calls,providerCalls:()=>providerCalls};
+}
+test('successful persisted output consumes exactly one server-controlled reservation',async()=>{const h=boot();assert.equal((await h.send()).status,200);assert.equal(h.providerCalls(),1);assert.deepEqual(h.calls.filter(x=>x.name==='settle_ai_credit_charge').map(x=>x.args.p_outcome),['consumed'])});
+test('provider failure releases credits',async()=>{const h=boot({providerOk:false,providerBody:{error:{code:'unavailable'}}});assert.equal((await h.send()).status,502);assert.deepEqual(h.calls.filter(x=>x.name==='settle_ai_credit_charge').map(x=>x.args.p_outcome),['released'])});
+test('malformed provider response releases credits',async()=>{const h=boot({providerBody:'invalid-json'});assert.equal((await h.send()).status,500);assert.deepEqual(h.calls.filter(x=>x.name==='settle_ai_credit_charge').map(x=>x.args.p_outcome),['released'])});
+test('missing configuration after reservation releases credits',async()=>{const h=boot({missingSnapshots:true});assert.equal((await h.send()).status,409);assert.equal(h.providerCalls(),0);assert.deepEqual(h.calls.filter(x=>x.name==='settle_ai_credit_charge').map(x=>x.args.p_outcome),['released'])});
+test('unavailable AI fallback does not reserve or consume customer credits',async()=>{const h=boot({openai:false});assert.equal((await h.send()).status,200);assert.equal(h.providerCalls(),0);assert.equal(h.calls.some(x=>x.name==='reserve_ai_credits'||x.name==='settle_ai_credit_charge'),false)});
+test('concurrent runtime claim cannot issue another provider call or release another invocation reservation',async()=>{const h=boot({claim:false});assert.equal((await h.send()).status,409);assert.equal(h.providerCalls(),0);assert.equal(h.calls.some(x=>x.name==='settle_ai_credit_charge'),false)});
+test('client cannot execute another account request',async()=>{const h=boot({owner:'other-account'});assert.equal((await h.send()).status,403);assert.equal(h.providerCalls(),0);assert.equal(h.calls.some(x=>x.name==='reserve_ai_credits'),false)});

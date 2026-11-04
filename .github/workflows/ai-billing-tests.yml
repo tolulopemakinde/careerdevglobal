@@ -1,0 +1,81 @@
+name: AI billing regression guards
+on:
+  pull_request:
+    paths:
+      - 'supabase/functions/careerdev-paystack-webhook/**'
+      - 'supabase/functions/careerdev-ai-subscription-manage/**'
+      - 'supabase/functions/careerdev-ai-subscription-checkout/**'
+      - 'supabase/functions/careerdev-ai-subscription-verify/**'
+      - 'supabase/functions/careerdev-ai-billing-reconcile/**'
+      - 'supabase/functions/careerdev-ai-payment-adjustment/**'
+      - 'supabase/functions/careerdev-ai-agent-runtime/**'
+      - 'supabase/functions/_shared/ai-billing-*'
+      - 'supabase/functions/_shared/ai-payment-*'
+      - 'supabase/migrations/**'
+      - 'lib/ai-billing-plans.ts'
+      - 'lib/ai-billing-lifecycle.mjs'
+      - 'tests/ai-*'
+      - 'package.json'
+      - '.github/workflows/ai-billing-tests.yml'
+  push:
+    branches: ['fix/ai-billing-lifecycle-safety-2026-11']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: AI billing unit and source regression tests
+        run: npm run test:ai-billing
+
+  postgres-replay-fixture:
+    name: Disposable PostgreSQL credit replay integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: fixture-only-not-production
+          POSTGRES_DB: synthetic_ai_fixture
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d synthetic_ai_fixture"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=8
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: fixture-only-not-production
+      PGDATABASE: synthetic_ai_fixture
+    steps:
+      - name: Checkout billing draft branch
+        uses: actions/checkout@v4
+      - name: Ensure PostgreSQL client is available
+        shell: bash
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq postgresql-client
+          fi
+          psql --version
+      - name: Build isolated fictional schema
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/ai-credit-replay-disposable-schema.sql
+      - name: Load exact proposed function body from unapplied migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          awk 'index($0,"CREATE OR REPLACE FUNCTION public.reserve_ai_credits(")==1 {copy=1} copy {print} copy && $0=="$function$;" {exit}' supabase/migrations/20261104122023_bind_ai_credit_replay_to_execution.sql > /tmp/credit_replay_function.sql
+          grep -q '^CREATE OR REPLACE FUNCTION public.reserve_ai_credits(' /tmp/credit_replay_function.sql
+          grep -q '^\$function\$;' /tmp/credit_replay_function.sql
+          psql -X -v ON_ERROR_STOP=1 -f /tmp/credit_replay_function.sql
+      - name: Verify actual PostgreSQL reservation, denial, ownership and payment semantics
+        run: psql -X -v ON_ERROR_STOP=1 -f tests/ai-credit-replay-disposable-cases.sql

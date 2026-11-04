@@ -1,0 +1,11 @@
+.ai-billing-page{line-height:1.65;overflow-wrap:anywhere}
+.ai-billing-page h2{font-size:clamp(1.3rem,3vw,1.7rem);line-height:1.2;margin:24px 0 14px;letter-spacing:-.02em}
+.ai-billing-page h3{font-size:1.2rem;line-height:1.25;margin:8px 0}
+.ai-billing-page section,.ai-billing-page article{background:#fff}
+.ai-billing-page a{color:#0b5d9b;text-decoration:underline;text-underline-offset:3px}
+.ai-billing-page button{border:1px solid #a9c7dd;border-radius:9px;background:#fff;color:#09233f;padding:10px 15px;margin:8px 0;font:inherit;font-weight:700;cursor:pointer}
+.ai-billing-page button:disabled{cursor:wait;opacity:.6}
+.ai-billing-page button:focus-visible,.ai-billing-page a:focus-visible{outline:3px solid #1976b6;outline-offset:3px}
+.ai-billing-page dialog::backdrop{background:rgba(5,24,45,.5)}
+.ai-billing-page dialog h2{margin-top:0}
+.ai-billing-page dialog button{max-width:100%;white-space:normal}

@@ -1,0 +1,122 @@
+// Fixed, one-shot TEST acceptance and one safe provider resend. Never production.
+import {createClient} from 'jsr:@supabase/supabase-js@2.117.3';
+import {paystackRequest,providerPlanCode,providerRenewalStopped} from './_shared/ai-billing-provider.ts';
+const expected='https://yyevuwvtrktrzwuzeddo.supabase.co';
+const namespace='billing-acknowledgment-20261103-a';
+const probeReference='CDG-WEBHOOK-TEST-20261103-86e31a7c0b2f4d99';
+const providerEventId='6aea261cc2ff06530f130f88';
+Deno.serve(async req=>{
+ const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+ const url=Deno.env.get('SUPABASE_URL'),secret=Deno.env.get('PAYSTACK_SECRET_KEY'),service=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+ if(req.method!=='POST'||url!==expected||!secret?.startsWith('sk_test_')||!service)return reply({error:'Named isolated TEST environment required'},403);
+ const sb=createClient(url,service);let stage='guard';const results:any[]=[];
+ const requireData=async(query:any)=>{const r=await query;if(r.error||!r.data)throw Error('Fixture query failed');return r.data;};
+ try{
+  const [billing,refund]=await Promise.all([sb.from('ai_billing_release_config').select('self_service_enabled').eq('id',true).single(),sb.from('ai_refund_policy_config').select('enabled').eq('id',true).single()]);
+  if(billing.error||refund.error||billing.data.self_service_enabled!==false||refund.data.enabled!==false)throw Error('Both gates must be disabled');
+  const {action}=await req.json();
+  if(!['synthetic_checks','resend_standalone','read_history','observe_standalone'].includes(action))return reply({error:'Fixed actions only'},400);
+  if(action==='observe_standalone'){
+   stage='readonly_provider_observation';
+   const event=await paystackRequest(secret,'/integration/webhooks/events/'+providerEventId),data=event.event_payload?.data;
+   if(event._id!==providerEventId||event.domain!=='test'||event.event_name!=='charge.success'||String(event.category_row_id)!=='6726807449'||event.webhook_url!==expected+'/functions/v1/careerdev-paystack-webhook'||data?.reference!==probeReference||String(data?.id)!=='6726807449'||data?.domain!=='test'||data?.amount!==10000||data?.currency!=='NGN')throw Error('Exact TEST event required');
+   const stored=await requireData(sb.from('marketplace_payment_webhook_events').select('id,provider_event_reference,signature_verified,transaction_id,processing_status,payload_hash,error_message,processed_at').eq('provider_event_reference','charge.success:6726807449'));
+   const observation={event_id:providerEventId,transaction_id:'6726807449',domain:'test',endpoint_matches:true,payload_identity_matches:true,status:event.status,response_code:event.response_code,trial_count:event.trial_count,updated_at:event.updatedAt,stored_events:stored};
+   const run=namespace+'-observation-'+crypto.randomUUID();
+   const saved=await sb.from('ai_billing_test_runs').insert({run_id:run,status:'observed',results:[observation]});if(saved.error)throw Error('Observation persistence failed');
+   return reply({run_id:run,...observation});
+  }
+  const run=namespace+'-'+action;
+  const prior=await sb.from('ai_billing_test_runs').select('status,results').eq('run_id',run).maybeSingle();if(prior.error)throw Error('Claim lookup failed');
+  if(prior.data)return reply({run_id:run,reused:true,...prior.data});
+  const claim=await sb.from('ai_billing_test_runs').insert({run_id:run,status:'claimed',results:[{action,at:new Date().toISOString()}]});
+  if(claim.error)return reply({error:'Action already claimed; do not repeat'},409);
+  const check=(name:string,ok:boolean,actual?:unknown)=>{results.push({name,status:ok?'pass':'fail',...(actual===undefined?{}:{actual})});if(!ok)throw Error('Acceptance assertion failed');};
+  if(action==='resend_standalone'){
+   stage='resend_safety_validation';
+   const tx=await paystackRequest(secret,'/transaction/verify/'+probeReference);
+   const event=await paystackRequest(secret,'/integration/webhooks/events/'+providerEventId);
+   const data=event.event_payload?.data;
+   if(tx.domain!=='test'||tx.status!=='success'||String(tx.id)!=='6726807449'||tx.reference!==probeReference||tx.amount!==10000||tx.currency!=='NGN'||providerPlanCode(tx.plan)||providerPlanCode(tx.plan_object)||tx.subscription_code||tx.subscription?.subscription_code||tx.metadata?.standalone_webhook_probe!==true||tx.metadata?.no_entitlements!==true||tx.metadata?.acceptance_run!=='billing-standalone-delivery-20261103-a')throw Error('Dedicated standalone payment required');
+   if(event._id!==providerEventId||event.domain!=='test'||event.event_name!=='charge.success'||String(event.category_row_id)!=='6726807449'||event.webhook_url!==expected+'/functions/v1/careerdev-paystack-webhook'||data?.reference!==probeReference||String(data?.id)!=='6726807449'||data?.domain!=='test'||data?.amount!==10000||data?.currency!=='NGN')throw Error('Exact TEST event and destination required');
+   for(const [table,column,value] of [['ai_agent_subscriptions','paystack_transaction_reference',probeReference],['ai_agent_subscriptions','paystack_customer_code',tx.customer?.customer_code],['ai_subscription_payments','reference',probeReference],['marketplace_transactions','provider_transaction_reference',probeReference],['marketplace_payment_intents','provider_intent_reference',probeReference]]){
+    if(!value)throw Error('Exact standalone identity required');
+    const r=await sb.from(table).select('*',{count:'exact',head:true}).eq(column,value);if(r.error||r.count!==0)throw Error('Standalone event has financial linkage');
+   }
+   const stored=await requireData(sb.from('marketplace_payment_webhook_events').select('*').eq('id','effce232-de55-4b45-afa4-9316e632a252').single());
+   if(stored.provider_event_reference!=='charge.success:6726807449'||stored.signature_verified!==true||stored.transaction_id!==null||stored.processing_status==='processed'||stored.payload_hash!=='09b372109a25f8b8f731df171f8aac74ea48f50128e593df7987ba5bba1f57d3')throw Error('Unchanged quarantinable event required');
+   check('Documented resend is restricted to one unlinked TEST event',true,{event_id:providerEventId,previous_trials:event.trial_count});
+   // A durable claim precedes the only provider write. Uncertain outcome is never retried.
+   stage='provider_resend';await paystackRequest(secret,'/integration/webhooks/events/resend',{ids:[providerEventId]});
+   check('One provider resend requested; no charge or refund requested',true);
+  }else if(action==='read_history'){
+   stage='readonly_historical_verification';
+   for(const reference of ['CDG-AI-c3c49ff54bb84ccbbac646fbd821b0b0','CDG-AI-c3fcaa6431b94d82bd4a348998512ad7']){
+    const sub=await requireData(sb.from('ai_agent_subscriptions').select('*').eq('paystack_transaction_reference',reference).single());
+    const payment=await paystackRequest(secret,'/transaction/verify/'+reference);
+    check('Retained payment exact TEST identity reverified '+reference.slice(-8),payment.domain==='test'&&payment.reference===reference&&payment.customer?.customer_code===sub.paystack_customer_code&&payment.amount===Math.round(Number(sub.amount)*100)&&payment.currency===sub.currency,{provider_status:payment.status});
+    const providerSub=await paystackRequest(secret,'/subscription/'+sub.paystack_subscription_code);
+    check('Retained provider renewal remains stopped '+reference.slice(-8),providerSub.domain==='test'&&providerRenewalStopped(providerSub));
+   }
+   for(const [id,amount] of [['18971821',300000],['18972336',1200000]]){
+    const refund=await paystackRequest(secret,'/refund/'+id);
+    check('Existing TEST refund remains processed '+id,refund.domain==='test'&&refund.status==='processed'&&refund.amount===amount&&refund.currency==='NGN');
+   }
+  }else{
+   const hex=(b:ArrayBuffer)=>Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,'0')).join('');
+   const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-512'},false,['sign']);
+   const send=async(event:any,invalid=false,raw?:string)=>{
+    const body=raw??JSON.stringify(event),hash=hex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(body)));
+    const signature=invalid?'0'.repeat(128):hex(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(body)));
+    const r=await fetch(expected+'/functions/v1/careerdev-paystack-webhook',{method:'POST',headers:{'Content-Type':'application/json','x-paystack-signature':signature},body,signal:AbortSignal.timeout(25000)});
+    return {http:r.status,body:await r.json(),hash};
+   };
+   stage='signed_http_checks';
+   const event={event:'charge.success',data:{id:namespace+'-unmatched',reference:namespace+'-unmatched',amount:1000,currency:'USD',acceptance_run:namespace,synthetic:true}};
+   check('Invalid HMAC rejected',(await send(event,true)).http===401);
+   check('Signed malformed JSON rejected',(await send(null,false,'{')).http===400);
+   const responses=await Promise.all([send(event),send(event)]);
+   check('Concurrent synthetic unmatched deliveries acknowledged without settlement',responses.every(r=>r.http===200&&r.body.processed===false&&r.body.reconciliation_required===true));
+   const retained=await requireData(sb.from('marketplace_payment_webhook_events').select('id,processing_status,transaction_id,payload_hash').eq('provider_event_reference','charge.success:'+namespace+'-unmatched'));
+   check('One durable unmatched marketplace event',retained.length===1&&retained[0].transaction_id===null&&retained[0].processing_status==='verified');
+   const conflict=await send({...event,data:{...event.data,amount:2000}});
+   check('Conflicting content rejected with original hash preserved',conflict.http===409&&(await requireData(sb.from('marketplace_payment_webhook_events').select('payload_hash').eq('id',retained[0].id).single())).payload_hash===responses[0].hash);
+   const unmatched=await send({event:'invoice.create',data:{reference:'CDG-AI-'+namespace+'-absent',acceptance_run:namespace}});
+   check('Synthetic unmatched AI lifecycle acknowledged without payment',unmatched.http===200&&unmatched.body.processed===false);
+   for(const type of ['refund.processed','charge.dispute.create']){
+    const r=await send({event:type,data:{id:namespace+'-'+type,transaction_reference:'CDG-AI-'+namespace+'-review',acceptance_run:namespace}});
+    check('Synthetic '+type+' is acknowledged only for operator review',r.http===200&&r.body.processed===false&&r.body.reconciliation_required===true);
+   }
+   stage='fresh_nonpayment_ai_fixture';
+   const account=await sb.auth.admin.createUser({email:'billing-ack-fixture-20261103-a@example.com',email_confirm:true,user_metadata:{full_name:'Billing acknowledgment TEST fixture',acceptance_run:namespace}});
+   if(account.error||!account.data.user)throw Error('Fresh fixture account required');
+   const user=account.data.user.id;
+   const profile=await sb.from('profiles').upsert({id:user,email:'billing-ack-fixture-20261103-a@example.com',full_name:'Billing acknowledgment TEST fixture',role:'client',status:'active'});if(profile.error)throw Error('Fixture profile unavailable');
+   const plan=(await requireData(sb.from('ai_agent_subscription_plans').select('plan_key,monthly_price').eq('active',true).order('monthly_credits').limit(1)))[0];
+   const sub=await requireData(sb.from('ai_agent_subscriptions').insert({user_id:user,plan_key:plan.plan_key,billing_interval:'monthly',status:'pending',currency:'USD',amount:plan.monthly_price,paystack_transaction_reference:'CDG-AI-'+namespace+'-nonpayment',metadata:{acceptance_run:namespace,synthetic:true,no_provider_payment:true}}).select('id').single());
+   const ai={event:'invoice.create',data:{reference:'CDG-AI-'+namespace+'-nonpayment',acceptance_run:namespace}};
+   const first=await send(ai),second=await send(ai);
+   check('Matched synthetic AI nonpayment event processed then deduplicated',first.http===200&&first.body.processed===true&&second.http===200&&second.body.duplicate===true);
+   const state=await requireData(sb.from('ai_agent_subscriptions').select('status').eq('id',sub.id).single());
+   const receipts=await sb.from('ai_subscription_payments').select('*',{count:'exact',head:true}).eq('subscription_id',sub.id);
+   check('Invoice alone leaves fixture pending with no receipt',state.status==='pending'&&!receipts.error&&receipts.count===0,{fixture_subscription_id:sub.id});
+   stage='fresh_marketplace_failure_fixture';
+   const client=(await requireData(sb.from('clients').select('id').limit(1)))[0],coach=(await requireData(sb.from('coaches').select('id').limit(1)))[0],serviceRow=(await requireData(sb.from('services').select('id').eq('active',true).limit(1)))[0];
+   const booking=await requireData(sb.from('marketplace_booking_requests').insert({client_id:client.id,coach_id:coach.id,service_id:serviceRow.id}).select('id').single());
+   const tx=await requireData(sb.from('marketplace_transactions').insert({booking_id:booking.id,client_id:client.id,coach_id:coach.id,service_id:serviceRow.id,currency:'USD',gross_amount:10,platform_share_pct:20,coach_share_pct:80,platform_fee:2,coach_earnings:8,provider_key:'paystack',provider_transaction_reference:namespace+'-market-failure',metadata:{acceptance_run:namespace,synthetic:true,no_provider_payment:true}}).select('id').single());
+   const failed={event:'charge.failed',data:{id:namespace+'-market-failure',reference:namespace+'-market-failure',amount:1000,currency:'USD',acceptance_run:namespace}};
+   const a=await send(failed),b=await send(failed);
+   const sync=await sb.from('marketplace_payment_state_sync_events').select('*',{count:'exact',head:true}).eq('transaction_id',tx.id);
+   const txAfter=await requireData(sb.from('marketplace_transactions').select('payment_status,release_eligibility').eq('id',tx.id).single());
+   check('Matched synthetic marketplace failure processed once without funding',a.http===200&&a.body.processed===true&&b.http===200&&b.body.duplicate===true&&!sync.error&&sync.count===1&&txAfter.payment_status==='failed'&&txAfter.release_eligibility==='blocked',{fixture_transaction_id:tx.id});
+  }
+  const saved=await sb.from('ai_billing_test_runs').update({status:'passed',results}).eq('run_id',run);if(saved.error)throw Error('Evidence persistence failed');
+  return reply({run_id:run,status:'passed',results});
+ }catch(error){
+  // Fixed claim is retained. Inspect this record instead of repeating uncertain work.
+  const run=namespace+'-failure-'+crypto.randomUUID();
+  const providerError=error instanceof Error&&/^provider_[0-9]{3}_[a-z]+$/.test(error.message)?error.message:undefined;
+  await sb.from('ai_billing_test_runs').insert({run_id:run,status:'failed',results:[...results,{stage,error:'Acceptance unavailable; do not repeat provider action',provider_error:providerError}]});
+  return reply({run_id:run,stage,status:'failed',results,...(providerError?{provider_error:providerError}:{})},409);
+ }
+});
