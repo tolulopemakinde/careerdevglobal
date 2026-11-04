@@ -49,3 +49,16 @@ Prior aggregate-only inspections found **21 auth users** whose provenance as pur
 5. Keep PR #42 in draft until matched Paystack TEST delivery, refunds/chargebacks, entitlements, runtime and production release criteria all pass.
 
 **Changes not made:** No production migrations, no Supabase DDL/DML/RPC calls, no real AI API calls, no financial state changes, and no PR merge/deploy.
+
+## Additive migration prepared — 4 November 2026
+
+- **Generated using Supabase CLI v2:** `supabase migration new bind_ai_credit_replay_to_execution` on a one-time GitHub Actions runner. Output: `supabase/migrations/20261104122023_bind_ai_credit_replay_to_execution.sql`. No login, production link, provider credentials or database connection was used during file creation.
+- Populated the file from the **audited deployed test function** (`public.reserve_ai_credits`, 6,300-character source) rather than replaying earlier baseline migrations. Added null-safe equality checks for `execution_id`, `request_id` and `agent_key` in its existing-ledger branch.
+- Included a strict **source fingerprint preflight**: the migration aborts if `pg_get_functiondef` differs from its observed test snapshot (MD5 `62d121ebc7076de1ac5aaf557e6d5749`), or if its payment-access or transaction-lock checks are missing. This is a source-drift marker, not a cryptographic access-control mechanism.
+- Uses `CREATE OR REPLACE FUNCTION` without dropping the routine or changing existing `GRANT`/`REVOKE` rules; intended to preserve ownership, signature and invocation permissions. The sandbox's wider `anon` EXECUTE grant remains a separate security review.
+- The one-time GitHub Actions workflow was **removed** after it scaffolded the migration. No contents-write workflow remains from this task.
+- Added tests to verify the additive migration's fingerprint guard, null-safe bindings, unchanged payment/ownership/locking requirements and lack of unrelated schema/privilege commands.
+- Verified the server's **read-only preflight** returned one expected signature, fingerprint match, preserved payment guard and lock, and `binding_fix_present=false` (the sandbox routine remains unchanged). Reproduction query: `tests/ai-credit-replay-migration-preflight-readonly.sql`.
+- The targeted migration is intentionally not applied: existing test accounts (21 in previous aggregate read) have not been independently confirmed as synthetic; live payment/provider credentials and test data provenance remain outstanding.
+
+**Safeguarded next step:** After explicit approval of synthetic-account provenance and financial/test environment isolation, take a source snapshot, review the migration, execute only against the intended isolated database, then run real authenticated idempotency and concurrent claim tests. *A passing CI build and read-only fingerprint match are not database integration evidence.*
