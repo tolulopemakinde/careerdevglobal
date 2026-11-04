@@ -8,6 +8,10 @@ const configured=()=>({
   CAREERDEV_ISOLATED_TEST_PROJECT_REF:"yyevuwvtrktrzwuzeddo",
   CAREERDEV_PILOT_OWNER_APPROVED:"true",
   CAREERDEV_PILOT_BUDGET_CAP_VERIFIED:"true",
+  CAREERDEV_OPENAI_ENFORCED_HARD_LIMIT_VERIFIED:"true",
+  CAREERDEV_GROQ_ORG_SPEND_LIMIT_VERIFIED:"true",
+  CAREERDEV_GROQ_PILOT_PROJECT_ISOLATED:"true",
+  CAREERDEV_GROQ_PILOT_ORG_SEPARATE_FROM_PRODUCTION:"true",
   OPENAI_PILOT_API_KEY:"unit-only-openai-key",
   GROQ_PILOT_API_KEY:"unit-only-groq-key",
   OPENAI_PILOT_MODEL:"synthetic-approved-openai",
@@ -102,4 +106,43 @@ test("manual model-catalogue command sends zero requests when run in CI even wit
  assert.equal(report.productionAuthorized,false);
  assert.ok(report.blockers.includes("AUTOMATED_OR_PRODUCTION_ENVIRONMENT_BLOCKED"));
  assert.equal(JSON.stringify(report).includes("unit-only"),false);
+});
+
+test("alerts-only OpenAI spending controls never pass as hard spend limits",()=>{
+ const x=configured();
+ for(const v of [undefined,"false","alerts_only"]){
+   const e={...x}; if(v===undefined)delete e.CAREERDEV_OPENAI_ENFORCED_HARD_LIMIT_VERIFIED;
+   else e.CAREERDEV_OPENAI_ENFORCED_HARD_LIMIT_VERIFIED=v;
+   const r=assessManualAiPilotPreflight(e);
+   assert.equal(r.allowed,false);
+   assert.ok(r.blockers.includes("OPENAI_HARD_SPEND_LIMIT_NOT_ATTESTED"));
+ }
+});
+test("Groq organization spend limit cannot be replaced by a per-key rate limit",()=>{
+ const e=configured();delete e.CAREERDEV_GROQ_ORG_SPEND_LIMIT_VERIFIED;
+ const r=assessManualAiPilotPreflight(e);
+ assert.equal(r.allowed,false);
+ assert.ok(r.blockers.includes("GROQ_ORG_SPEND_LIMIT_NOT_ATTESTED"));
+});
+test("Groq pilot must not share spending-cap blast radius with production",()=>{
+ for(const key of [
+   "CAREERDEV_GROQ_PILOT_PROJECT_ISOLATED",
+   "CAREERDEV_GROQ_PILOT_ORG_SEPARATE_FROM_PRODUCTION",
+ ]){
+   const e=configured();delete e[key];
+   const r=assessManualAiPilotPreflight(e);
+   assert.equal(r.allowed,false);
+   assert.ok(r.blockers.some(x=>x==="GROQ_PILOT_PROJECT_NOT_ISOLATED"||
+       x==="GROQ_SPEND_LIMIT_COULD_AFFECT_PRODUCTION"));
+ }
+});
+test("legacy aggregate budget boolean is insufficient by itself",()=>{
+ const e=configured();
+ delete e.CAREERDEV_OPENAI_ENFORCED_HARD_LIMIT_VERIFIED;
+ delete e.CAREERDEV_GROQ_ORG_SPEND_LIMIT_VERIFIED;
+ delete e.CAREERDEV_GROQ_PILOT_PROJECT_ISOLATED;
+ delete e.CAREERDEV_GROQ_PILOT_ORG_SEPARATE_FROM_PRODUCTION;
+ const r=assessManualAiPilotPreflight(e);
+ assert.equal(r.allowed,false);
+ assert.equal(r.blockers.length,4);
 });
