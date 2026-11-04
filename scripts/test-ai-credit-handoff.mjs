@@ -8,7 +8,7 @@ function scenario(overrides={}){
   const creditPort={
     reserve:async key=>{calls.reserve.push(key);return {allowed:true,ledgerId:"ledger-00123"};},
     claim:async(ledger,key)=>{calls.claim.push([ledger,key]);return true;},
-    settle:async(ledger,outcome,key)=>{calls.settle.push([ledger,outcome,key]);return true;},
+    settle:async(ledger,outcome,key)=>{calls.settle.push([ledger,outcome,key]);return {status:outcome,duplicate:false};},
   };
   const requestKey="case-00001234";
   const sdkConfig={
@@ -236,7 +236,7 @@ test("synthetic handoff orders reserve claim providers validation persistence an
   const creditPort={
     reserve:async key=>{events.push("reserve");return {allowed:true,ledgerId:"ledger-00123"};},
     claim:async()=>{events.push("claim");return true;},
-    settle:async(_ledger,outcome)=>{events.push("settle:"+outcome);return true;},
+    settle:async(_ledger,outcome)=>{events.push("settle:"+outcome);return {status:outcome,duplicate:false};},
   };
   const result=await run({...x.simulation,creditPort,
     invoke:async()=>{events.push("provider");return {provider:"openai",text:"synthetic output"};},
@@ -290,4 +290,35 @@ test("failed Groq persistence after fallback never consumes the synthetic reserv
   await assert.rejects(()=>run(x.simulation),e=>e.code==="SYNTHETIC_OUTPUT_NOT_PERSISTED");
   assert.deepEqual(x.calls.models,["synthetic-openai-model","openai/gpt-oss-120b"]);
   assert.deepEqual(x.calls.settle.map(r=>r[1]),["released"]);
+});
+
+
+test("settlement receipt with a conflicting status fails closed and is never retried",async()=>{
+  const x=scenario();
+  x.simulation.creditPort.settle=async(ledger,outcome,key)=>{
+    x.calls.settle.push([ledger,outcome,key]);
+    return {status:"released",duplicate:false};
+  };
+  await assert.rejects(()=>run(x.simulation),e=>e.code==="CREDIT_SETTLEMENT_UNCONFIRMED");
+  assert.deepEqual(x.calls.settle.map(c=>c[1]),["consumed"]);
+});
+
+test("duplicate-settlement receipt requires reconciliation rather than assuming success",async()=>{
+  const x=scenario();
+  x.simulation.creditPort.settle=async(ledger,outcome,key)=>{
+    x.calls.settle.push([ledger,outcome,key]);
+    return {status:outcome,duplicate:true};
+  };
+  await assert.rejects(()=>run(x.simulation),e=>e.code==="CREDIT_SETTLEMENT_UNCONFIRMED");
+  assert.deepEqual(x.calls.settle.map(c=>c[1]),["consumed"]);
+});
+
+test("boolean settlement without sandbox RPC status is rejected",async()=>{
+  const x=scenario();
+  x.simulation.creditPort.settle=async(ledger,outcome,key)=>{
+    x.calls.settle.push([ledger,outcome,key]);
+    return true;
+  };
+  await assert.rejects(()=>run(x.simulation),e=>e.code==="CREDIT_SETTLEMENT_UNCONFIRMED");
+  assert.equal(x.calls.settle.length,1);
 });
