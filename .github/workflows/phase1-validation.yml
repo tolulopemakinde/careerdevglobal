@@ -24,6 +24,12 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate isolated AI pilot change scope
+        if: github.event_name == 'pull_request' && github.head_ref == 'design-groq-research-gateway-2026-11-04'
+        run: node scripts/validate-ai-pilot-scope.mjs
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
