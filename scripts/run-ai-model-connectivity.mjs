@@ -1,50 +1,52 @@
 /**
- * Explicit, read-only model availability check.
+ * Manual, read-only provider-model listing; never used by CI or deployed routes.
  *
- * This script is NEVER run by CI or a deployed route. To opt in manually:
+ * Required operator-verified, separate pilot-only configuration:
  *   CAREERDEV_AI_MODEL_PREFLIGHT=true
  *   CAREERDEV_ISOLATED_TEST_PROJECT_REF=yyevuwvtrktrzwuzeddo
- *   OPENAI_PILOT_API_KEY=<separate test-only key>
- *   GROQ_PILOT_API_KEY=<separate test-only key>
+ *   CAREERDEV_PILOT_OWNER_APPROVED=true
+ *   CAREERDEV_PILOT_BUDGET_CAP_VERIFIED=true
+ *   OPENAI_PILOT_API_KEY=<approved, isolated pilot credential>
+ *   GROQ_PILOT_API_KEY=<approved, isolated pilot credential>
  *   OPENAI_PILOT_MODEL=<approved model ID>
- *   GROQ_PILOT_MODEL=<approved model ID>
- *   node scripts/run-ai-model-connectivity.mjs
+ *   GROQ_PILOT_MODEL=openai/gpt-oss-120b
  *
- * Never paste API keys into commits or issues.
+ * Credentials must be managed through an approved local secret manager,
+ * never in GitHub commits, issues, screenshots, or chat messages.
+ * The flags attest operator review; they do not independently establish it.
  */
 import {checkPilotModelCatalogue} from "../lib/ai/pilot/model-connectivity.mjs";
+import {assessManualAiPilotPreflight} from "../lib/ai/pilot/manual-preflight-policy.mjs";
 
-const ref=process.env.CAREERDEV_ISOLATED_TEST_PROJECT_REF;
-const enabled=process.env.CAREERDEV_AI_MODEL_PREFLIGHT==="true";
-if(!enabled || ref!=="yyevuwvtrktrzwuzeddo" || process.env.NODE_ENV==="production"){
-  console.error("Preflight disabled: requires explicit isolated-test configuration.");
+const readiness=assessManualAiPilotPreflight(process.env,"catalogue");
+if(!readiness.allowed){
+  // The preflight is intentionally offline until ALL gates are satisfied.
+  // Print stable reason codes only, never credentials, prompts, or account IDs.
+  console.log(JSON.stringify({status:"HOLD",stage:"catalogue",
+    blockers:readiness.blockers,requestsSent:0,productionAuthorized:false}));
   process.exitCode=2;
 }else{
+  const ref=process.env.CAREERDEV_ISOLATED_TEST_PROJECT_REF;
   const configs=[
     {provider:"openai",pilotKey:process.env.OPENAI_PILOT_API_KEY,
-     approvedModel:process.env.OPENAI_PILOT_MODEL},
+      approvedModel:process.env.OPENAI_PILOT_MODEL},
     {provider:"groq",pilotKey:process.env.GROQ_PILOT_API_KEY,
-     approvedModel:process.env.GROQ_PILOT_MODEL},
+      approvedModel:process.env.GROQ_PILOT_MODEL},
   ];
-  const existing=[process.env.OPENAI_API_KEY,process.env.GROQ_API_KEY].filter(Boolean);
-  if(configs.some(c=>!c.pilotKey || existing.includes(c.pilotKey))){
-    console.error("Dedicated pilot credentials not configured or match generic credentials; no requests sent.");
-    process.exitCode=2;
-  }else{
-    let failed=false;
-    for(const c of configs){
-      try{
-        const outcome=await checkPilotModelCatalogue({...c,enabled:true,
-          synthetic:true,isolatedProjectRef:ref});
-        // Deliberately output only booleans, provider ID and HTTP status, never any key.
-        console.log(JSON.stringify(outcome));
-        if(!outcome.connected || !outcome.approvedModelFound)failed=true;
-      }catch(error){
-        console.log(JSON.stringify({provider:c.provider,status:"blocked",
-          reason:error?.code||"UNEXPECTED_PREFLIGHT_FAILURE"}));
-        failed=true;
-      }
+  let failed=false;
+  for(const c of configs){
+    try{
+      const outcome=await checkPilotModelCatalogue({...c,enabled:true,
+        synthetic:true,isolatedProjectRef:ref});
+      console.log(JSON.stringify({provider:outcome.provider,
+        connected:outcome.connected,approvedModelFound:outcome.approvedModelFound,
+        httpStatus:outcome.httpStatus,productionAuthorized:false}));
+      if(!outcome.connected || !outcome.approvedModelFound)failed=true;
+    }catch(error){
+      console.log(JSON.stringify({provider:c.provider,status:"blocked",
+        reason:error?.code||"PREFLIGHT_REQUEST_FAILED",productionAuthorized:false}));
+      failed=true;
     }
-    if(failed)process.exitCode=1;
   }
+  if(failed)process.exitCode=1;
 }
