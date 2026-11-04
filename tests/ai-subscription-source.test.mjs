@@ -18,10 +18,10 @@ test('webhook never uses shared plan or customer codes as fallback identity',()=
 test('webhook protects paid period when renewals stop',()=>{
  assert.match(webhook,/type==="subscription\.disable"/);
  assert.match(webhook,/new Date\(sub\.current_period_end\)>new Date\(\)/);
- assert.match(webhook,/"non_renewing":"canceled"/);
+ assert.match(webhook,/"non_renewing":"cancelled"/);
 });
 test('webhook does not reactivate non-renewing accounts on payment updates',()=>{
- assert.match(webhook,/sub\.status!=="non_renewing"&&sub\.status!=="canceled"/);
+ assert.match(webhook,/sub\.status!=="non_renewing"&&sub\.status!=="cancelled"/);
 });
 test('account UI does not offer unverified cancellation',()=>{
  assert.match(management,/cancellationReady=false/);
