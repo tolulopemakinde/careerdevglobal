@@ -45,6 +45,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Next.js build regenerates these tracked files; discard only build-generated changes.
+          git restore -- next-env.d.ts tsconfig.json
           git diff --exit-code -- . ':!package.json' ':!package-lock.json'
           git diff --check
           git add package.json package-lock.json
