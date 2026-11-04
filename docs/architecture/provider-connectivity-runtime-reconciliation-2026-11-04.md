@@ -147,3 +147,34 @@ An aggregate-only inspection of the isolated Supabase AI test project (`yyevuwvt
 - Added no-network integration tests that pass fake HTTP `Response` objects through **actual AI SDK provider constructors and `generateText`**, including OpenAI Responses success, Groq Chat Completions success, HTTP 503, HTTP 429 quota exhaustion, and full adapter routing from OpenAI to Groq. No real API credentials or live network are used.
 - GitHub Actions run [41806035860](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41806035860) passed **82 tests, 0 failures**, typecheck, source-secret audit, existing security/boundary checks, and application build for commit `7d170d5244dff39823b08d3ed7e7419d6a9ac645`.
 - This does **not** establish live API model eligibility, AI-quality parity, costs, or safe production credit billing. The release decision remains **HOLD**.
+
+## Offline single-ledger fallback and credit-handoff acceptance — 2026-11-04
+
+### Observed sandbox RPC contract (read-only)
+
+The `careerdevglobal-ai-test` database provides:
+
+- `reserve_ai_credits`: a user-scoped reservation with an idempotency key, ownership checks and an advisory transaction lock in its stored procedure; its broader anonymous EXECUTE grant remains under review.
+- `claim_ai_runtime_credit(p_ledger_id uuid, p_user_id uuid)`: a service-role-only conditional `UPDATE` of a `reserved` ledger, requiring `runtime_claimed_at IS NULL`; returns true only when one row is claimed.
+- `settle_ai_credit_charge(p_ledger_id uuid, p_user_id uuid, p_outcome text, p_metadata jsonb)`: service-role-only, locks the claimed ledger row `FOR UPDATE`, and returns `{status:'consumed'|'released', duplicate:boolean}`. When already settled, it reports the existing status with `duplicate:true`.
+
+The isolated handoff simulation now requires a correctly shaped settlement receipt with the intended status and `duplicate:false`. Ambiguous, duplicate or conflicting receipts are considered **unconfirmed** and require reconciliation; they are never retried automatically or treated as proof of a charge.
+
+### Completed mock acceptance coverage
+
+The isolated synthetic tests now cover: one reservation/claim/settlement on OpenAI success; one shared ledger for OpenAI temporary failure followed by Groq success; two simultaneous duplicate-key requests with only one mock atomic claim winner; denied or ambiguous reserve/claim; both providers failing; API quota exhaustion; user cancellation; invalid or unpersisted model output; ambiguous settlement; duplicate settlement receipt; conflicting settlement outcome; actual pinned SDK HTTP mock transport; and ordered validation/persistence before consumption.
+
+**Verified GitHub CI:** [run 41811898088](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41811898088) passed **104 tests, 0 failures**, including type checks, secret scan, existing boundary checks and Next.js build (commit `4fe9981699db618694b4eadbc2a08a57ffb76974`). Tests used synthetic identities, mocked credit ports and intercepted local SDK HTTP responses. The test project database was **not mutated**; these results are not proof of concurrent Postgres RPC behavior under live user traffic.
+
+### Test-account provenance: still blocked
+
+Aggregate-only read-only data showed **21 auth accounts**, **11 AI subscriptions**, **3 credit-ledger records**, **0 agent execution requests**, and **0 AI usage events**. All 21 accounts were created within the last 30 days; **none** has a recognized explicit `synthetic`, `is_test_user` or `test_account` metadata marker. The absence of these markers does not prove the accounts are real or synthetic. No account-identifying rows or emails were retrieved. **Do not use these records in paid model trials** without owner-confirmed provenance and test-data authorization.
+
+### Remaining release blockers
+
+- No verified dedicated spending-limited OpenAI/Groq pilot keys; no live inference calls or tokens purchased.
+- No independent concurrent SQL/RPC test with two authenticated disposable test users and a verified service-role client.
+- Production runtime uses `finalize_ai_credit_charge`; the AI test sandbox uses `claim_ai_runtime_credit` and `settle_ai_credit_charge`. Do not overwrite either contract without the owner-reviewed billing PR #42 reconciliation.
+- No end-to-end authenticated subscription, RLS, coach-review, current research-provider or post-generation billing acceptance across actual deployed infrastructure.
+
+**Release decision: HOLD; PR #43 remains draft, no production changes or Supabase writes.**
