@@ -18,7 +18,8 @@
     "verify:phase3": "npm run verify:phase2 && npm run validate:phase3-preview",
     "validate:phase4-simulation": "node scripts/validate-phase4-simulation.mjs",
     "verify:phase4": "npm run verify:phase3 && npm run validate:phase4-simulation",
-    "test:ai-pilot": "node --test scripts/test-ai-provider-pilot.mjs scripts/test-ai-research-pilot.mjs scripts/test-ai-sdk-pilot.mjs scripts/test-ai-research-clients.mjs scripts/test-ai-model-connectivity.mjs scripts/test-ai-release-readiness.mjs scripts/test-ai-agent-capabilities.mjs scripts/test-ai-research-benchmark.mjs scripts/test-ai-scope.mjs scripts/test-ai-structured-draft.mjs scripts/test-ai-sdk-transport.mjs scripts/test-ai-credit-handoff.mjs scripts/test-ai-credit-contract-policy.mjs scripts/test-ai-manual-preflight.mjs"
+    "test:ai-pilot": "node --test scripts/test-ai-provider-pilot.mjs scripts/test-ai-research-pilot.mjs scripts/test-ai-sdk-pilot.mjs scripts/test-ai-research-clients.mjs scripts/test-ai-model-connectivity.mjs scripts/test-ai-release-readiness.mjs scripts/test-ai-agent-capabilities.mjs scripts/test-ai-research-benchmark.mjs scripts/test-ai-scope.mjs scripts/test-ai-structured-draft.mjs scripts/test-ai-sdk-transport.mjs scripts/test-ai-credit-handoff.mjs scripts/test-ai-credit-contract-policy.mjs scripts/test-ai-manual-preflight.mjs scripts/test-ai-release-status-report.mjs",
+    "report:ai-pilot-readiness": "node scripts/report-ai-pilot-readiness.mjs"
   },
   "dependencies": {
     "@ai-sdk/groq": "4.0.76",
