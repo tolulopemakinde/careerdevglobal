@@ -1,5 +1,7 @@
 # Read-only AI credit sandbox diagnostics — 4 November 2026
 
+> **Updated 2026-11-04, after the initial read-only finding:** PR #42 has **already applied** an additive cross-request idempotency-binding fix to the isolated TEST database only. The source-level acceptance gap below documents the **pre-fix snapshot**, not the current TEST behavior. The remaining blocker concerns production contract migration, evidence parity and separate release approval. See the verified update at the end of this report.
+
 **Environment:** Supabase test project `careerdevglobal-ai-test` (`yyevuwvtrktrzwuzeddo`).  
 **Mode:** Read-only metadata + aggregate database SQL. No rows with user identifiers were selected. No DDL, DML, RPC writes, account changes, billing actions, provider calls, or production changes.
 
@@ -68,3 +70,22 @@ FROM public.ai_credit_ledger;
 7. **Keep provider routing off:** This PR #43's simulation is not a Supabase runtime migration or a substitute for the actual PR #42 test environment billing contract.
 
 **Release status:** HOLD. Exact post-change SQL and concurrent runtime tests must be verified in PR #42 before accepting OpenAI/Groq live credit-fallback integration. Neither project was mutated by this audit.
+
+## Later verification — deployed TEST idempotency guard
+
+A fresh read-only query of `public.reserve_ai_credits` on TEST confirmed:
+
+- Exactly one matching definition, MD5 fingerprint `b9c0ffb6432e9f9da7d8010845df0e77`.
+- `v_existing.execution_id IS DISTINCT FROM p_execution_id`: **present**.
+- `v_existing.request_id IS DISTINCT FROM p_request_id`: **present**.
+- `v_existing.agent_key IS DISTINCT FROM v_op.agent_key`: **present**.
+- `public.ai_payment_access_allowed(s.id)` and `pg_advisory_xact_lock`: **both present**.
+- Billing self-service gate `self_service_enabled`: 0 of 1 rows enabled; refund policy `enabled`: 0 of 1 rows enabled.
+
+The migration `20261104122023_bind_ai_credit_replay_to_execution.sql` lives in [Draft PR #42](https://github.com/tolulopemakinde/careerdevglobal/pull/42); the TEST migration-history entry is `20261104123708`. PR #42 reports seven authenticated regression cases after its TEST application. This audit independently verified the stored source **and gates**, not the earlier write-based test execution. Do not reapply this migration or copy its test-specific routine to production.
+
+### Additional isolated simulation coverage
+
+PR #43's offline `runSyntheticCreditHandoff` now refuses to treat staff/no-credit permissions or a `creditsRequired=0` reservation as a normal billable credit path. It also fails closed when a chargeable reservation has an unknown, fractional or negative credit cost. These checks prevent simulated provider inference from proceeding on an ambiguous credit contract. An actual no-credit agent workflow needs its own authorized server-side path with policy and rate limits; this synthetic helper does not provide one.
+
+**HOLD remains:** The production `finalize_ai_credit_charge` runtime differs from TEST `claim_ai_runtime_credit`/`settle_ai_credit_charge`; test-account provenance and dedicated, capped provider credentials remain unverified. No production, Paystack, or database mutation was performed by this review.
