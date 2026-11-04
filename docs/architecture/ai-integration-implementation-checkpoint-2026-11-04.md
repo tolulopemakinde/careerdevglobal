@@ -43,3 +43,16 @@ Read-only source inspection of the deployed `careerdev-ai-agent-runtime` identif
 6. Pass CI, isolated preview tests, budget/credential tests and owner approval. Remain draft until those gates pass.
 
 **No production changes were made.**
+
+## SDK transport integration test milestone — 2026-11-04
+
+**Problem resolved:** AI SDK `generateText` defaults to `maxRetries: 2`. When combined with the application-owned OpenAI-to-Groq fallback policy, unreviewed internal retries could multiply provider requests and costs without appearing as separate routing attempts. The isolated SDK adapter now passes **`maxRetries: 0`** on each provider request. One primary call and at most one explicitly authorized fallback is the intended limit.
+
+- Unit tests verify that the SDK executor sends `maxRetries: 0` for both OpenAI and Groq.
+- `scripts/test-ai-sdk-transport.mjs` exercises the **actual installed AI SDK** provider serializers/parsers via injected HTTP mock transport. It tests OpenAI Responses, Groq Chat Completions, and that simulated HTTP 429/503 failures do not trigger implicit SDK-level retries.
+- The Groq SDK omits `stream` on the non-streaming request; the initial test incorrectly demanded `stream:false`. Fixed to assert streaming was not enabled. The actual request/response test passed otherwise.
+- CI run [41805612163](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41805612163) passed **79 tests, zero failures**, plus source audit, TypeScript, boundary checks and Next.js build for commit `6be07f92bda49ce4e71b2088126b0001992a14df`.
+
+This is a **wire-format simulation**, not real OpenAI/Groq service connectivity: the HTTP requests were intercepted by local functions, test credentials were fabricated, and no tokens were purchased or consumed. This does not validate server-side Supabase credit accounting, pricing, real fallback or live model suitability.
+
+**Release blocker unchanged:** A separate pilot key pair with verified spending caps, a reconciled PR #42 sandbox credit contract, and bounded real provider tests are still necessary. Do not reuse general Vercel Preview `GROQ_API_KEY` unless its use as a capped isolated key is explicitly verified and approved.
