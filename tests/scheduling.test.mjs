@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import './calendly-operation.test.mjs';
 import { buildRequestSlots, wallTimeInstants, dateInTimezone, formatBookingTime, validTimezone, safeCalendlyUrl, safeMeetingUrl, createSubmissionGate, calendlyFailureMessage, runCalendlyAction } from '../lib/scheduling.ts';
 
 const weekly = (day, start, end, timezone = 'Africa/Lagos') => ({ day_of_week: day, start_time: start, end_time: end, timezone });
