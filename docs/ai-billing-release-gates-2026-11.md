@@ -1,5 +1,9 @@
 # AI billing release gates — 1 November 2026
 
+## Conditional TEST plan approved — account-scoped preparation
+
+The owner approved oneNGN7,500 Fresher TEST payment and its renewal stop. A private, expiring one-account authorization is prepared with both global gatesfalse; no checkout is initialized in this snapshot. Read [the bounded control review](ai-billing-approved-test-preparation-2026-11-04.md). Existing accounts remain ineligible for this scope, and production stays blocked.
+
 ## Current evidence — 4 November 2026
 
 **PARTIALLY COMPLETE — BLOCKED for production.** Genuine Paystack delivery of the original event now reports **Delivered / HTTP200 / attempt7** (3November21:07:36WAT), independently matched by webhookv10 Edge logs. The same signed event remains unassigned and unprocessed, with no financial mutation. No payment/refund/cancellation or resend was initiated during this resume.

@@ -1,6 +1,6 @@
-# Proposed matched subscription TEST acceptance — owner approval required
+# Matched subscription TEST acceptance — conditional owner approval received
 
-No checkout has been initialized. This proposal creates one new simulated subscription payment, not another standalone NGN100 probe.
+Owner approved the conditional plan on4November. Isolation and reviewed gate control remain mandatory. No checkout has been initialized in this preparation snapshot. This proposal creates one new simulated subscription payment, not another standalone NGN100 probe.
 
 - Environment: only yyevuwvtrktrzwuzeddo, current reviewed preview and Paystack TEST secret/TEST controls. No real card, LIVE configuration, production write or production gate change.
 - Dedicated fresh client fixture, distinct from retained real-reference and synthetic accounts. No unresolved billing operation, active paid interval or reusable provider reference. Preserve every existing receipt and historical attribution.
@@ -11,4 +11,4 @@ No checkout has been initialized. This proposal creates one new simulated subscr
 - Separately include one TEST renewal-stop/cancellation on this new subscription after activation, preserving the paid term and credits, with repeat-request safety. No new refund or further renewal/replacement charge is part of this proposal.
 - W16 needs its own later owner-approved matched replacement payment after the paid term naturally ends, or a provider-supported controlled scenario. Do not rewrite real paid periods to claim natural expiry.
 
-Requested approval: approve this one NGN7,500 TEST subscription payment and its subsequent TEST renewal stop, subject to a reviewed gate-controlled path. Alternatively defer all new provider transactions. No production approval is requested.
+Approval received in this chat for this one NGN7,500 TEST subscription payment and its subsequent TEST renewal stop, subject to a reviewed gate-controlled path. Alternatively defer all new provider transactions. No production approval is requested.

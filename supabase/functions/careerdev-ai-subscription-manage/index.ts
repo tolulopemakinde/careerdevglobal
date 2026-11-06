@@ -1,6 +1,7 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import {createClient} from 'jsr:@supabase/supabase-js@2.117.3';
 import {paystackRequest,assertProviderSubscription,providerRenewalStopped} from '../_shared/ai-billing-provider.ts';
+import {billingActionAllowed} from '../_shared/ai-billing-release.ts';
 
 const cors={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type','Content-Type':'application/json','Cache-Control':'no-store'};
 const respond=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:cors});
@@ -22,8 +23,7 @@ Deno.serve(async request=>{
   if(!['cancel','upgrade'].includes(body?.action)||body?.confirmed!==true)return respond({error:'Explicit confirmation is required'},400);
   if(body.action==='upgrade'&&(typeof body.plan_key!=='string'||!body.plan_key))return respond({error:'Target plan is required'},400);
   const admin=createClient(url,service);
-  const gate=await admin.from('ai_billing_release_config').select('self_service_enabled').eq('id',true).maybeSingle();
-  if(gate.error||gate.data?.self_service_enabled!==true)return respond({error:'Self-service billing is awaiting verification'},503);
+  if(!await billingActionAllowed(admin,{projectUrl:url,secret,userId:user.id,action:body.action}))return respond({error:'Self-service billing is awaiting verification'},503);
   const {data:operation,error:beginError}=await admin.rpc('begin_ai_subscription_cancellation',{p_user_id:user.id,p_target_plan_key:body.action==='upgrade'?body.plan_key:null});
   if(beginError||!operation)return respond({error:'Subscription change requires billing support or another operation is pending'},409);
   const sub=operation.subscription;

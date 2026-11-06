@@ -1,0 +1,130 @@
+// Owner-approved, one-shot TEST payment acceptance. Never deploy to production.
+import {createClient} from 'jsr:@supabase/supabase-js@2.117.3';
+import {paystackRequest,providerRenewalStopped} from './_shared/ai-billing-provider.ts';
+const project='https://yyevuwvtrktrzwuzeddo.supabase.co';
+const run='billing-matched-fresher-20261104-a',approval='owner-paid-fresher-20261104-a';
+const capabilityHash='b62bc12191e4b45a4f813b62aa2db4d7273f8432ea9b084be3ac1a42f0426788';
+const capabilityExpires='2026-11-07T00:46:31.665699+00:00';
+const email='billing-matched-fresher-20261104-a@example.com';
+const hex=(b:ArrayBuffer)=>Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,'0')).join('');
+const same=(a:string,b:string)=>{if(a.length!==b.length)return false;let n=0;for(let i=0;i<a.length;i++)n|=a.charCodeAt(i)^b.charCodeAt(i);return n===0};
+Deno.serve(async req=>{
+ const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+ const url=Deno.env.get('SUPABASE_URL'),secret=Deno.env.get('PAYSTACK_SECRET_KEY'),service=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),anon=Deno.env.get('SUPABASE_ANON_KEY');
+ if(req.method!=='POST'||url!==project||!secret?.startsWith('sk_test_')||!service||!anon)return reply({error:'Named TEST environment required'},403);
+ const capability=req.headers.get('x-billing-test-capability')??'';
+ const deadline=Date.parse(capabilityExpires);
+ if(!/^[a-f0-9]{64}$/.test(capability)||!Number.isFinite(deadline)||Date.now()>=deadline||!same(hex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(capability))),capabilityHash))return reply({error:'Operator authorization required'},401);
+ const sb=createClient(url,service);let stage='guards',endpointHttp:number|undefined;
+ const data=async(query:any)=>{const r=await query;if(r.error||!r.data)throw Error('Acceptance query unavailable');return r.data;};
+ const gates=async()=>{
+  const [a,b]=await Promise.all([sb.from('ai_billing_release_config').select('self_service_enabled').eq('id',true).single(),sb.from('ai_refund_policy_config').select('enabled').eq('id',true).single()]);
+  if(a.error||b.error||a.data.self_service_enabled!==false||b.data.enabled!==false)throw Error('Both global gates must remain disabled');
+ };
+ const ownerSession=async(userId:string)=>{
+  const found=await sb.auth.admin.getUserById(userId),u=found.data?.user;
+  if(found.error||u?.email!==email||u.app_metadata?.billing_acceptance_fixture!==true||u.app_metadata?.synthetic!==true||u.app_metadata?.approval_reference!==approval)throw Error('Verified new synthetic owner required');
+  const link=await sb.auth.admin.generateLink({type:'magiclink',email});if(link.error)throw Error('Fixture authentication unavailable');
+  const client=createClient(url,anon,{auth:{persistSession:false}});
+  const auth=await client.auth.verifyOtp({token_hash:link.data.properties.hashed_token,type:'magiclink'});
+  if(auth.error||!auth.data.session||auth.data.user?.id!==userId)throw Error('Fixture authentication failed');
+  return {client,token:auth.data.session.access_token};
+ };
+ const invoke=async(name:string,body:unknown,token:string)=>{
+  const r=await fetch(project+'/functions/v1/'+name,{method:'POST',headers:{apikey:anon,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(25000)});
+  return {http:r.status,body:await r.json()};
+ };
+ try{
+  await gates();const body=await req.json();
+  if(!['initialize','observe','cancel'].includes(body.action))return reply({error:'Fixed actions only'},400);
+  const existing=await sb.from('ai_billing_test_runs').select('status,results').eq('run_id',run).maybeSingle();if(existing.error)throw Error('Claim lookup failed');
+  if(body.action==='initialize'){
+   if(existing.data)return reply({run_id:run,reused:true,...existing.data});
+   stage='approval_window';if(deadline-Date.now()<1800000)throw Error('Insufficient operator window for a new payment');
+   stage='plan_validation';
+   const plan=await data(sb.from('ai_agent_subscription_plans').select('*').eq('plan_key','fresher').single());
+   if(plan.active!==true||Number(plan.monthly_price_ngn)!==7500||plan.monthly_credits!==25||plan.paystack_monthly_plan_code_ngn!=='PLN_n878aimofox7pf1')throw Error('Approved price and allowance required');
+   const providerPlan=await paystackRequest(secret,'/plan/'+plan.paystack_monthly_plan_code_ngn);
+   if(providerPlan.domain!=='test'||providerPlan.amount!==750000||providerPlan.currency!=='NGN'||providerPlan.interval!=='monthly')throw Error('Verified TEST plan contract required');
+   if(Deno.env.get('CAREERDEV_APP_URL')!=='https://careerdevglobal-git-fix-ai-billing-lif-9f3bbf-career-dev-global.vercel.app')throw Error('Isolated callback required');
+   const claim=await sb.from('ai_billing_test_runs').insert({run_id:run,status:'initialization_claimed',results:[{name:'owner_approval',approval_reference:approval,amount_minor:750000,currency:'NGN',monthly_credits:25,at:new Date().toISOString()}]});
+   if(claim.error)return reply({error:'One-shot claim already exists; observe only'},409);
+   stage='new_fixture';
+   const created=await sb.auth.admin.createUser({email,email_confirm:true,user_metadata:{full_name:'Owner-approved TEST billing fixture'},app_metadata:{synthetic:true,billing_acceptance_fixture:true,approval_reference:approval,no_live_payments:true}});
+   if(created.error||!created.data.user)throw Error('New dedicated fixture required');
+   const userId=created.data.user.id;
+   const profile=await sb.from('profiles').upsert({id:userId,email,full_name:'Owner-approved TEST billing fixture',role:'client',status:'active'});if(profile.error)throw Error('Fixture profile failed');
+   for(const table of ['ai_agent_subscriptions','ai_subscription_payments','ai_credit_ledger','ai_billing_operations']){
+    if(table==='ai_subscription_payments')continue;
+    const r=await sb.from(table).select('*',{head:true,count:'exact'}).eq('user_id',userId);if(r.error||r.count!==0)throw Error('Fresh empty fixture required');
+   }
+   const owner=await ownerSession(userId);
+   const createdAt=new Date().toISOString(),expiresAt=new Date(Math.min(Date.now()+23*3600000,deadline)).toISOString();
+   const scoped=await sb.from('ai_billing_test_authorizations').insert({user_id:userId,approval_reference:approval,project_ref:'yyevuwvtrktrzwuzeddo',enabled:true,created_at:createdAt,expires_at:expiresAt,metadata:{acceptance_run:run,owner_approved_one_payment:true,owner_approved_one_renewal_stop:true}});if(scoped.error)throw Error('Scoped authorization failed');
+   const proof={name:'verified_synthetic_fixture',user_id:userId,app_metadata_verified:true,empty_account_verified:true,scope_expires_at:expiresAt};
+   const saved=await sb.from('ai_billing_test_runs').update({status:'fixture_prepared',results:[{name:'owner_approval',approval_reference:approval},proof]}).eq('run_id',run).eq('status','initialization_claimed');if(saved.error)throw Error('Fixture proof persistence failed');
+   stage='authenticated_checkout';
+   const checkout=await invoke('careerdev-ai-subscription-checkout',{plan_key:'fresher',billing_interval:'monthly',currency:'NGN'},owner.token);
+   endpointHttp=checkout.http;
+   if(checkout.http!==200||Number(checkout.body.amount)!==7500||checkout.body.currency!=='NGN'||typeof checkout.body.reference!=='string'||new URL(checkout.body.authorization_url).origin!=='https://checkout.paystack.com')throw Error('Checkout outcome uncertain; observe existing operation only');
+   const sub=await data(sb.from('ai_agent_subscriptions').select('id,user_id,status').eq('paystack_transaction_reference',checkout.body.reference).single());
+   if(sub.user_id!==userId||sub.status!=='pending')throw Error('Fresh checkout ownership mismatch');
+   const outcome={name:'one_approved_checkout',user_id:userId,subscription_id:sub.id,reference:checkout.body.reference,authorization_url:checkout.body.authorization_url,amount_minor:750000,currency:'NGN',monthly_credits:25};
+   const persisted=await sb.from('ai_billing_test_runs').update({status:'checkout_ready',results:[{name:'owner_approval',approval_reference:approval},proof,outcome]}).eq('run_id',run).eq('status','fixture_prepared');if(persisted.error)throw Error('Checkout response uncertain; do not initialize again');
+   await gates();return reply({run_id:run,status:'checkout_ready',...outcome});
+  }
+  if(!existing.data)return reply({error:'Approved checkout has not been initialized'},409);
+  const fixture=existing.data.results.find((x:any)=>x.name==='verified_synthetic_fixture'),checkout=existing.data.results.find((x:any)=>x.name==='one_approved_checkout');
+  if(!fixture||!checkout||fixture.user_id!==checkout.user_id)throw Error('Saved checkout outcome requires operator review; do not initialize again');
+  stage='observe_provider';const tx=await paystackRequest(secret,'/transaction/verify/'+encodeURIComponent(checkout.reference));
+  if(tx.domain!=='test'||tx.reference!==checkout.reference||tx.amount!==750000||tx.currency!=='NGN'||tx.metadata?.careerdev_ai_subscription_id!==checkout.subscription_id||tx.customer?.email!==email)throw Error('Exact approved TEST payment required');
+  if(tx.status!=='success')return reply({run_id:run,status:'awaiting_test_payment',provider_status:tx.status,reference:checkout.reference,authorization_url:checkout.authorization_url});
+  const owner=await ownerSession(fixture.user_id);
+  stage='verify_paid_access';const verified=await invoke('careerdev-ai-subscription-verify',{reference:checkout.reference},owner.token);
+  endpointHttp=verified.http;
+  if(verified.http!==200||verified.body.payment_verified!==true||verified.body.access_active!==true)throw Error('Verified paid access not ready');
+  const receipt=await data(sb.from('ai_subscription_payments').select('reference,subscription_id,provider_transaction_id,amount_minor,currency,period_start,period_end').eq('reference',checkout.reference).single());
+  if(receipt.subscription_id!==checkout.subscription_id||String(receipt.provider_transaction_id)!==String(tx.id)||Number(receipt.amount_minor)!==750000||receipt.currency!=='NGN')throw Error('Exact receipt attribution required');
+  const credit=await owner.client.rpc('get_my_ai_credit_status');if(credit.error||credit.data?.[0]?.monthly_allowance!==25||credit.data[0].credits_remaining!==25||credit.data[0].credits_consumed!==0||credit.data[0].credits_reserved!==0)throw Error('Approved untouched credit balance required');
+  const sub=await data(sb.from('ai_agent_subscriptions').select('id,user_id,status,current_period_start,current_period_end,paystack_subscription_code').eq('id',checkout.subscription_id).single());
+  if(sub.user_id!==fixture.user_id||Date.parse(sub.current_period_start)>Date.now()||Date.parse(sub.current_period_end)<=Date.now())throw Error('Current verified paid period required');
+  const events=await data(sb.from('ai_agent_subscription_webhook_events').select('id,event_type,processing_status,signature_verified,verification_source').eq('transaction_reference',checkout.reference));
+  const listed=await paystackRequest(secret,'/integration/webhooks/events?category=transactions&category_row_id='+encodeURIComponent(tx.id)+'&limit=20');
+  const deliveries=[];
+  for(const item of (Array.isArray(listed)?listed:[]).slice(0,10)){
+   const detail=await paystackRequest(secret,'/integration/webhooks/events/'+encodeURIComponent(item._id));
+   if(detail.domain==='test'&&detail.webhook_url===project+'/functions/v1/careerdev-paystack-webhook'&&detail.event_payload?.data?.reference===checkout.reference&&String(detail.category_row_id)===String(tx.id))deliveries.push({event_id:detail._id,event_name:detail.event_name,status:detail.status,response_code:detail.response_code,trial_count:detail.trial_count,endpoint_matches:true,payload_identity_matches:true});
+  }
+  const evidence:any={reference:checkout.reference,subscription_id:checkout.subscription_id,provider_transaction_id:String(tx.id),domain:'test',payment_verified:true,access_active:true,receipt_exact:true,paid_period_start:sub.current_period_start,paid_period_end:sub.current_period_end,monthly_allowance:25,credits_remaining:25,credits_consumed:0,credits_reserved:0,status:sub.status,events,deliveries};
+  if(body.action==='cancel'){
+   if(!sub.paystack_subscription_code)throw Error('Exact provider subscription linkage required');
+   const provider=await paystackRequest(secret,'/subscription/'+encodeURIComponent(sub.paystack_subscription_code));
+   if(provider.domain!=='test')throw Error('TEST provider subscription required');
+   if(existing.data.status==='cancel_requested'&&!providerRenewalStopped(provider))throw Error('Cancellation outcome uncertain; operator review required before any repeat');
+   if(existing.data.status==='checkout_ready'){
+    const claimed=await sb.from('ai_billing_test_runs').update({status:'cancel_requested'}).eq('run_id',run).eq('status','checkout_ready').select('run_id').maybeSingle();if(claimed.error||!claimed.data)throw Error('Cancellation already claimed');
+   }else if(!['cancel_requested','renewal_stopped'].includes(existing.data.status))throw Error('Unexpected cancellation claim state');
+   stage='approved_renewal_stop';
+   if(existing.data.status!=='renewal_stopped'){
+    const cancelled=await invoke('careerdev-ai-subscription-manage',{action:'cancel',confirmed:true},owner.token);
+    endpointHttp=cancelled.http;
+    if(cancelled.http!==200)throw Error('Renewal stop outcome requires observation; do not repeat blindly');
+   }
+   const stopped=await paystackRequest(secret,'/subscription/'+encodeURIComponent(sub.paystack_subscription_code));
+   const after=await data(sb.from('ai_agent_subscriptions').select('status,current_period_start,current_period_end').eq('id',sub.id).single());
+   if(stopped.domain!=='test'||!providerRenewalStopped(stopped)||after.status!=='non_renewing'||after.current_period_start!==sub.current_period_start||after.current_period_end!==sub.current_period_end)throw Error('Renewal stop must preserve exact paid period');
+   const disabled=await sb.from('ai_billing_test_authorizations').update({enabled:false}).eq('user_id',fixture.user_id);if(disabled.error)throw Error('Scope closure failed');
+   const saved=await sb.from('ai_billing_test_runs').update({status:'renewal_stopped'}).eq('run_id',run);if(saved.error)throw Error('Renewal-stop evidence synchronization required');
+   evidence.renewal_stopped=true;evidence.paid_term_preserved=true;evidence.test_scope_closed=true;evidence.status=after.status;
+  }
+  await gates();
+  const observation=run+'-'+body.action+'-'+crypto.randomUUID();
+  const saved=await sb.from('ai_billing_test_runs').insert({run_id:observation,status:body.action==='cancel'?'passed':'observed',results:[evidence]});if(saved.error)throw Error('Observation persistence failed');
+  return reply({run_id:observation,...evidence});
+ }catch(error){
+  const observation=run+'-failure-'+crypto.randomUUID();
+  const code=error instanceof Error&&/^provider_[0-9]{3}_[a-z]+$/.test(error.message)?error.message:undefined;
+  await sb.from('ai_billing_test_runs').insert({run_id:observation,status:'failed',results:[{stage,endpoint_http:endpointHttp,provider_error:code,message:'Acceptance incomplete; preserve existing claims and do not initialize again'}]});
+  return reply({run_id:observation,status:'incomplete',stage,...(endpointHttp?{endpoint_http:endpointHttp}:{}),...(code?{provider_error:code}:{})},409);
+ }
+});

@@ -1,6 +1,7 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import {createClient} from 'jsr:@supabase/supabase-js@2.117.3';
 import {paystackRequest,providerPlanCode} from '../_shared/ai-billing-provider.ts';
+import {billingActionAllowed} from '../_shared/ai-billing-release.ts';
 const headers={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type','Content-Type':'application/json','Cache-Control':'no-store'};
 const reply=(b:unknown,s=200)=>new Response(JSON.stringify(b),{status:s,headers});
 function key(name:string,fallback?:string){try{return JSON.parse(Deno.env.get(name)||'{}').default??fallback}catch{return fallback}}
@@ -15,8 +16,7 @@ Deno.serve(async req=>{
   const client=createClient(url,anon,{global:{headers:{Authorization:auth}}});
   const {data:{user},error}=await client.auth.getUser();if(error||!user?.email)return reply({error:'Authentication required'},401);
   const body=await req.json(),sb=createClient(url,service);
-  const gate=await sb.from('ai_billing_release_config').select('self_service_enabled').eq('id',true).maybeSingle();
-  if(gate.error||gate.data?.self_service_enabled!==true)return reply({error:'Self-service billing is awaiting verification'},503);
+  if(!await billingActionAllowed(sb,{projectUrl:url,secret,userId:user.id,action:'checkout',planKey:body.plan_key,interval:body.billing_interval,currency:body.currency}))return reply({error:'Self-service billing is awaiting verification'},503);
   const {data:op,error:prepareError}=await sb.rpc('prepare_ai_subscription_checkout',{p_user_id:user.id,p_plan_key:body.plan_key,p_billing_interval:body.billing_interval,p_currency:body.currency});
   if(prepareError||!op)return reply({error:'Checkout is unavailable. Manage your existing subscription or contact support about a pending payment.'},409);
   if(op.response?.authorization_url)return reply(op.response);

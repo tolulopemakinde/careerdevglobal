@@ -68,42 +68,6 @@
       ]
     },
     {
-      "name": "careerdev-ai-subscription-checkout",
-      "version": 5,
-      "verify_jwt": true,
-      "bundle_sha256": "76c2722a0180ab4647efaf869f270efc874cfc0fb4570d2400d6bf5d953cd215",
-      "files": [
-        {
-          "name": "careerdev-ai-subscription-checkout/index.ts",
-          "match": true,
-          "sha256": "86f0a2e7e03d561f1cf1e2907b5c7eed4c32a78d5120e79e0a0039449b9496f9"
-        },
-        {
-          "name": "_shared/ai-billing-provider.ts",
-          "match": true,
-          "sha256": "e70c88e8056643ebe41bc15e1b77cbf80f0f50a21fec4d444cbdd1937ef1d692"
-        }
-      ]
-    },
-    {
-      "name": "careerdev-ai-subscription-manage",
-      "version": 4,
-      "verify_jwt": true,
-      "bundle_sha256": "4c150cb1a0923816341b46c7b45377549a21c0580bf3f722479d669968ec17c0",
-      "files": [
-        {
-          "name": "careerdev-ai-subscription-manage/index.ts",
-          "match": true,
-          "sha256": "ca4094a61484a23b94cd0dfe0951a680e2135d30c13593eb01d8907cfa098282"
-        },
-        {
-          "name": "_shared/ai-billing-provider.ts",
-          "match": true,
-          "sha256": "e70c88e8056643ebe41bc15e1b77cbf80f0f50a21fec4d444cbdd1937ef1d692"
-        }
-      ]
-    },
-    {
       "name": "careerdev-ai-payment-adjustment",
       "version": 1,
       "verify_jwt": true,
@@ -167,6 +131,70 @@
           "name": "index.ts",
           "match": true,
           "sha256": "0ac6a2cf16ed3bbfbf55b25785fa5c83649303e8a25d0cb39b58f6203c00a23e"
+        },
+        {
+          "name": "_shared/ai-billing-provider.ts",
+          "match": true,
+          "sha256": "e70c88e8056643ebe41bc15e1b77cbf80f0f50a21fec4d444cbdd1937ef1d692"
+        }
+      ]
+    },
+    {
+      "name": "careerdev-ai-subscription-checkout",
+      "version": 6,
+      "verify_jwt": true,
+      "bundle_sha256": "668dbb126aa1e74f9594843fdd602bec91bd883ab437c64a2e688f239de6a08c",
+      "files": [
+        {
+          "name": "careerdev-ai-subscription-checkout/index.ts",
+          "match": true,
+          "sha256": "4af314dfe0bdc9a724a165ab81649e9af59aee7c58f3aa8e7b6834836e037926"
+        },
+        {
+          "name": "_shared/ai-billing-provider.ts",
+          "match": true,
+          "sha256": "e70c88e8056643ebe41bc15e1b77cbf80f0f50a21fec4d444cbdd1937ef1d692"
+        },
+        {
+          "name": "_shared/ai-billing-release.ts",
+          "match": true,
+          "sha256": "70faaad78a864179ee1cbea5405eee3207c93d3c1a88f95f5d1bcc839897140e"
+        }
+      ]
+    },
+    {
+      "name": "careerdev-ai-subscription-manage",
+      "version": 5,
+      "verify_jwt": true,
+      "bundle_sha256": "c186765ee9c7716f652bc9c5a4e78307d9a66ac4f1f07c5fd289dd9ebdfb2451",
+      "files": [
+        {
+          "name": "careerdev-ai-subscription-manage/index.ts",
+          "match": true,
+          "sha256": "3b6ebf9265f3256cd57a8d6fc0af676fa32f344ced2e04eb28e17e32daeb6095"
+        },
+        {
+          "name": "_shared/ai-billing-provider.ts",
+          "match": true,
+          "sha256": "e70c88e8056643ebe41bc15e1b77cbf80f0f50a21fec4d444cbdd1937ef1d692"
+        },
+        {
+          "name": "_shared/ai-billing-release.ts",
+          "match": true,
+          "sha256": "70faaad78a864179ee1cbea5405eee3207c93d3c1a88f95f5d1bcc839897140e"
+        }
+      ]
+    },
+    {
+      "name": "billing-sandbox-matched-acceptance",
+      "version": 4,
+      "verify_jwt": true,
+      "bundle_sha256": "04c442cadf7d1ccf8f992664340b749b8437b6d81616d07626f415c0e97e730d",
+      "files": [
+        {
+          "name": "index.ts",
+          "match": true,
+          "sha256": "d160c56a951a6e43403416560a9f03b5dcad8c8ced96c2c2cf9f82d32840aa3a"
         },
         {
           "name": "_shared/ai-billing-provider.ts",
@@ -681,5 +709,190 @@
     "function_definition_md5": "b9c0ffb6432e9f9da7d8010845df0e77",
     "verified_only_in_test": true,
     "acl_unchanged": true
+  },
+  "pre_scoped_test_snapshot": [
+    {
+      "name": "careerdev-paystack-webhook",
+      "version": 10,
+      "verify_jwt": false,
+      "bundle_sha256": "f8e06b644b2f19428d4b54bbe40dd9c3b3bbddffae26433ae5868634f10716e3",
+      "files": [
+        {
+          "name": "careerdev-paystack-webhook/index.ts",
+          "match": true,
+          "sha256": "7680102a7297e9088c8b784f693587b8e8a5d0583f89895bc0952fd3e8d81be2"
+        },
+        {
+          "name": "_shared/ai-billing-reconcile.ts",
+          "match": true,
+          "sha256": "6245110211668a83752a7c9ed758ed70ceed7cdc8ca25558aa28b2a96a2dd175"
+        },
+        {
+          "name": "_shared/ai-billing-provider.ts",
+          "match": true,
+          "sha256": "e70c88e8056643ebe41bc15e1b77cbf80f0f50a21fec4d444cbdd1937ef1d692"
+        }
+      ]
+    },
+    {
+      "name": "careerdev-ai-subscription-verify",
+      "version": 5,
+      "verify_jwt": true,
+      "bundle_sha256": "5e80dd43f2cf52e3e6181e1bfe0e182bb6787f688b32a723369af3449aa32c54",
+      "files": [
+        {
+          "name": "careerdev-ai-subscription-verify/index.ts",
+          "match": true,
+          "sha256": "306ab01f46bb079ee346d2f520ae7fef15d2a05d7c35b623e2aca600a8c745c3"
+        },
+        {
+          "name": "_shared/ai-billing-provider.ts",
+          "match": true,
+          "sha256": "e70c88e8056643ebe41bc15e1b77cbf80f0f50a21fec4d444cbdd1937ef1d692"
+        }
+      ]
+    },
+    {
+      "name": "careerdev-ai-billing-reconcile",
+      "version": 4,
+      "verify_jwt": true,
+      "bundle_sha256": "7dbe70d02152c7410fdf54319fed089e300f215b7aaa8974ee76c1076dcc1f9f",
+      "files": [
+        {
+          "name": "careerdev-ai-billing-reconcile/index.ts",
+          "match": true,
+          "sha256": "07698d17b4f4f261644bac33b6ed9b2ff13daff3d57702182428b5d041e7136a"
+        },
+        {
+          "name": "_shared/ai-billing-reconcile.ts",
+          "match": true,
+          "sha256": "6245110211668a83752a7c9ed758ed70ceed7cdc8ca25558aa28b2a96a2dd175"
+        },
+        {
+          "name": "_shared/ai-billing-provider.ts",
+          "match": true,
+          "sha256": "e70c88e8056643ebe41bc15e1b77cbf80f0f50a21fec4d444cbdd1937ef1d692"
+        }
+      ]
+    },
+    {
+      "name": "careerdev-ai-subscription-checkout",
+      "version": 5,
+      "verify_jwt": true,
+      "bundle_sha256": "76c2722a0180ab4647efaf869f270efc874cfc0fb4570d2400d6bf5d953cd215",
+      "files": [
+        {
+          "name": "careerdev-ai-subscription-checkout/index.ts",
+          "match": true,
+          "sha256": "86f0a2e7e03d561f1cf1e2907b5c7eed4c32a78d5120e79e0a0039449b9496f9"
+        },
+        {
+          "name": "_shared/ai-billing-provider.ts",
+          "match": true,
+          "sha256": "e70c88e8056643ebe41bc15e1b77cbf80f0f50a21fec4d444cbdd1937ef1d692"
+        }
+      ]
+    },
+    {
+      "name": "careerdev-ai-subscription-manage",
+      "version": 4,
+      "verify_jwt": true,
+      "bundle_sha256": "4c150cb1a0923816341b46c7b45377549a21c0580bf3f722479d669968ec17c0",
+      "files": [
+        {
+          "name": "careerdev-ai-subscription-manage/index.ts",
+          "match": true,
+          "sha256": "ca4094a61484a23b94cd0dfe0951a680e2135d30c13593eb01d8907cfa098282"
+        },
+        {
+          "name": "_shared/ai-billing-provider.ts",
+          "match": true,
+          "sha256": "e70c88e8056643ebe41bc15e1b77cbf80f0f50a21fec4d444cbdd1937ef1d692"
+        }
+      ]
+    },
+    {
+      "name": "careerdev-ai-payment-adjustment",
+      "version": 1,
+      "verify_jwt": true,
+      "bundle_sha256": "68679dcec560bbaa6cd047f43745b33cd1859d530b09ed23f72cfbb2db26c3e3",
+      "files": [
+        {
+          "name": "careerdev-ai-payment-adjustment/index.ts",
+          "match": true,
+          "sha256": "1d7b14bcdf5f2b28a2efe367ec358747b6c91a178324bbc3bfa522846a21aabc"
+        },
+        {
+          "name": "_shared/ai-billing-provider.ts",
+          "match": true,
+          "sha256": "e70c88e8056643ebe41bc15e1b77cbf80f0f50a21fec4d444cbdd1937ef1d692"
+        },
+        {
+          "name": "_shared/ai-payment-adjustments.ts",
+          "match": true,
+          "sha256": "258669a5417fdbd8898c40f4747aa98561f9c1caf127bda4445ef3219619b5d3"
+        }
+      ]
+    },
+    {
+      "name": "careerdev-ai-agent-runtime",
+      "version": 2,
+      "verify_jwt": true,
+      "bundle_sha256": "98870d5940cfde6d6cbc7620854c07be9f8f2fa56ce04deecc97f614942a12b9",
+      "files": [
+        {
+          "name": "careerdev-ai-agent-runtime/index.ts",
+          "match": true,
+          "sha256": "dea0a1be683d90221813ff4b87cc429d5e407fd7f1ebf6cfddd2003d92590f01"
+        }
+      ]
+    },
+    {
+      "name": "billing-sandbox-acknowledgment",
+      "version": 3,
+      "verify_jwt": true,
+      "bundle_sha256": "b9b9a88b3dac2732eb940440574fe61669fe34af68a0c71379e2ffe5b91933d0",
+      "files": [
+        {
+          "name": "index.ts",
+          "match": true,
+          "sha256": "8c7eff0344d67d89323018b709b1d151efdc01578ecde4301edb5fd719a6c207"
+        },
+        {
+          "name": "_shared/ai-billing-provider.ts",
+          "match": true,
+          "sha256": "e70c88e8056643ebe41bc15e1b77cbf80f0f50a21fec4d444cbdd1937ef1d692"
+        }
+      ]
+    },
+    {
+      "name": "billing-sandbox-provider-delivery",
+      "version": 4,
+      "verify_jwt": true,
+      "bundle_sha256": "c6271b7e7150b55084e3af1cbee8f684c671143e4bb65e3da2336c69751dadc2",
+      "files": [
+        {
+          "name": "index.ts",
+          "match": true,
+          "sha256": "0ac6a2cf16ed3bbfbf55b25785fa5c83649303e8a25d0cb39b58f6203c00a23e"
+        },
+        {
+          "name": "_shared/ai-billing-provider.ts",
+          "match": true,
+          "sha256": "e70c88e8056643ebe41bc15e1b77cbf80f0f50a21fec4d444cbdd1937ef1d692"
+        }
+      ]
+    }
+  ],
+  "scoped_test_preparation": {
+    "global_billing_gate": false,
+    "refund_gate": false,
+    "enabled_scopes_before_checkout": 0,
+    "source_migration": "20261104141257_bounded_ai_billing_test_authorization.sql",
+    "history_migration": "20261104145537",
+    "checkout_initialized": false,
+    "one_account_source_migration": "20261104150331_bind_billing_test_approval_to_one_account.sql",
+    "one_account_history_migration": "20261104150334",
+    "fetched_source_rechecked_date": "2026-11-06"
   }
 }

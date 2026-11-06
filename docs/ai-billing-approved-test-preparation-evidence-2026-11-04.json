@@ -1,0 +1,94 @@
+{
+  "owner_approval": {
+    "approved_at_date": "2026-11-04",
+    "approved_by": "owner in this chat",
+    "scope": "One Paystack TEST Fresher monthly NGN7500 / 25 credits and one subsequent TEST renewal stop",
+    "conditions": [
+      "verified disposable-account/environment isolation",
+      "reviewed gate-controlled path",
+      "no production or LIVE changes",
+      "refund policy stays disabled"
+    ],
+    "approval_answer": "Approve conditional TEST plan",
+    "checkout_initialized": false,
+    "scope_activation": false
+  },
+  "sql": {
+    "rehearsal": [
+      {
+        "results": [
+          {
+            "name": "private service-only RLS authorization",
+            "status": "pass"
+          },
+          {
+            "name": "approved fixed budget constraint",
+            "status": "pass"
+          },
+          {
+            "name": "authorization lifetime bounded",
+            "status": "pass"
+          },
+          {
+            "name": "actual customer role cannot read scopes",
+            "status": "pass"
+          },
+          {
+            "name": "actual customer role cannot enable scopes",
+            "status": "pass"
+          }
+        ]
+      }
+    ],
+    "post_apply": [
+      {
+        "results": [
+          {
+            "name": "private service-only RLS authorization",
+            "status": "pass"
+          },
+          {
+            "name": "approved fixed budget constraint",
+            "status": "pass"
+          },
+          {
+            "name": "authorization lifetime bounded",
+            "status": "pass"
+          },
+          {
+            "name": "actual customer role cannot read scopes",
+            "status": "pass"
+          },
+          {
+            "name": "actual customer role cannot enable scopes",
+            "status": "pass"
+          }
+        ]
+      }
+    ]
+  },
+  "inactive_preflight": [
+    {
+      "preflight": {
+        "receipts": 9,
+        "run_claims": 0,
+        "credit_rows": 3,
+        "refund_gate": false,
+        "billing_gate": false,
+        "authorizations": 0,
+        "enabled_authorizations": 0
+      }
+    }
+  ],
+  "checkout_version": 6,
+  "manage_version": 5,
+  "helper_version": 4,
+  "all_changed_bundled_files_match": true,
+  "local_test_count": 144,
+  "no_provider_transaction_yet": true,
+  "one_account_history_migration": "20261104150334",
+  "single_approval_constraint_verified": true,
+  "revalidated_date": "2026-11-06",
+  "public_runner_http": 401,
+  "authorized_pre_initialization_observe_http": 409
+}
