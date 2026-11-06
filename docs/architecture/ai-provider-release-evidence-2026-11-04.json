@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-04",
+  "productionProjectRef": "ufmhrmzumqkjvaezrmxf",
+  "testProjectRef": "yyevuwvtrktrzwuzeddo",
+  "directProductionRoutingEnabled": false,
+  "note": "Read-only audit evidence statuses; not a source of secrets, a runtime policy, or permission to deploy. A true status must have independent signed/reviewed evidence.",
+  "gates": {
+    "isolatedEnvironment": {
+      "passed": false,
+      "evidenceIds": [],
+      "note": "Separate test project exists, but no proof that test payment/email credentials and customer data are isolated."
+    },
+    "testRuntimeAndCreditContract": {
+      "passed": false,
+      "evidenceIds": [],
+      "note": "Production runtime v25 (finalize_ai_credit_charge); test v2 (claim_ai_runtime_credit/settle_ai_credit_charge); incompatible."
+    },
+    "subscriptionAndAuthorization": {
+      "passed": false,
+      "evidenceIds": [],
+      "note": "No authenticated preview end-to-end testing of new model adapter."
+    },
+    "retryIdempotency": {
+      "passed": false,
+      "evidenceIds": [],
+      "note": "Synthetic fallback is tested; DB-backed one-credit accounting across provider handoff not tested."
+    },
+    "spendCapsAndKeys": {
+      "passed": false,
+      "evidenceIds": [],
+      "note": "Only generic Vercel Preview GROQ_API_KEY name observed; no verified dedicated OpenAI/Groq test key pair or hard limits."
+    },
+    "modelCataloguePreflight": {
+      "passed": false,
+      "evidenceIds": [],
+      "note": "Read-only isolated preflight code exists; no live API call."
+    },
+    "structuredOutputAndToolEquivalence": {
+      "passed": false,
+      "evidenceIds": [],
+      "note": "Existing OpenAI Responses API uses strict json_schema and built-in web_search; Groq equivalence unknown."
+    },
+    "sourceGroundingAndResearchFreshness": {
+      "passed": false,
+      "evidenceIds": [],
+      "note": "Exa/Tavily synthetic tests only; neither selected or live benchmarked."
+    },
+    "humanReviewAndObservability": {
+      "passed": false,
+      "evidenceIds": [],
+      "note": "Existing review controls and agent governance are not proved for new provider."
+    },
+    "liveSyntheticComparison": {
+      "passed": false,
+      "evidenceIds": [],
+      "note": "No live provider calls; no measured latency, cost or quality."
+    },
+    "rollbackAndOwnerApproval": {
+      "passed": false,
+      "evidenceIds": [],
+      "note": "Draft PR open; no approved release, rollback rehearsal or production deployment."
+    }
+  }
+}

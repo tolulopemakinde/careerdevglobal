@@ -24,6 +24,12 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate isolated AI pilot change scope
+        if: github.event_name == 'pull_request' && github.head_ref == 'design-groq-research-gateway-2026-11-04'
+        run: node scripts/validate-ai-pilot-scope.mjs
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -33,6 +39,9 @@ jobs:
 
       - name: Install locked dependencies
         run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Run isolated AI provider pilot tests (no credentials or network calls)
+        run: npm run test:ai-pilot
 
       - name: Run source-secret audit
         run: npm run audit:source
