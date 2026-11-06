@@ -40,6 +40,9 @@ jobs:
       - name: Run TypeScript check
         run: npm run typecheck
 
+      - name: Test scheduling with synthetic data
+        run: npm run test:scheduling
+
       - name: Verify packaged build inputs
         run: npm run check:build-inputs
 

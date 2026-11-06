@@ -1,0 +1,36 @@
+name: Calendly database rehearsal
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/scheduling/rehearsal/**'
+      - 'tests/calendly-rehearsal*'
+      - '.github/workflows/calendly-rehearsal.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-postgres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: careerdev_scheduling_fixture
+          POSTGRES_PASSWORD: synthetic-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d careerdev_scheduling_fixture"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exercise booking claims, roles and transaction initialization
+        env:
+          PGPASSWORD: synthetic-only
+        run: bash tests/calendly-rehearsal.sh
