@@ -1,5 +1,7 @@
 # CareerDev Global — manual AI provider preflight runbook (4 November 2026)
 
+> **Architecture update (6 November 2026):** This older runbook covers the OPTIONAL **direct OpenAI/Groq provider-key experiment**, not the selected first-stage approach. For the approved **single-key, Gateway-funded synthetic pilot**, use [AI Gateway isolated rollout](ai-gateway-isolated-rollout-2026-11-06.md) and `npm run evaluate:ai-gateway:synthetic`. Do **not** create separate Groq/OpenAI test organizations or credentials solely to run the Gateway pilot. Neither pathway is production AI routing.
+
 **Owner decision:** Draft PR #43 is OFF by default. Model-catalogue checks require independent operator verification before use. The deployed Supabase AI runtime and live application do not import this module.
 
 ## Current source-of-truth status (read-only)
