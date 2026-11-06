@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { createSupabaseBrowserClient } from '../../lib/supabase-browser';
 
 type Plan={plan_key:string;name:string;description:string;monthly_price:number;annual_price:number;monthly_price_ngn:number;annual_price_ngn:number;currency:string;monthly_credits:number;included_agents:string[]};
@@ -25,7 +26,20 @@ export default function PricingPage(){
     if(params.get('payment')==='return'&&reference){
       setMessage('Verifying your Paystack payment…');
       const {data,error}=await supabase.functions.invoke('careerdev-ai-subscription-verify',{body:{reference}});
-      if(error||!data?.payment_verified){setMessage(data?.error||error?.message||'Payment verification is still pending. Please refresh shortly.');}
+      if(error||!data?.payment_verified){
+        const status=error instanceof FunctionsHttpError?error.context.status:undefined;
+        if(status===401||status===404){
+          setMessage('Sign in with the CareerDev account that started this checkout, then reopen this payment return page. Do not pay again.');
+        }else if(status===403){
+          setMessage('This account cannot verify the payment. Contact CareerDev billing support before trying again.');
+        }else if(status===400){
+          setMessage('This payment return link is invalid. Contact CareerDev billing support before trying again.');
+        }else if(status===409||!error){
+          setMessage('Payment verification is still pending. Refresh this page shortly. Do not pay again.');
+        }else{
+          setMessage('Payment verification is temporarily unavailable. Refresh this page to try verification again. Do not pay again.');
+        }
+      }
       else{setMessage(data.access_active?'Payment verified. Your paid AI subscription is available.':'Payment verified. Your subscription status is '+data.status+'. Contact billing support if access is unexpected.');window.history.replaceState({},'','/pricing');}
     }
     const [{data:plansData},{data:serviceData},{data:subscription}]=await Promise.all([
@@ -87,7 +101,7 @@ export default function PricingPage(){
         </div>
       </div>
       {currency==='NGN'&&<p style={{textAlign:'center',fontSize:12,color:'#718394',margin:'0 0 20px'}}>NGN pricing is a rounded local-price schedule for Nigeria, not a live FX conversion.</p>}
-      {message&&<div style={{marginBottom:18,padding:14,borderRadius:12,background:'#fff4e5',border:'1px solid #f0c36a',color:'#684b00'}}>{message}</div>}
+      {message&&<div role="status" style={{marginBottom:18,padding:14,borderRadius:12,background:'#fff4e5',border:'1px solid #f0c36a',color:'#684b00'}}>{message}</div>}
       {loading?<p>Loading plans…</p>:<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:16}}>
         {plans.map((p)=>{const price=money(p);const popular=p.plan_key==='professional';const isCurrent=currentPlan===p.plan_key;return <article key={p.plan_key} style={{position:'relative',background:'#fff',border:popular?'2px solid #0b5d9b':'1px solid #d8e6f1',borderRadius:18,padding:22,boxShadow:'0 10px 30px rgba(0,60,100,.07)',display:'flex',flexDirection:'column',height:'100%',boxSizing:'border-box'}}>
           {popular&&<span style={{position:'absolute',top:-12,left:18,padding:'5px 10px',borderRadius:999,background:'#0b5d9b',color:'#fff',fontSize:11,fontWeight:900}}>MOST POPULAR</span>}

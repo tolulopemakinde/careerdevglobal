@@ -894,5 +894,27 @@
     "one_account_source_migration": "20261104150331_bind_billing_test_approval_to_one_account.sql",
     "one_account_history_migration": "20261104150334",
     "fetched_source_rechecked_date": "2026-11-06"
+  },
+  "matched_test_result": {
+    "checked_date": "2026-11-06",
+    "source_commit": "7ef525ca2fac1675572db186fb7e74b90f21f105",
+    "github_billing_run": 42139507066,
+    "vercel_preview": "dpl_hTCZ8TwrJzW5h844KpWsjUHvjM7M",
+    "checkout_version": 6,
+    "manage_version": 5,
+    "runner_version": 4,
+    "webhook_version": 10,
+    "provider_mode": "test",
+    "provider_transaction_id": "6734777802",
+    "charge_event_id": "6aed27f7195a93c4579db7d8",
+    "charge_delivery_http": 200,
+    "charge_delivery_attempt": 1,
+    "confirmed_checkouts": 1,
+    "confirmed_cancellations": 1,
+    "matched_receipts": 1,
+    "credits_available_after_cancel": 25,
+    "scope_closed": true,
+    "global_billing_gate": false,
+    "refund_gate": false
   }
 }

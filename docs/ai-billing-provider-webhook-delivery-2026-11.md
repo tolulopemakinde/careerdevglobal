@@ -1,5 +1,9 @@
 # Paystack TEST webhook delivery — 3 November 2026
 
+## Matched TEST result — 6 November 2026
+
+One owner-approved NGN 7,500 Fresher TEST payment succeeded. Paystack delivered the signed charge event with HTTP 200 on the first attempt. The isolated database recorded one exact receipt and 25 available credits. The approved renewal stop preserved the paid interval and balance, and the account scope was closed. W01 and W11 pass for the provider and backend. Browser acceptance and the remaining production gates are open. See [the matched TEST execution result](ai-billing-matched-test-result-2026-11-06.md).
+
 ## Current evidence — 4 November 2026
 
 **PARTIALLY COMPLETE — BLOCKED for production.** Genuine Paystack delivery of the original event now reports **Delivered / HTTP200 / attempt7** (3November21:07:36WAT), independently matched by webhookv10 Edge logs. The same signed event remains unassigned and unprocessed, with no financial mutation. No payment/refund/cancellation or resend was initiated during this resume.

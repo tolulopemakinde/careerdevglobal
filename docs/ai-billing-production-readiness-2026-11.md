@@ -1,5 +1,9 @@
 # AI billing production readiness — 3 November 2026
 
+## Matched TEST result — 6 November 2026
+
+One owner-approved NGN 7,500 Fresher TEST payment succeeded. Paystack delivered the signed charge event with HTTP 200 on the first attempt. The isolated database recorded one exact receipt and 25 available credits. The approved renewal stop preserved the paid interval and balance, and the account scope was closed. W01 and W11 pass for the provider and backend. Browser acceptance and the remaining production gates are open. See [the matched TEST execution result](ai-billing-matched-test-result-2026-11-06.md).
+
 ## Conditional TEST plan approved — account-scoped preparation
 
 The owner approved oneNGN7,500 Fresher TEST payment and its renewal stop. A private, expiring one-account authorization is prepared with both global gatesfalse; no checkout is initialized in this snapshot. Read [the bounded control review](ai-billing-approved-test-preparation-2026-11-04.md). Existing accounts remain ineligible for this scope, and production stays blocked.
