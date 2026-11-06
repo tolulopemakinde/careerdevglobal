@@ -79,3 +79,15 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f /tmp/credit_replay_function.sql
       - name: Verify actual PostgreSQL reservation, denial, ownership and payment semantics
         run: psql -X -v ON_ERROR_STOP=1 -f tests/ai-credit-replay-disposable-cases.sql
+      - name: Verify refunds and credit settlement in concurrent PostgreSQL sessions
+        shell: bash
+        run: |
+          set -euo pipefail
+          createdb synthetic_ai_adjustment_fixture
+          export PGDATABASE=synthetic_ai_adjustment_fixture
+          psql -X -v ON_ERROR_STOP=1 -f tests/ai-credit-replay-disposable-schema.sql
+          psql -X -v ON_ERROR_STOP=1 -f tests/ai-adjustment-concurrency-fixture.sql
+          awk '/^-- Preserve existing RPC contracts/{ found=1; exit } { print } END { if (!found) exit 1 }' \
+            supabase/migrations/20261101152243_ai_payment_refund_chargeback_policy.sql > "$RUNNER_TEMP/refund-policy.sql"
+          psql -X -v ON_ERROR_STOP=1 -f "$RUNNER_TEMP/refund-policy.sql"
+          python3 tests/ai-adjustment-concurrency.py
