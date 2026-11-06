@@ -11,6 +11,7 @@ test("allows only draft AI adapter, docs, tests and package lockfile",()=>{
    "examples/ai-pilot/sdk-executor.example.mjs",
    "scripts/run-ai-model-connectivity.mjs",
    "scripts/report-ai-pilot-readiness.mjs",
+   "scripts/run-ai-gateway-synthetic.mjs",
    "scripts/validate-ai-pilot-scope.mjs",
  ];
  assert.deepEqual(forbiddenAiPilotChanges(paths),[]);
