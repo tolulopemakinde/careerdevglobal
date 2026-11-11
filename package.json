@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:scheduling": "node --test tests/scheduling.test.mjs",
     "dev": "next dev",
     "build": "npm run check:build-inputs && tar -xzf public/careerdev-global-assets.tgz -C public && next build",
     "start": "next start",
