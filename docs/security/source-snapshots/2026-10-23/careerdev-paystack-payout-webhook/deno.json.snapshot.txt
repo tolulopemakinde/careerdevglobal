@@ -1,0 +1,11 @@
+# READ-ONLY PRODUCTION SOURCE SNAPSHOT
+# Function: careerdev-paystack-payout-webhook
+# Retrieved from Supabase project: ufmhrmzumqkjvaezrmxf
+# Deployed version: v8
+# verify_jwt: false
+# Runtime source fingerprint (ezbr_sha256 reported by Supabase): c2c9f3614f2d87b501416cb5f7f7eb8c328ab064cd5534a2f0f8165a1c185755
+# Retrieved: 2026-10-23
+# WARNING: Evidence snapshot only; not a deployable source tree. Do not deploy this .txt file.
+# This is a copy of the currently deployed source, not proof of the original authoring source or migration history.
+
+{"compilerOptions":{"strict":true},"imports":{}}
