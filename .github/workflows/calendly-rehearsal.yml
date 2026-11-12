@@ -6,6 +6,8 @@ on:
     paths:
       - 'docs/scheduling/rehearsal/**'
       - 'tests/calendly-rehearsal*'
+      - 'tests/calendly-local-supabase.mjs'
+      - 'supabase/functions/careerdev-calendly-reschedule/**'
       - '.github/workflows/calendly-rehearsal.yml'
 
 permissions:
@@ -34,3 +36,37 @@ jobs:
         env:
           PGPASSWORD: synthetic-only
         run: bash tests/calendly-rehearsal.sh
+
+  local-supabase-auth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.122.0
+      - name: Exercise rescheduling with local Supabase Auth and synthetic Calendly responses
+        shell: bash
+        run: |
+          set -euo pipefail
+          stack="$(mktemp -d)"
+          trap 'supabase stop --workdir "$stack" --no-backup >/dev/null 2>&1 || true' EXIT
+          supabase init --workdir "$stack"
+          supabase start --workdir "$stack" -x studio,imgproxy,storage-api,realtime,mailpit,postgres-meta,edge-runtime,logflare,vector,supavisor >"$stack/start.log" 2>&1 || { tail -n 50 "$stack/start.log"; exit 1; }
+          supabase status --workdir "$stack" -o env >"$stack/local.env"
+          set -a
+          source "$stack/local.env"
+          set +a
+          [[ "$API_URL" == http://127.0.0.1:54321 ]]
+          [[ "$DB_URL" == postgres://postgres:postgres@127.0.0.1:54322/postgres || "$DB_URL" == postgresql://postgres:postgres@127.0.0.1:54322/postgres ]]
+          psql "$DB_URL" -Xq -v ON_ERROR_STOP=1 -v local_supabase=1 \
+            -f tests/calendly-rehearsal-fixtures.sql \
+            -f docs/scheduling/rehearsal/calendly-operations.sql \
+            -f docs/scheduling/rehearsal/calendly-reschedule.sql \
+            -f docs/scheduling/rehearsal/marketplace-transaction.sql
+          node tests/calendly-local-supabase.mjs

@@ -1,11 +1,15 @@
 -- Synthetic contract fixture. Run only in an empty, disposable Postgres database.
-create extension btree_gist;
+create extension if not exists btree_gist;
+\if :{?local_supabase}
+-- The local Supabase stack already provides the API roles and auth.uid().
+\else
 create role anon;
 create role authenticated;
 create role service_role bypassrls;
 create schema auth;
 create function auth.uid() returns uuid language sql stable as
   $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+\endif
 
 create table profiles (id uuid primary key);
 create table coaches (id uuid primary key, profile_id uuid references profiles, application_status text);
@@ -17,7 +21,10 @@ create table coach_service_offerings (
   id uuid primary key, coach_id uuid references coaches, service_id uuid references services,
   active boolean, duration_minutes integer, calendly_event_type_uri text, price numeric, currency text
 );
-create table calendly_connections (coach_id uuid primary key, calendly_user_uri text, active boolean);
+create table calendly_connections (
+  coach_id uuid primary key, calendly_user_uri text, active boolean,
+  access_token_ciphertext text, token_expires_at timestamptz
+);
 create table calendly_oauth_states (id uuid);
 create table marketplace_booking_requests (
   id uuid primary key default gen_random_uuid(), client_id uuid references clients, coach_id uuid references coaches,
@@ -71,7 +78,8 @@ insert into services values ('00000000-0000-0000-0000-000000000031', true);
 insert into coach_service_offerings values ('00000000-0000-0000-0000-000000000041',
   '00000000-0000-0000-0000-000000000011', '00000000-0000-0000-0000-000000000031',
   true, 30, 'https://api.calendly.com/event_types/type-1', 101.55, 'NGN');
-insert into calendly_connections values ('00000000-0000-0000-0000-000000000011', 'https://api.calendly.com/users/coach', true);
+insert into calendly_connections (coach_id, calendly_user_uri, active)
+values ('00000000-0000-0000-0000-000000000011', 'https://api.calendly.com/users/coach', true);
 insert into marketplace_booking_requests (id, client_id, coach_id, service_id, coach_service_offering_id,
   booking_status, requested_start, requested_end, timezone)
 select id::uuid, '00000000-0000-0000-0000-000000000021', '00000000-0000-0000-0000-000000000011',

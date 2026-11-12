@@ -15,6 +15,12 @@ exclusion, provider identifier guards, cancellation, and reschedule rollback
 on overlap and replay. The reduced fixture omits the deployed notification and billing
 triggers and cannot establish migration compatibility.
 
+The local Supabase CI job uses a fresh CLI stack with no hosted project. It
+signs in two synthetic users, invokes the reschedule handler with their actual
+Supabase access tokens, and verifies the moved slot and retained marketplace
+transaction through PostgREST. Its Calendly responses are synthetic. Browser
+acceptance and the hosted Calendly Sandbox flow are separate checks.
+
 The reschedule Edge candidate requires the exact disposable Supabase project
 ref in CALENDLY_RESCHEDULE_REHEARSAL_PROJECT_REF and the browser origin in
 CALENDLY_RESCHEDULE_REHEARSAL_ORIGIN. It rejects both existing project refs.
