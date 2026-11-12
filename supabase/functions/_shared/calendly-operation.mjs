@@ -177,3 +177,65 @@ export async function reconcileCalendlyOperation({ bookingId, actorId, kind, eve
   await store.finish(bookingId, operation.id, evidence.eventUri, evidence.inviteeUri);
   return { state: 'succeeded', operationId: operation.id };
 }
+
+function rescheduleEvent(inviteeUri) {
+  const eventUri = typeof inviteeUri === 'string' ? inviteeUri.split('/invitees/')[0] : null;
+  inviteePath(eventUri, inviteeUri);
+  return eventUri;
+}
+
+// The store authorizes the participant before returning provider context.
+// Calendly hosts the reschedule form. This flow performs only provider reads.
+export async function rescheduleCalendlyBooking({ bookingId, actorId, store, provider, now = Date.now() }) {
+  if (!actorId) throw new Error('Unauthorized operation');
+  const snapshot = await store.rescheduleContext(bookingId, actorId);
+  const { provider_event_uri: oldEventUri, provider_invitee_uri: oldInviteeUri } = snapshot;
+  const [oldEventResponse, oldInviteeResponse] = await Promise.all([
+    provider(pathFor(oldEventUri, 'scheduled_events')), provider(inviteePath(oldEventUri, oldInviteeUri)),
+  ]);
+  const oldEvent = oldEventResponse?.resource;
+  const oldInvitee = oldInviteeResponse?.resource;
+  if (oldEvent?.uri !== oldEventUri || oldEvent.event_type !== snapshot.provider_type_uri ||
+      !ownedEvent(oldEvent, snapshot) ||
+      oldInvitee?.uri !== oldInviteeUri || oldInvitee.event !== oldEventUri) {
+    throw new Error('Cannot verify the current Calendly booking');
+  }
+
+  if (oldEvent.status === 'active' && oldInvitee.status === 'active' && !oldInvitee.new_invitee) {
+    const url = oldInvitee.reschedule_url;
+    if (instant(snapshot.starts_at) <= now ||
+        typeof url !== 'string' || !/^https:\/\/calendly[.]com\/reschedulings\/[A-Za-z0-9-]+$/.test(url)) {
+      throw new Error('Calendly rescheduling is unavailable');
+    }
+    return { state: 'active', url };
+  }
+
+  if (oldEvent.status !== 'canceled' || oldInvitee.status !== 'canceled' || oldInvitee.rescheduled !== true) {
+    throw new Error('Calendly has not verified a reschedule');
+  }
+  const newInviteeUri = oldInvitee.new_invitee;
+  const newEventUri = rescheduleEvent(newInviteeUri);
+  if (newEventUri === oldEventUri) throw new Error('Calendly returned the previous event');
+  const [newEventResponse, newInviteeResponse] = await Promise.all([
+    provider(pathFor(newEventUri, 'scheduled_events')), provider(inviteePath(newEventUri, newInviteeUri)),
+  ]);
+  const newEvent = newEventResponse?.resource;
+  const newInvitee = newInviteeResponse?.resource;
+  const start = instant(newEvent?.start_time);
+  const end = instant(newEvent?.end_time);
+  const originalDuration = instant(snapshot.ends_at) - instant(snapshot.starts_at);
+  if (!(start > now) || !(end > start) || end - start !== originalDuration ||
+      newEvent?.uri !== newEventUri || newEvent.event_type !== snapshot.provider_type_uri ||
+      newEvent.status !== 'active' || newEvent.event_memberships?.length !== 1 ||
+      newEvent.event_memberships[0].user !== snapshot.provider_user_uri ||
+      newInvitee?.uri !== newInviteeUri || newInvitee.event !== newEventUri ||
+      newInvitee.status !== 'active' || newInvitee.old_invitee !== oldInviteeUri || newInvitee.new_invitee) {
+    throw new Error('Calendly replacement does not match the booking');
+  }
+
+  await store.applyReschedule(bookingId, actorId, {
+    ...snapshot, replacement_event_uri: newEventUri, replacement_invitee_uri: newInviteeUri,
+    replacement_start: newEvent.start_time, replacement_end: newEvent.end_time,
+  });
+  return { state: 'rescheduled' };
+}

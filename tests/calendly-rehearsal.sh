@@ -7,7 +7,8 @@ export PGHOST=127.0.0.1 PGPORT=5432 PGUSER=postgres PGDATABASE=careerdev_schedul
 sql() { psql -XqAt -v ON_ERROR_STOP=1 "$@"; }
 candidate=docs/scheduling/rehearsal
 sql -f tests/calendly-rehearsal-fixtures.sql -f "$candidate/booking-request.sql" -f "$candidate/calendly-operations.sql" \
-  -f "$candidate/marketplace-transaction.sql" -f "$candidate/public-directory.sql"
+  -f "$candidate/marketplace-transaction.sql" -f "$candidate/public-directory.sql" \
+  -f "$candidate/calendly-reschedule.sql"
 
 coach=00000000-0000-0000-0000-000000000001
 client=00000000-0000-0000-0000-000000000002
@@ -66,9 +67,34 @@ two=$!
 wait "$one"; wait "$two"
 [[ -s "$scratch/one" ]]
 cmp "$scratch/one" "$scratch/two"
+transaction_id=$(cat "$scratch/one")
 [[ $(sql -c 'select gross_amount, platform_fee, coach_earnings, (select count(*) from marketplace_transaction_events) from marketplace_transactions') == '101.55|20.31|81.24|1' ]]
 expect_error "set role authenticated; set request.jwt.claim.sub='$outsider'; select create_marketplace_transaction('$booking')" 'Booking unavailable'
 
+context="get_calendly_reschedule_context('$booking','$client')"
+expect_error "set role authenticated; select $context" 'permission denied'
+expect_error "set role service_role; select get_calendly_reschedule_context('$booking','$outsider')" 'Rescheduling is unavailable'
+old_context=$(sql -c "set role service_role; select $context")
+new_event=https://api.calendly.com/scheduled_events/event-2
+new_invitee="$new_event/invitees/invitee-2"
+evidence=$(sql -c "select '$old_context'::jsonb || jsonb_build_object('replacement_event_uri','$new_event','replacement_invitee_uri','$new_invitee','replacement_start','2090-01-01T11:00Z','replacement_end','2090-01-01T11:30Z')")
+move="set role service_role; select apply_calendly_reschedule('$booking','$client','$evidence')"
+sql -c "insert into marketplace_booking_slots (booking_id,coach_id,start_at,end_at,timezone,status) select '$overlap',coach_id,'2090-01-01T11:00Z','2090-01-01T11:30Z','UTC','held' from marketplace_booking_requests where id='$overlap'"
+expect_error "$move" 'exclusion constraint'
+[[ $(sql -c "select calendly_event_uri from marketplace_booking_requests where id='$booking'") == "$event" ]]
+sql -c "delete from marketplace_booking_slots where booking_id='$overlap'"
+sql -c "update marketplace_booking_requests set meeting_join_url='https://example.invalid/old' where id='$booking'"
+sql -c "$move" >"$scratch/one" &
+one=$!
+sql -c "$move" >"$scratch/two" &
+two=$!
+wait "$one"; wait "$two"
+[[ $(sql -c "select calendly_event_uri,meeting_join_url is null,(select count(*) from marketplace_booking_events where event_type='rescheduled') from marketplace_booking_requests where id='$booking'") == "$new_event|t|1" ]]
+[[ $(sql -c "$init_tx") == "$transaction_id" ]]
+
+snapshot=$(sql -c "set role service_role; select $context")
+event=$new_event
+invitee=$new_invitee
 cancel_snapshot=$(sql -c "select '$snapshot'::jsonb || jsonb_build_object('provider_event_uri','$event','provider_invitee_uri','$invitee')")
 cancel="select begin_calendly_operation('$booking','$client','cancel','$cancel_snapshot')"
 cancel_id=$(sql -c "set role service_role; $cancel->>'id'")

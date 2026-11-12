@@ -3,6 +3,7 @@ import test from 'node:test';
 import {
   createCalendlyTransport,
   reconcileCalendlyOperation,
+  rescheduleCalendlyBooking,
   runCalendlyOperation,
 } from '../supabase/functions/_shared/calendly-operation.mjs';
 
@@ -175,3 +176,99 @@ test('a persisted receipt supports read-only recovery without supplying provider
   assert.equal((await f.reconcile({ eventUri: undefined, inviteeUri: undefined })).state, 'succeeded');
   assert.equal(f.counts().posts, 1);
 });
+
+function rescheduleFixture({ active = false, replacement = {}, hostedUrl = 'https://calendly.com/reschedulings/fixture' } = {}) {
+  const nextEventUri = root + '/scheduled_events/event-2';
+  const nextInviteeUri = nextEventUri + '/invitees/invitee-2';
+  const nextStart = '2035-01-01T11:00:00Z';
+  const nextEnd = '2035-01-01T11:30:00Z';
+  const original = { ...snapshot, provider_event_uri: eventUri, provider_invitee_uri: inviteeUri };
+  const providerReads = [];
+  const moves = [];
+  const member = { user: snapshot.provider_user_uri };
+  const resources = {
+    [eventUri]: {
+      uri: eventUri, status: active ? 'active' : 'canceled', event_type: snapshot.provider_type_uri,
+      start_time: snapshot.starts_at, end_time: snapshot.ends_at, event_memberships: [member],
+    },
+    [inviteeUri]: {
+      uri: inviteeUri, event: eventUri, status: active ? 'active' : 'canceled',
+      rescheduled: !active, new_invitee: active ? null : nextInviteeUri,
+      reschedule_url: hostedUrl,
+    },
+    [nextEventUri]: {
+      uri: nextEventUri, status: 'active', event_type: snapshot.provider_type_uri,
+      start_time: nextStart, end_time: nextEnd, event_memberships: [member], ...replacement.event,
+    },
+    [nextInviteeUri]: {
+      uri: nextInviteeUri, event: nextEventUri, status: 'active',
+      old_invitee: inviteeUri, ...replacement.invitee,
+    },
+  };
+  const provider = async (path, body) => {
+    assert.equal(body, undefined, 'rescheduling never sends a Calendly mutation');
+    providerReads.push(path);
+    return { resource: resources[root + path] };
+  };
+  const store = {
+    async rescheduleContext(id, actor) {
+      assert.equal(id, bookingId);
+      if (actor !== actorId) throw new Error('Unauthorized');
+      return original;
+    },
+    async applyReschedule(id, actor, evidence) {
+      assert.deepEqual([id, actor], [bookingId, actorId]);
+      moves.push(evidence);
+    },
+  };
+  return {
+    run: (actor = actorId) => rescheduleCalendlyBooking({
+      bookingId, actorId: actor, store, provider, now: Date.parse('2034-12-01T00:00Z'),
+    }),
+    providerReads, moves,
+    expected: {
+      ...original, replacement_event_uri: nextEventUri, replacement_invitee_uri: nextInviteeUri,
+      replacement_start: nextStart, replacement_end: nextEnd,
+    },
+  };
+}
+
+test('reschedule rejects an unrelated actor before any provider reads', async () => {
+  const fixture = rescheduleFixture({ active: true });
+  await assert.rejects(fixture.run('outsider'), /Unauthorized/);
+  assert.equal(fixture.providerReads.length, 0);
+});
+
+test('an active booking yields the hosted reschedule link without moving the slot', async () => {
+  const fixture = rescheduleFixture({ active: true });
+  assert.deepEqual(await fixture.run(), {
+    state: 'active', url: 'https://calendly.com/reschedulings/fixture',
+  });
+  assert.equal(fixture.moves.length, 0);
+});
+
+test('reschedule never returns a link outside Calendly', async () => {
+  const fixture = rescheduleFixture({ active: true, hostedUrl: 'https://calendly.com.example.invalid/reschedulings/fixture' });
+  await assert.rejects(fixture.run(), /rescheduling is unavailable/);
+  assert.equal(fixture.moves.length, 0);
+});
+
+test('a linked replacement moves the booking once per verified database update', async () => {
+  const fixture = rescheduleFixture();
+  assert.deepEqual(await fixture.run(), { state: 'rescheduled' });
+  assert.deepEqual(fixture.moves, [fixture.expected]);
+  assert.equal(fixture.providerReads.length, 4);
+});
+
+for (const replacement of [
+  { invitee: { old_invitee: root + '/scheduled_events/other/invitees/other' } },
+  { invitee: { status: 'canceled' } },
+  { event: { event_memberships: [{ user: root + '/users/other' }] } },
+  { event: { end_time: '2035-01-01T12:00:00Z' } },
+]) {
+  test('reschedule refuses replacement evidence that changes the linkage, state, coach or duration', async () => {
+    const fixture = rescheduleFixture({ replacement });
+    await assert.rejects(fixture.run(), /does not match the booking/);
+    assert.equal(fixture.moves.length, 0);
+  });
+}

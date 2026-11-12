@@ -24,7 +24,8 @@ create table marketplace_booking_requests (
   service_id uuid references services, coach_service_offering_id uuid references coach_service_offerings,
   booking_status text, requested_start timestamptz, requested_end timestamptz, timezone text,
   calendly_event_uri text, calendly_invitee_uri text, calendly_booking_status text,
-  calendly_last_error text, updated_at timestamptz, service_request_id uuid, client_notes text
+  calendly_last_error text, updated_at timestamptz, service_request_id uuid, client_notes text,
+  meeting_platform text, meeting_platform_label text, meeting_join_url text, meeting_location_details jsonb
 );
 create table marketplace_booking_slots (
   id uuid primary key default gen_random_uuid(), booking_id uuid references marketplace_booking_requests,

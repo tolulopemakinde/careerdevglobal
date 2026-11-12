@@ -11,9 +11,22 @@ Run the existing scheduling suite with Node 22. The GitHub Actions database job
 starts Postgres 16 with the synthetic database name required by
 tests/calendly-rehearsal.sh. It runs the corrected booking-request RPC and
 checks separate-session claim and transaction races, role grants, slot
-exclusion, provider identifier guards, cancellation, and persisted audit
-events. The reduced fixture omits the deployed notification and billing
+exclusion, provider identifier guards, cancellation, and reschedule rollback
+on overlap and replay. The reduced fixture omits the deployed notification and billing
 triggers and cannot establish migration compatibility.
+
+The reschedule Edge candidate requires the exact disposable Supabase project
+ref in CALENDLY_RESCHEDULE_REHEARSAL_PROJECT_REF and the browser origin in
+CALENDLY_RESCHEDULE_REHEARSAL_ORIGIN. It rejects both existing project refs.
+Use a dedicated token encryption key and a fresh synthetic Calendly sandbox
+connection with scheduled event read scope. The function accepts a POST with
+the booking_id and a verified client JWT. Its Calendly requests are GET only.
+It returns the current invitee's hosted URL or applies a verified replacement
+under the booking lock. It clears stale meeting details and keeps the existing
+marketplace transaction. Use synthetic accounts and avoid real appointments.
+Set NEXT_PUBLIC_CALENDLY_RESCHEDULE_REHEARSAL_PROJECT_REF to the same project ref
+in the preview build to show the client controls. The client opens Calendly in
+a new tab, then checks for the new time from their dashboard.
 
 ## Release gates
 
@@ -38,11 +51,11 @@ triggers and cannot establish migration compatibility.
   leaves the hold in place. Where no provider receipt exists, retrieve candidate
   identifiers through authorized provider reads and match the operation's
   tracking value, owner, event type, time and linked invitee before completing.
-- Calendly rescheduling is a provider-hosted workflow. Add participant-only
-  delivery of the provider's reschedule URL and reconcile verified old/new
-  invitee linkage under the booking lock, including out-of-order notifications
-  and overlap conflicts. The candidate rejects rescheduled evidence in confirm
-  and cancel paths.
+- Verify the provider-hosted flow and immediate old/new invitee linkage from
+  the client dashboard in the sandbox.
+  Add authenticated webhook or scheduled reconciliation for out-of-order
+  notifications, multiple moves before a refresh, and overlap conflicts.
+  Rehearse replacement meeting details and reminders on the full schema.
 - Rehearse payment intents, retries, refunds and subscription/entitlement
   regressions in Paystack test mode. The transaction initializer is a client
   RPC with a booking lock and unique booking key. It writes the existing
