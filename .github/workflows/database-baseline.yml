@@ -71,5 +71,8 @@ jobs:
           set +a
           [[ "$API_URL" == http://127.0.0.1:54321 ]]
           [[ $(docker exec supabase_db_careerdev-baseline-ci psql -U postgres -d postgres -Atc "select count(*) from pg_tables where schemaname='public'") == 0 ]]
-          docker exec -i supabase_db_careerdev-baseline-ci psql -Xq -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/baseline/current-state-2026-11-16.sql
+          # Only the disposable local cluster administrator can restore captured
+          # default ACLs owned by multiple roles. No hosted credential is used.
+          [[ $(docker exec supabase_db_careerdev-baseline-ci psql -U postgres -d postgres -Atc "select rolsuper from pg_roles where rolname='supabase_admin'") == t ]]
+          docker exec -i supabase_db_careerdev-baseline-ci psql -Xq -U supabase_admin -d postgres -v ON_ERROR_STOP=1 < supabase/baseline/current-state-2026-11-16.sql
           CAREERDEV_MANAGED_CI=synthetic-local-only python tests/database/managed-supabase.py
