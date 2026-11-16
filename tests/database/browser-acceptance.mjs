@@ -6,8 +6,9 @@ assert.equal(process.env.CAREERDEV_BROWSER_FIXTURE,'synthetic-local-only');
 assert.equal(process.env.NEXT_PUBLIC_SUPABASE_URL,'http://127.0.0.1:54321');
 const users=JSON.parse(readFileSync('/tmp/careerdev-synthetic-browser.json','utf8'));
 const results=[], blockedProduction=[];
+let currentPage;
 const browser=await chromium.launch({headless:true});
-function pass(name){results.push({case:name,status:'PASS'});}
+function pass(name){results.push({case:name,status:'PASS'});console.log('PASS browser: '+name);}
 async function context(){
   const ctx=await browser.newContext();
   await ctx.route('**/*',route=>{
@@ -19,7 +20,7 @@ async function context(){
   return ctx;
 }
 async function login(ctx,n,role){
-  const page=await ctx.newPage();
+  const page=await ctx.newPage();currentPage=page;
   await page.goto('http://127.0.0.1:3000/'+role+'/login');
   await page.getByLabel('Email address',{exact:true}).fill(users[n-1].email);
   await page.getByLabel('Password',{exact:true}).fill(users[n-1].password);
@@ -32,7 +33,7 @@ try{
   await cp.waitForURL('**/client-dashboard');
   await cp.getByRole('heading',{name:'Your career journey',exact:true}).waitFor();pass('Client login renders authenticated dashboard');
   await cp.getByLabel('Full name',{exact:true}).fill('Synthetic Browser Client');
-  await cp.getByRole('button',{name:/Save account changes|Save profile/i}).click();
+  await cp.getByRole('button',{name:'Save profile changes',exact:true}).click();
   await cp.getByText('Profile updated successfully.',{exact:true}).waitFor();
   assert.equal(sql("select full_name from public.profiles where id='11111111-1111-4111-8111-000000000001'"),'Synthetic Browser Client');pass('Client UI save persists owned profile');
   await cp.reload();await cp.getByLabel('Full name',{exact:true}).waitFor();assert.equal(await cp.getByLabel('Full name',{exact:true}).inputValue(),'Synthetic Browser Client');pass('Client profile persists after reload');
@@ -52,4 +53,8 @@ try{
   assert.deepEqual(blockedProduction,[]);pass('Browser never attempts production backend/deployment access');
   const out={environment:'Chromium against pinned #49 frontend and recovered local Supabase schema; synthetic logins only',passed:results.length,failed:0,results,limits:['Bounded role login/profile/admin journeys only','No provider transaction or live embedding UI flow']};
   writeFileSync('/tmp/browser-acceptance-result.json',JSON.stringify(out,null,2)+'\n');console.log(JSON.stringify(out,null,2));
+}catch(error){
+  console.error('Browser failed after '+results.length+' passing cases.');
+  if(currentPage) console.error((await currentPage.locator('body').innerText()).slice(0,4500));
+  throw error;
 }finally{await browser.close();}
