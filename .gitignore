@@ -20,3 +20,7 @@ public/cdg-wordmark.jpg
 # Local logs and OS files
 *.log
 .DS_Store
+
+# Local Python artifacts
+__pycache__/
+*.pyc

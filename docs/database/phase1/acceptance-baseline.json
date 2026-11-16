@@ -1,0 +1,127 @@
+{
+  "stage": "baseline",
+  "environment": "network-disabled local PostgreSQL17; managed adapters, not live Auth/Storage",
+  "results": [
+    {
+      "case": "client sees own profile only",
+      "status": "PASS",
+      "expected": "1",
+      "actual": "1",
+      "error": null
+    },
+    {
+      "case": "client sees own career profile",
+      "status": "PASS",
+      "expected": "1",
+      "actual": "1",
+      "error": null
+    },
+    {
+      "case": "client cannot update another profile",
+      "status": "PASS",
+      "expected": "0",
+      "actual": "0",
+      "error": null
+    },
+    {
+      "case": "unassigned coach cannot read client versions",
+      "status": "FAIL",
+      "expected": "0",
+      "actual": "2",
+      "error": null
+    },
+    {
+      "case": "assigned coach sees assigned client versions only",
+      "status": "FAIL",
+      "expected": "1",
+      "actual": "2",
+      "error": null
+    },
+    {
+      "case": "unassigned coach cannot read comparisons",
+      "status": "FAIL",
+      "expected": "0",
+      "actual": "2",
+      "error": null
+    },
+    {
+      "case": "unassigned coach cannot read quality runs",
+      "status": "FAIL",
+      "expected": "0",
+      "actual": "2",
+      "error": null
+    },
+    {
+      "case": "admin review scope sees both client versions",
+      "status": "PASS",
+      "expected": "2",
+      "actual": "2",
+      "error": null
+    },
+    {
+      "case": "client cannot self-promote",
+      "status": "PASS",
+      "expected": "denied",
+      "actual": "denied",
+      "error": null
+    },
+    {
+      "case": "storage path owner sees one object",
+      "status": "PASS",
+      "expected": "1",
+      "actual": "1",
+      "error": null
+    },
+    {
+      "case": "anonymous cannot read storage metadata",
+      "status": "PASS",
+      "expected": "denied",
+      "actual": "denied",
+      "error": null
+    },
+    {
+      "case": "public coach directory approved only",
+      "status": "FAIL",
+      "expected": "1",
+      "actual": "denied",
+      "error": "ERROR:  permission denied for function get_public_coach_directory"
+    },
+    {
+      "case": "public service directory approved only",
+      "status": "FAIL",
+      "expected": "1",
+      "actual": "denied",
+      "error": "ERROR:  permission denied for function get_public_service_directory"
+    },
+    {
+      "case": "raw matching evidence stays private",
+      "status": "PASS",
+      "expected": "denied",
+      "actual": "denied",
+      "error": null
+    },
+    {
+      "case": "server matching candidate eligible only",
+      "status": "PASS",
+      "expected": "1",
+      "actual": "1",
+      "error": null
+    },
+    {
+      "case": "service role vector retrieval valid verification status",
+      "status": "FAIL",
+      "expected": "1",
+      "actual": "denied",
+      "error": "ERROR:  operator does not exist: extensions.vector <=> extensions.vector\nLINE 4:       1-(csp.embedding <=> p_query_embedding) semantic_score\n                               ^\nHINT:  No operator matches the given name and argument types. You might need to add explicit type casts.\nQUERY:  \n  with eligible as (\n    select cmp.coach_id,cmp.display_name,cmp.headline,cmp.bio,cmp.specializations,cmp.coac"
+    },
+    {
+      "case": "safe coach profile update succeeds",
+      "status": "FAIL",
+      "expected": "Synthetic updated coach",
+      "actual": "denied",
+      "error": "ERROR:  permission denied for table coach_semantic_profiles\nCONTEXT:  SQL statement \"update public.coach_semantic_profiles\n     set embedding = null,\n         source_text = public.coach_semantic_source_text(target_coach_id),\n         updated_at = now()\n   where coach_id = target_coach_id\"\nPL/pgSQL function mark_coach_semantic_profile_stale() line 11 at SQL statement"
+    }
+  ],
+  "passed": 9,
+  "failed": 8
+}

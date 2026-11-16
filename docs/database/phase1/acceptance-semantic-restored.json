@@ -1,0 +1,127 @@
+{
+  "stage": "semantic-restored",
+  "environment": "network-disabled local PostgreSQL17; managed adapters, not live Auth/Storage",
+  "results": [
+    {
+      "case": "client sees own profile only",
+      "status": "PASS",
+      "expected": "1",
+      "actual": "1",
+      "error": null
+    },
+    {
+      "case": "client sees own career profile",
+      "status": "PASS",
+      "expected": "1",
+      "actual": "1",
+      "error": null
+    },
+    {
+      "case": "client cannot update another profile",
+      "status": "PASS",
+      "expected": "0",
+      "actual": "0",
+      "error": null
+    },
+    {
+      "case": "unassigned coach cannot read client versions",
+      "status": "PASS",
+      "expected": "0",
+      "actual": "0",
+      "error": null
+    },
+    {
+      "case": "assigned coach sees assigned client versions only",
+      "status": "PASS",
+      "expected": "1",
+      "actual": "1",
+      "error": null
+    },
+    {
+      "case": "unassigned coach cannot read comparisons",
+      "status": "PASS",
+      "expected": "0",
+      "actual": "0",
+      "error": null
+    },
+    {
+      "case": "unassigned coach cannot read quality runs",
+      "status": "PASS",
+      "expected": "0",
+      "actual": "0",
+      "error": null
+    },
+    {
+      "case": "admin review scope sees both client versions",
+      "status": "PASS",
+      "expected": "2",
+      "actual": "2",
+      "error": null
+    },
+    {
+      "case": "client cannot self-promote",
+      "status": "PASS",
+      "expected": "denied",
+      "actual": "denied",
+      "error": null
+    },
+    {
+      "case": "storage path owner sees one object",
+      "status": "PASS",
+      "expected": "1",
+      "actual": "1",
+      "error": null
+    },
+    {
+      "case": "anonymous cannot read storage metadata",
+      "status": "PASS",
+      "expected": "denied",
+      "actual": "denied",
+      "error": null
+    },
+    {
+      "case": "public coach directory approved only",
+      "status": "PASS",
+      "expected": "1",
+      "actual": "1",
+      "error": null
+    },
+    {
+      "case": "public service directory approved only",
+      "status": "PASS",
+      "expected": "1",
+      "actual": "1",
+      "error": null
+    },
+    {
+      "case": "raw matching evidence stays private",
+      "status": "PASS",
+      "expected": "denied",
+      "actual": "denied",
+      "error": null
+    },
+    {
+      "case": "server matching candidate eligible only",
+      "status": "PASS",
+      "expected": "1",
+      "actual": "1",
+      "error": null
+    },
+    {
+      "case": "service role vector retrieval valid verification status",
+      "status": "PASS",
+      "expected": "1",
+      "actual": "1",
+      "error": null
+    },
+    {
+      "case": "safe coach profile update succeeds",
+      "status": "PASS",
+      "expected": "Synthetic updated coach",
+      "actual": "Synthetic updated coach",
+      "error": null
+    }
+  ],
+  "passed": 17,
+  "failed": 0
+}

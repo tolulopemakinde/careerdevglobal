@@ -1,0 +1,149 @@
+{
+  "run_url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43963115523",
+  "commit": "8d6ef82",
+  "result": {
+    "environment": "ephemeral CI local Supabase; recovered application schema; six real synthetic Auth logins; no provider calls",
+    "passed": 33,
+    "failed": 0,
+    "results": [
+      {
+        "case": "Auth creates synthetic identity 1",
+        "status": "PASS"
+      },
+      {
+        "case": "Password login 1",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth creates synthetic identity 2",
+        "status": "PASS"
+      },
+      {
+        "case": "Password login 2",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth creates synthetic identity 3",
+        "status": "PASS"
+      },
+      {
+        "case": "Password login 3",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth creates synthetic identity 4",
+        "status": "PASS"
+      },
+      {
+        "case": "Password login 4",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth creates synthetic identity 5",
+        "status": "PASS"
+      },
+      {
+        "case": "Password login 5",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth creates synthetic identity 6",
+        "status": "PASS"
+      },
+      {
+        "case": "Password login 6",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth validates session 1",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth validates session 2",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth validates session 3",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth validates session 4",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth validates session 5",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth validates session 6",
+        "status": "PASS"
+      },
+      {
+        "case": "JWT assignment/ownership scope 1",
+        "status": "PASS"
+      },
+      {
+        "case": "JWT assignment/ownership scope 2",
+        "status": "PASS"
+      },
+      {
+        "case": "JWT assignment/ownership scope 3",
+        "status": "PASS"
+      },
+      {
+        "case": "JWT assignment/ownership scope 4",
+        "status": "PASS"
+      },
+      {
+        "case": "JWT assignment/ownership scope 5",
+        "status": "PASS"
+      },
+      {
+        "case": "Anonymous approved-only get_public_coach_directory",
+        "status": "PASS"
+      },
+      {
+        "case": "Anonymous approved-only get_public_service_directory",
+        "status": "PASS"
+      },
+      {
+        "case": "Anonymous matching evidence denied",
+        "status": "PASS"
+      },
+      {
+        "case": "Authenticated coach profile edit",
+        "status": "PASS"
+      },
+      {
+        "case": "API edit invalidates derived cache",
+        "status": "PASS"
+      },
+      {
+        "case": "Pending JWT cannot approve itself",
+        "status": "PASS"
+      },
+      {
+        "case": "Actual Storage owner upload",
+        "status": "PASS"
+      },
+      {
+        "case": "Actual Storage owner download",
+        "status": "PASS"
+      },
+      {
+        "case": "Actual Storage unrelated client denied",
+        "status": "PASS"
+      },
+      {
+        "case": "Actual Storage anonymous denied",
+        "status": "PASS"
+      }
+    ],
+    "limits": [
+      "Not browser acceptance",
+      "Not Calendly/Paystack/embedding provider acceptance",
+      "Managed version/configuration may differ from production",
+      "Storage physical backup restoration not verified"
+    ]
+  }
+}

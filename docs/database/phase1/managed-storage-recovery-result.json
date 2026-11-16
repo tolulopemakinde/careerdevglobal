@@ -1,0 +1,183 @@
+{
+  "run_url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43968692269",
+  "commit": "8e786da39254a60d16a3dd057df9cc7c0959c349",
+  "frontend_commit": "2358aaef3c5466e82e8be54adae314e916adb252",
+  "matching_commit": "8a776246f2a7eeb9b9db5b86b0c21e5dc4623c3a",
+  "result": {
+    "environment": "ephemeral CI local Supabase; recovered application schema; six real synthetic Auth logins; no provider calls",
+    "passed": 41,
+    "failed": 0,
+    "results": [
+      {
+        "case": "Auth creates synthetic identity 1",
+        "status": "PASS"
+      },
+      {
+        "case": "Password login 1",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth creates synthetic identity 2",
+        "status": "PASS"
+      },
+      {
+        "case": "Password login 2",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth creates synthetic identity 3",
+        "status": "PASS"
+      },
+      {
+        "case": "Password login 3",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth creates synthetic identity 4",
+        "status": "PASS"
+      },
+      {
+        "case": "Password login 4",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth creates synthetic identity 5",
+        "status": "PASS"
+      },
+      {
+        "case": "Password login 5",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth creates synthetic identity 6",
+        "status": "PASS"
+      },
+      {
+        "case": "Password login 6",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth validates session 1",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth validates session 2",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth validates session 3",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth validates session 4",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth validates session 5",
+        "status": "PASS"
+      },
+      {
+        "case": "Auth validates session 6",
+        "status": "PASS"
+      },
+      {
+        "case": "JWT assignment/ownership scope 1",
+        "status": "PASS"
+      },
+      {
+        "case": "JWT assignment/ownership scope 2",
+        "status": "PASS"
+      },
+      {
+        "case": "JWT assignment/ownership scope 3",
+        "status": "PASS"
+      },
+      {
+        "case": "JWT assignment/ownership scope 4",
+        "status": "PASS"
+      },
+      {
+        "case": "JWT assignment/ownership scope 5",
+        "status": "PASS"
+      },
+      {
+        "case": "Anonymous approved-only get_public_coach_directory",
+        "status": "PASS"
+      },
+      {
+        "case": "Anonymous approved-only get_public_service_directory",
+        "status": "PASS"
+      },
+      {
+        "case": "Anonymous matching evidence denied",
+        "status": "PASS"
+      },
+      {
+        "case": "Authenticated coach profile edit",
+        "status": "PASS"
+      },
+      {
+        "case": "API edit invalidates derived cache",
+        "status": "PASS"
+      },
+      {
+        "case": "Pending JWT cannot approve itself",
+        "status": "PASS"
+      },
+      {
+        "case": "Actual Storage owner upload",
+        "status": "PASS"
+      },
+      {
+        "case": "Actual Storage owner download",
+        "status": "PASS"
+      },
+      {
+        "case": "Actual Storage unrelated client denied",
+        "status": "PASS"
+      },
+      {
+        "case": "Actual Storage anonymous denied",
+        "status": "PASS"
+      },
+      {
+        "case": "Storage backup captures actual file bytes",
+        "status": "PASS"
+      },
+      {
+        "case": "Disposable recovery drill removes original object",
+        "status": "PASS"
+      },
+      {
+        "case": "Deleted object unavailable before restoration",
+        "status": "PASS"
+      },
+      {
+        "case": "Storage object restored by original owner",
+        "status": "PASS"
+      },
+      {
+        "case": "Restored bytes match backup hash",
+        "status": "PASS"
+      },
+      {
+        "case": "Restored ownership retained",
+        "status": "PASS"
+      },
+      {
+        "case": "Restored object still denies unrelated client",
+        "status": "PASS"
+      },
+      {
+        "case": "Restored bytes survive Storage service restart",
+        "status": "PASS"
+      }
+    ],
+    "limits": [
+      "Not browser acceptance",
+      "Not Calendly/Paystack/embedding provider acceptance",
+      "Managed version/configuration may differ from production",
+      "One synthetic object backup/reimport and restart only; not complete bucket/PITR recovery"
+    ]
+  }
+}

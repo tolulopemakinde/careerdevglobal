@@ -1,0 +1,54 @@
+# Local reconstruction and recovery runbook
+
+## Full managed acceptance in CI
+
+The workflow checks out the pinned #49 frontend and #48 matching implementation, then runs `bash scripts/database/managed-journeys-ci.sh` on a standard public-repository GitHub runner. That driver refuses an undesignated environment, starts a fresh named local Supabase stack, verifies empty application/Auth tables, restores with its local cluster administrator and creates only synthetic accounts. It never links a hosted project.
+
+The driver verifies Storage backup/reimport and restart, serves the actual matching function locally, builds the pinned Next.js frontend with local Supabase settings, and runs pinned Chromium/Playwright role journeys. Credentials stay in a mode-0600 temporary file and are removed by the cleanup trap; they must never be uploaded as artifacts. Browser traffic is restricted to local ports 3000/54321. The SQL and role checks remain separate from provider acceptance.
+
+A recreated run changes random passwords and session tokens. No persistent browser login URL is supplied. Review the sanitized result JSON and run logs, or rerun the PR's workflow through GitHub. The owner-hosted workspace remains too small for this full stack; the lower-footprint SQL fixture can be recreated separately when enough space is available.
+
+A single restored Storage object is representative evidence, not a complete recovery procedure for all production buckets. Provider credentials and payment gates are never introduced by this runbook.
+
+
+Run from the #36 continuation repository root, with Python 3 and Docker. Never link this fixture to a hosted project. The scripts accept no production connection URL. The pinned image must already exist (CI explicitly pulls it). The database uses tmpfs: stopping/removing its container destroys the fixture.
+
+```sh
+python -m unittest discover -s tests/database -v
+python scripts/database/render-baseline.py supabase/baseline/current-state-2026-11-16.json /tmp/current-state.sql
+cmp /tmp/current-state.sql supabase/baseline/current-state-2026-11-16.sql
+bash scripts/database/start-local.sh
+bash scripts/database/rehearse-local.sh > /tmp/baseline.log
+python scripts/database/extract-snapshot.py /tmp/baseline.log /tmp/local-schema.json
+python scripts/database/compare-baseline.py supabase/baseline/current-state-2026-11-16.json /tmp/local-schema.json /tmp/reconstruction-result.json
+docker exec -i careerdev-phase1-db psql -Xq -U postgres -d careerdev_acceptance -v ON_ERROR_STOP=1 < tests/database/synthetic-seed.sql
+python tests/database/acceptance.py --stage baseline
+bash scripts/database/apply-local-candidates.sh
+bash scripts/database/apply-semantic-candidate.sh
+python tests/database/acceptance.py --stage candidate
+python tests/database/semantic-invalidation.py
+CAREERDEV_RESTORE_TARGET=careerdev_semantic_restore bash scripts/database/restore-local.sh
+python tests/database/acceptance.py --stage semantic-restored --database careerdev_semantic_restore
+python tests/database/semantic-invalidation.py --database careerdev_semantic_restore
+```
+
+The original baseline exits nonzero with eight failures. With both reviewed local candidates applied, all 17 acceptance and 22 semantic invalidation/publication checks pass. This does not imply provider/browser acceptance. The earlier 16/17 result remains historical evidence for the marketplace-only candidate. The semantic catalog comparison is separate from acceptance.
+
+To exercise the existing #48 booking correction without duplicating it, obtain its reviewed `docs/scheduling/rehearsal/booking-request.sql`, verify the expected commit, and pass that file explicitly:
+
+```sh
+python tests/database/booking-compatibility.py /path/to/reviewed/pr48/docs/scheduling/rehearsal/booking-request.sql
+```
+
+Run once against the restored baseline before applying that candidate: a second run cannot reproduce the original failure. All booking attempts roll back; the local function definition change remains in the disposable restore database.
+
+The local backup `/tmp/careerdev-fixture-backup.sql` contains only reconstructed schema and synthetic records. `restore-local.sh` refuses an existing restore database rather than deleting it. Check `restore-result.json` and then rerun role tests. A backup file without a successful restore comparison is not recovery proof.
+
+For a clean rerun, inspect the container label `careerdev.acceptance=phase1-disposable` and network `none`, then remove **only that named fixture** and restart the sequence. Never substitute a shared or hosted database. Local rollback means discard/rebuild this fixture or restore its synthetic backup; it does not define a production down migration.
+
+Production recovery remains a separate approved procedure: obtain a native schema-only export and suitable backup/PITR capability, test a new change in real managed Supabase, record pre-change fingerprints and reversible application behavior, then approve a concrete forward/rollback plan. No historical rollback bodies were present in the recovered ledger. Do not invent them or replay all recovered SQL into production.
+
+
+The CI `managed-supabase` job starts an isolated local Supabase stack with CLI 2.122.0, reconstructs the application snapshot without helper adapters, creates six genuine synthetic Auth accounts, and exercises PostgREST and Storage. It runs on a public-repository hosted runner with no repository/provider/cloud credentials supplied to the test. CLI keys are generated by the disposable local stack and are not committed. A passing job does not prove browser journeys, production-equivalent extension configuration, or physical Storage backup restoration.
+
+The semantic candidate has a matching local-only rollback SQL file. Rollback/reapplication was exercised only in the labeled `careerdev_semantic_restore` database: 16/17 checks after rollback and 17/17 plus 22/22 after reapplication. Both source and restore catalogs compare equal before that rollback. The CI managed-service run uses only its freshly created local cluster administrator to restore cross-role default ACLs, then tests through real Auth-issued JWTs. It does not use hosted credentials.
