@@ -1,5 +1,18 @@
 # Feature and production status matrix
 
+## Verified browser/runtime/recovery continuation — current status
+
+**PARTIAL / production HOLD.** The [integrated isolated rehearsal](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43968692269) passes **12 Chromium browser checks, 7 real native gte-small matching checks and 41 Auth/API/Storage checks** against the recovered schema. Database reconstruction/restore, 17 role cases and 23 specialized cache/publication cases also pass. This supersedes earlier browser/native-execution gaps.
+
+The browser verifies client/coach/admin login, persisted profile saves, reload, eligible coach/service directories, matching UI → Edge → database → UI, client admin denial and admin logout. It found an early-edit loading race; #49 now disables profile editing until the saved account loads. #36 excludes null cache vectors from SQL ranking so real native fallback executes. No candidate was deployed to production.
+
+Real synthetic file bytes were backed up, deleted, restored with their owner, hash-checked, denied to an unrelated account and verified after Storage restart. This is a one-object API recovery drill, not full production bucket/PITR disaster recovery. CI accounts are ephemeral, passwords/JWTs are not committed, and browser traffic was limited to local service ports.
+
+Remaining: designated nonproduction Calendly host/application and verified plan/scopes/callback; isolated public callbacks; real scheduling and payment linkage; explicitly approved Paystack TEST financial scope; production distributed quotas/configuration fidelity and complete recovery/release gates. The Calendly settings question is pending. No new spending, provider appointment/payment, production/shared-test mutation, merge or production release occurred. Review order remains #49 safe fixes → #36 baseline/candidates → #48 scheduling/matching → #42 billing; every release gate still applies.
+
+See the [full current report](https://github.com/tolulopemakinde/careerdevglobal/blob/chore/supabase-authoritative-baseline/docs/database/phase1/README.md) and [published review status](phase1-published-review-status.md) for bounded evidence and exact implementation heads.
+
+
 ## Continued Phase 1 acceptance — superseding update
 
 The coach semantic invalidation failure is now resolved in a **local-only candidate**: **17/17** SQL acceptance and **22/22** cache/publication checks pass, including after restore. Rollback restores the previous single failure and reapplication passes again. The fix retains invoker execution, uses narrow column privileges and ownership/derived-value RLS, and independently denies coach self-approval/publication and cache forgery.

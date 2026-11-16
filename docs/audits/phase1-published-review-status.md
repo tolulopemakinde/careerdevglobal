@@ -1,5 +1,15 @@
 # Published Phase 1 review status — 16 November 2026
 
+## Browser/runtime/recovery verified heads
+
+- #36 tested integration driver: `8e786da39254a60d16a3dd057df9cc7c0959c349`; [database plus managed/browser run PASS](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43968692269).
+- #49 tested frontend: `2358aaef3c5466e82e8be54adae314e916adb252`; [source/types/build PASS](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43967763654). It fixes the browser-reproduced profile loading race.
+- #48 tested matching source: `8a776246f2a7eeb9b9db5b86b0c21e5dc4623c3a`; executed by that integration run with the actual local native model.
+- Counts: 41 Auth/API/Storage, 7 native runtime, 12 Chromium journeys; 17 SQL role and 23 specialized cache/publication checks plus synthetic restore also pass.
+
+This supersedes previous pending browser/native/object-restoration statements. One-object recovery remains bounded; production quota, complete recovery and actual Calendly/Paystack lifecycles remain open. Provider designation/settings and financial scope require owner input before dependent operations. All PRs remain draft and unmerged. Subsequent report-only heads must still be checked; no implementation changed after these verified heads.
+
+
 ## Continued review heads
 
 - #36: `4a94098e45d5b1e3b3916132024dae11ab659a78`. Earlier successful [full recovered-schema managed-service run](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43963115523): 33/33. [Final-head checks](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43963701962) must also pass. Local catalog/restore and 17 SQL + 22 specialized tests pass; rollback/reapplication verified.
