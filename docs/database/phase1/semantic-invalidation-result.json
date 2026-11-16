@@ -1,5 +1,6 @@
 {
   "environment": "network-disabled local PostgreSQL17, synthetic records and managed adapters only",
+  "database": "careerdev_acceptance",
   "candidate": "coach-semantic-invalidation.sql",
   "results": [
     {
@@ -7,6 +8,12 @@
       "status": "PASS",
       "expected": "t",
       "actual": "t"
+    },
+    {
+      "case": "invalidated vector excluded from SQL matches for native fallback",
+      "status": "PASS",
+      "expected": "0",
+      "actual": "0"
     },
     {
       "case": "marketplace edit invalidates vector",
@@ -135,6 +142,6 @@
       "actual": "t"
     }
   ],
-  "passed": 22,
+  "passed": 23,
   "failed": 0
 }

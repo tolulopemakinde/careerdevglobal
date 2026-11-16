@@ -29,6 +29,7 @@ AS $function$
     join public.coach_semantic_profiles csp on csp.coach_id=cmp.coach_id
     join public.coach_marketplace_onboarding cbo on cbo.coach_id=cmp.coach_id
     where cmp.verification_status='verified' and cmp.marketplace_status='active'
+      and csp.embedding is not null
       and cbo.onboarding_status='active' and cbo.required_agreements_accepted=true and cbo.eligible_for_activation=true
       and exists(select 1 from public.coach_availability ca where ca.coach_id=cmp.coach_id and ca.active=true)
   ), scored as (

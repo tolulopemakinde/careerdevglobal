@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """CI-only real Auth/PostgREST/Storage acceptance with generated local credentials."""
-import json, os, secrets, subprocess, urllib.request, urllib.error, time
+import json, os, secrets, subprocess, urllib.request, urllib.error, time, hashlib
 from pathlib import Path
 url=os.environ.get('API_URL')
 if url!='http://127.0.0.1:54321' or os.environ.get('CAREERDEV_MANAGED_CI')!='synthetic-local-only':
@@ -26,6 +26,7 @@ def expect(name,ok):
     results.append({'case':name,'status':'PASS' if ok else 'FAIL'})
     if not ok: raise RuntimeError('Acceptance failed: '+name)
 users=[]
+browser_users=[]
 for n in range(1,7):
     uid=f'11111111-1111-4111-8111-{n:012d}';email=f'fixture-{n}@example.test';password=secrets.token_urlsafe(32)
     status,body=request('/auth/v1/admin/users',service,'POST',{'id':uid,'email':email,'password':password,'email_confirm':True})
@@ -33,6 +34,7 @@ for n in range(1,7):
     status,body=request('/auth/v1/token?grant_type=password',method='POST',data={'email':email,'password':password})
     payload=json.loads(body);expect('Password login '+str(n),status==200 and payload.get('user',{}).get('id')==uid and bool(payload.get('access_token')))
     users.append((uid,payload['access_token']))
+    browser_users.append({'id':uid,'email':email,'password':password})
 seed=Path('tests/database/synthetic-seed.sql').read_text()
 a=seed.index('INSERT INTO auth.users');b=seed.index('INSERT INTO public.profiles',a)
 sql(seed[:a]+seed[b:])
@@ -70,6 +72,37 @@ status,body=request(path,users[1][1])
 expect('Actual Storage unrelated client denied',status in (400,401,403,404) and b'Synthetic acceptance file only' not in body)
 status,body=request(path)
 expect('Actual Storage anonymous denied',status in (400,401,403,404))
-out={'environment':'ephemeral CI local Supabase; recovered application schema; six real synthetic Auth logins; no provider calls','passed':len(results),'failed':0,'results':results,'limits':['Not browser acceptance','Not Calendly/Paystack/embedding provider acceptance','Managed version/configuration may differ from production','Storage physical backup restoration not verified']}
+# Recover actual bytes through Storage API, preserving the owner through its JWT.
+backup=Path('/tmp/careerdev-storage-object-backup');backup.mkdir(mode=0o700)
+status,original=request(path,token)
+expect('Storage backup captures actual file bytes',status==200)
+(backup/'synthetic-object.bin').write_bytes(original)
+status,body=request('/storage/v1/object/client-documents',service,'DELETE',{'prefixes':[uid+'/actual-synthetic.txt']})
+expect('Disposable recovery drill removes original object',status==200)
+status,body=request(path,token)
+expect('Deleted object unavailable before restoration',status in (400,404))
+status,body=request(path,token,'POST',(backup/'synthetic-object.bin').read_bytes(),'text/plain')
+expect('Storage object restored by original owner',status in (200,201))
+status,restored=request(path,token)
+expect('Restored bytes match backup hash',status==200 and hashlib.sha256(restored).digest()==hashlib.sha256(original).digest())
+expect('Restored ownership retained',sql("select owner_id from storage.objects where bucket_id='client-documents' and name='"+uid+"/actual-synthetic.txt'")==uid)
+status,body=request(path,users[1][1])
+expect('Restored object still denies unrelated client',status in (400,401,403,404))
+# Restart only the newly created CI Storage service; verify persisted backend bytes.
+storage='supabase_storage_careerdev-baseline-ci'
+if subprocess.check_output(['docker','inspect','--format','{{.Name}}',storage],text=True).strip()!='/'+storage:
+    raise SystemExit('Refusing unexpected Storage container')
+subprocess.run(['docker','restart',storage],capture_output=True,check=True)
+for attempt in range(20):
+    try: status,body=request(path,token)
+    except urllib.error.URLError: status,body=0,b''
+    if status==200:break
+    time.sleep(0.5)
+expect('Restored bytes survive Storage service restart',status==200 and body==original)
+if os.environ.get('CAREERDEV_BROWSER_FIXTURE')=='synthetic-local-only':
+    credentials=Path('/tmp/careerdev-synthetic-browser.json')
+    fd=os.open(credentials,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+    with os.fdopen(fd,'w') as f:json.dump(browser_users,f)
+out={'environment':'ephemeral CI local Supabase; recovered application schema; six real synthetic Auth logins; no provider calls','passed':len(results),'failed':0,'results':results,'limits':['Not browser acceptance','Not Calendly/Paystack/embedding provider acceptance','Managed version/configuration may differ from production','One synthetic object backup/reimport and restart only; not complete bucket/PITR recovery']}
 Path('/tmp/managed-supabase-result.json').write_text(json.dumps(out,indent=2)+'\n')
 print(json.dumps(out,indent=2))

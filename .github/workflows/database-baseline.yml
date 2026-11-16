@@ -57,23 +57,15 @@ jobs:
       - uses: supabase/setup-cli@689adcfb80d947100a1eab127289b97d1fb07b13
         with:
           version: 2.122.0
-      - name: Reconstruct in real local Supabase and exercise synthetic sessions and Storage
-        shell: bash
-        run: |
-          set -euo pipefail
-          stack="$(mktemp -d)"
-          trap 'supabase stop --workdir "$stack" --no-backup >/dev/null 2>&1 || true' EXIT
-          supabase init --workdir "$stack"
-          sed -i 's/^project_id = .*/project_id = "careerdev-baseline-ci"/' "$stack/supabase/config.toml"
-          supabase start --workdir "$stack" -x studio,imgproxy,realtime,mailpit,postgres-meta,edge-runtime,logflare,vector,supavisor >"$stack/start.log" 2>&1 || { tail -n 40 "$stack/start.log"; exit 1; }
-          supabase status --workdir "$stack" -o env >"$stack/local.env"
-          set -a
-          source "$stack/local.env"
-          set +a
-          [[ "$API_URL" == http://127.0.0.1:54321 ]]
-          [[ $(docker exec supabase_db_careerdev-baseline-ci psql -U postgres -d postgres -Atc "select count(*) from pg_tables where schemaname='public'") == 0 ]]
-          # Only the disposable local cluster administrator can restore captured
-          # default ACLs owned by multiple roles. No hosted credential is used.
-          [[ $(docker exec supabase_db_careerdev-baseline-ci psql -U postgres -d postgres -Atc "select rolsuper from pg_roles where rolname='supabase_admin'") == t ]]
-          docker exec -i supabase_db_careerdev-baseline-ci psql -Xq -U supabase_admin -d postgres -v ON_ERROR_STOP=1 < supabase/baseline/current-state-2026-11-16.sql
-          CAREERDEV_MANAGED_CI=synthetic-local-only python tests/database/managed-supabase.py
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 46efef34c9ac6c6111f4a37a522aaba6aa526014
+          path: .acceptance-app
+          persist-credentials: false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 8a776246f2a7eeb9b9db5b86b0c21e5dc4623c3a
+          path: .acceptance-matching
+          persist-credentials: false
+      - name: Reconstruct and exercise real sessions, Storage recovery, native matching and browser roles
+        run: bash scripts/database/managed-journeys-ci.sh
