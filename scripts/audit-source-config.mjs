@@ -30,7 +30,12 @@ function inspect(path) {
     const sanitizedText = check.label === "Supabase service-role secret" && rel.startsWith("supabase/functions/")
       ? text.replace(/Deno\.env\.get\(["'`](?:SUPABASE_SERVICE_ROLE_KEY|CAREERDEV_SERVICE_ROLE_KEY)["'`]\)/g, "")
       : text;
-    if (check.pattern.test(sanitizedText)) findings.push(`${rel}: ${check.label}`);
+    // This server-only runner consumes a CLI-generated local fixture credential.
+    // Allow only the environment lookup, never literal assignments or client code.
+    const checkedText = check.label === "Supabase service-role secret" && rel === "tests/calendly-local-supabase.mjs"
+      ? sanitizedText.replace(/process\.env\.SERVICE_ROLE_KEY\b/g, "")
+      : sanitizedText;
+    if (check.pattern.test(checkedText)) findings.push(`${rel}: ${check.label}`);
   }
 }
 
