@@ -1,11 +1,19 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "jsr:@supabase/supabase-js@2";
+/// <reference types="jsr:@supabase/functions-js@2.119.0/edge-runtime.d.ts" />
+import { createClient } from "jsr:@supabase/supabase-js@2.119.0";
 import { allowedOrigin, consumeDistributedRateLimit, consumeRateLimit, consumeSharedQuota, diagnosticRecord, preflightResponse, readJsonWithLimit, requestKey, securityError, securityResponse, validateCoachMatchingInput } from "../_shared/edge-security.ts";
+import { embeddingVector } from "../_shared/embedding-vector.ts";
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const serviceRoleKey = Deno.env.get("CAREERDEV_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const distributedRateLimitEnabled = Deno.env.get("DISTRIBUTED_RATE_LIMIT_ENABLED") !== "false";
 const configuredOrigins = (Deno.env.get("ALLOWED_ORIGINS") ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
 const allowedOrigins = configuredOrigins.length > 0 ? configuredOrigins : ["https://careerdevglobal-nine.vercel.app"];
+// Native Edge Runtime global: https://supabase.com/docs/guides/functions/ai-models
+// Keep the result unknown and validate it before trusting provider output.
+declare const Supabase: {
+  ai: { Session: new (model: 'gte-small') => {
+    run(input: string, options: { mean_pool: boolean; normalize: boolean }): unknown;
+  } };
+};
 const model = new Supabase.ai.Session("gte-small");
 const publicCoach = (coach: any) => ({ coach_id: coach.coach_id, display_name: coach.display_name, headline: coach.headline, bio: coach.bio, specializations: coach.specializations, coaching_formats: coach.coaching_formats, languages: coach.languages, timezone: coach.timezone, country: coach.country, years_coaching: coach.years_coaching });
 Deno.serve(async (request) => {
@@ -43,7 +51,7 @@ Deno.serve(async (request) => {
     if (candidateError) throw candidateError;
     const list = Array.isArray(candidates) ? candidates : [];
     const available = list.map(publicCoach);
-    const embedding = Array.from(await model.run([goal, ...signals].join(". "), { mean_pool: true, normalize: true }));
+    const embedding = embeddingVector(await model.run([goal, ...signals].join(". "), { mean_pool: true, normalize: true }));
     const { data, error } = await supabase.rpc("find_public_coach_matches", { p_query_embedding: embedding, p_mode: mode, p_limit: 10 });
     if (error) throw error;
     let ranked = Array.isArray(data) ? data : [];
@@ -52,7 +60,7 @@ Deno.serve(async (request) => {
       const scored: any[] = [];
       for (const coach of list) {
         if (!coach.source_text) continue;
-        const vector = Array.from(await model.run(coach.source_text, { mean_pool: true, normalize: true }));
+        const vector = embeddingVector(await model.run(coach.source_text, { mean_pool: true, normalize: true }));
         let dot = 0;
         const length = Math.min(embedding.length, vector.length);
         for (let index = 0; index < length; index += 1) dot += Number(embedding[index] ?? 0) * Number(vector[index] ?? 0);

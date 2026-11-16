@@ -18,3 +18,9 @@ No remote push, CI rerun, merge, deployment, live provider action, production/sh
 ## Phase 1 matching continuation
 
 Restricted matching RPCs remain unavailable to anonymous callers. The Edge candidate uses server authorization after validated bounded input; its public coach projection and quota/origin checks remain intact. This accompanies the local-only #36 SQL candidate for verified status, vector operator resolution and approved onboarding rules. Three source-boundary tests pass; they do not prove Deno compilation, embedding provider execution or authenticated browser acceptance. No Edge function or SQL was deployed. The combined scheduling script now runs these three guards alongside the prior 93 tests.
+
+## Continued acceptance — real managed fixture and Deno
+
+The #36 continuation now passes all 17 SQL acceptance checks and 22 semantic invalidation/publication guards, including after synthetic restore. Its real local Supabase CI reconstructs the recovered application schema and passes 33 Auth/PostgREST/Storage checks with six genuine synthetic password logins. This is separate from #48's smaller rescheduling fixture; no production or populated AI-test setting was touched.
+
+Matching now passes standalone Deno 2.9.8 checking with a committed dependency lock and pinned SDK import. Correct the shared RPC type to PromiseLike (PostgREST builders are thenable) and accept string request IDs explicitly. Declare the documented native AI session boundary with unknown output and validate exactly 384 finite numeric elements before querying or scoring. Three embedding boundary tests and all 96 scheduling/security tests pass locally. The new pinned Deno workflow verifies compilation and those boundary cases; it does not execute a real embedding model or Calendly/Paystack operation. No function was deployed.

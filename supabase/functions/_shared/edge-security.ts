@@ -20,7 +20,7 @@ type ResponseOptions = {
 };
 
 export type RpcSecurityClient = {
-  rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>;
+  rpc: (name: string, args: Record<string, unknown>) => PromiseLike<{ data: unknown; error: unknown }>;
 };
 export type DistributedRateLimitResult = { ok: boolean; allowed: boolean; retryAfterSeconds: number; reason?: string };
 export type SharedQuotaResult = DistributedRateLimitResult & { requestCount?: number; requestLimit?: number; creditUnits?: number; creditLimit?: number };
@@ -42,7 +42,7 @@ function applyCommonHeaders(headers: Headers, requestId: string, origin?: string
   if (options.allowMethods) headers.set("Access-Control-Allow-Methods", options.allowMethods.join(", "));
   if (options.allowHeaders) headers.set("Access-Control-Allow-Headers", options.allowHeaders.join(", "));
 }
-export function securityResponse(body: unknown, status = 200, requestId = crypto.randomUUID(), origin?: string, options: ResponseOptions = {}): Response {
+export function securityResponse(body: unknown, status = 200, requestId: string = crypto.randomUUID(), origin?: string, options: ResponseOptions = {}): Response {
   const headers = new Headers(DEFAULT_HEADERS);
   applyCommonHeaders(headers, requestId, origin, options);
   return new Response(JSON.stringify(body), { status, headers });
