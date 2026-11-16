@@ -6,6 +6,7 @@ on:
       - 'supabase/diagnostics/current_schema_snapshot.sql'
       - 'scripts/database/**'
       - 'tests/database/**'
+      - 'docs/database/phase1/**'
       - '.github/workflows/database-baseline.yml'
   workflow_dispatch:
 permissions:
@@ -38,7 +39,7 @@ jobs:
           python tests/database/acceptance.py --stage semantic-restored --database careerdev_semantic_restore
           python tests/database/semantic-invalidation.py --database careerdev_semantic_restore
       - name: Explicit acceptance limitation
-        run: echo 'Application catalog regression only. Real Supabase Auth/Storage, provider acceptance and production release remain HOLD.'
+        run: echo 'Catalog, SQL candidate, real Auth/PostgREST/Storage API checks only. Browser/provider lifecycle, physical object restoration and production release remain HOLD.'
       - name: Remove only this disposable fixture
         if: always()
         run: |
