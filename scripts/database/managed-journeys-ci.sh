@@ -33,7 +33,7 @@ cp .acceptance-matching/supabase/functions/_shared/{edge-security,embedding-vect
 # Local fixture only. Do not change production quota configuration.
 cat > "$stack/local-functions.env" <<'ENV'
 DISTRIBUTED_RATE_LIMIT_ENABLED=false
-ALLOWED_ORIGINS=http://localhost:3000
+ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ENV
 supabase functions serve careerdev-coach-matching --workdir "$stack" --env-file "$stack/local-functions.env" >"$stack/edge.log" 2>&1 &
 edge_pid=$!

@@ -9,7 +9,7 @@ const results=[], blockedProduction=[];
 const browser=await chromium.launch({headless:true});
 function pass(name){results.push({case:name,status:'PASS'});}
 async function context(){
-  const ctx=await browser.newContext();ctx.setDefaultTimeout(20000);ctx.setDefaultNavigationTimeout(30000);
+  const ctx=await browser.newContext();
   await ctx.route('**/*',route=>{
     const u=new URL(route.request().url());
     if(u.hostname.endsWith('.supabase.co')||u.hostname.endsWith('.vercel.app'))blockedProduction.push(u.hostname);
@@ -36,6 +36,17 @@ try{
   await cp.getByText('Profile updated successfully.',{exact:true}).waitFor();
   assert.equal(sql("select full_name from public.profiles where id='11111111-1111-4111-8111-000000000001'"),'Synthetic Browser Client');pass('Client UI save persists owned profile');
   await cp.reload();await cp.getByLabel('Full name',{exact:true}).waitFor();assert.equal(await cp.getByLabel('Full name',{exact:true}).inputValue(),'Synthetic Browser Client');pass('Client profile persists after reload');
+  await cp.goto('http://127.0.0.1:3000/book-coaching');
+  await cp.getByRole('heading',{name:'Synthetic coach 3',exact:true}).waitFor();pass('Recovered public coach directory renders eligible coach');
+  await cp.goto('http://127.0.0.1:3000/book-service');
+  await cp.getByRole('heading',{name:'Synthetic fixture only',exact:true}).waitFor();pass('Recovered service directory renders eligible offering');
+  await cp.goto('http://127.0.0.1:3000/coach-matching');
+  await cp.locator('#goal').fill('Develop a clear career strategy and interview confidence');
+  const matchingResponse=cp.waitForResponse(r=>r.url().includes('/functions/v1/careerdev-coach-matching')&&r.request().method()==='POST',{timeout:120000});
+  await cp.getByRole('button',{name:'Find matching coaches',exact:true}).click();
+  const matchResponse=await matchingResponse;assert.equal(matchResponse.status(),200);
+  assert.equal((await matchResponse.json()).matches.length,1);
+  await cp.getByRole('heading',{name:'Synthetic coach 3',exact:true}).first().waitFor();pass('Browser matching executes native Edge model and renders eligible result');
   await cp.goto('http://127.0.0.1:3000/admin');
   await cp.getByText('This account does not have Staff/Admin permissions.',{exact:true}).waitFor();pass('Client denied administrator workspace');
   const coach=await context();const hp=await login(coach,3,'coach');

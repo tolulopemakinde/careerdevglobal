@@ -59,7 +59,7 @@ jobs:
           version: 2.122.0
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          ref: 46efef34c9ac6c6111f4a37a522aaba6aa526014
+          ref: 2358aaef3c5466e82e8be54adae314e916adb252
           path: .acceptance-app
           persist-credentials: false
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
