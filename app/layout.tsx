@@ -75,12 +75,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         />
       </head>
       <body>
-        <a className="skip-link" href="#services">Skip to content</a>
+        <a className="skip-link" href="#main-content">Skip to content</a>
         <SiteHeader />
         <NavigationEnhancements />
         <SiteMotion />
         <PwaInstallPrompt />
-        {children}
+        <div id="main-content" tabIndex={-1}>{children}</div>
         <SiteFooter />
         <a className="ai-career-intelligence-fab" href="/career-intelligence" style={{position:"fixed",right:20,bottom:20,zIndex:50,padding:"13px 17px",borderRadius:999,background:"#0879ad",color:"#fff",textDecoration:"none",fontWeight:800,fontSize:13,boxShadow:"0 10px 30px rgba(0,70,110,.25)"}}>✦ AI Career Intelligence</a>
       </body>

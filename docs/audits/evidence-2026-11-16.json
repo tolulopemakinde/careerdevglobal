@@ -1,0 +1,2305 @@
+{
+  "baseline": "2026-11-16",
+  "main": "8ca79c0ea5124ea55d8f7aa81f0ab4451ac15580",
+  "deployment": {
+    "id": "dpl_A986PDDr4nYxKHPCfFd82Bc8cHfa",
+    "name": "careerdevglobal",
+    "url": "careerdevglobal-c3rxwwkgc-career-dev-global.vercel.app",
+    "type": "LAMBDAS",
+    "state": "READY",
+    "createdAt": 1793933963848,
+    "creator": {
+      "uid": "XDUamveAgGkTDxto8R9w3VTb",
+      "username": "tolulopemakinde09-2240"
+    },
+    "project": {
+      "id": "prj_jBsWxtdk2PRkEpsRq1PAgs5LJELW",
+      "name": "careerdevglobal",
+      "framework": "nextjs"
+    },
+    "meta": {
+      "githubCommitRef": "main",
+      "githubCommitSha": "8ca79c0ea5124ea55d8f7aa81f0ab4451ac15580",
+      "githubCommitMessage": "feat(ai): add isolated Gateway-funded synthetic evaluation (production off)\n\nMerge tested development-only model evaluation and safety gates. Existing production OpenAI Direct routing, Supabase billing and customer-facing flows unchanged. No live Gateway credentials or requests configured; 11 pro...",
+      "githubRepo": "careerdevglobal",
+      "githubOrg": "tolulopemakinde"
+    },
+    "alias": [
+      "careerdevglobal-nine.vercel.app",
+      "careerdevglobal-career-dev-global.vercel.app",
+      "careerdevglobal-git-main-career-dev-global.vercel.app"
+    ],
+    "target": "production",
+    "regions": [
+      "iad1"
+    ],
+    "buildingAt": 1793933964752,
+    "ready": 1793934225083,
+    "readyState": "READY",
+    "source": "git",
+    "aliasError": null
+  },
+  "domains": [
+    {
+      "name": "careerdevglobal-nine.vercel.app",
+      "apexName": "vercel.app",
+      "projectId": "prj_jBsWxtdk2PRkEpsRq1PAgs5LJELW",
+      "redirect": null,
+      "gitBranch": null,
+      "customEnvironmentId": null,
+      "updatedAt": 1789428650137,
+      "createdAt": 1789428650137,
+      "verified": true
+    }
+  ],
+  "envs": [
+    {
+      "key": "NEXT_PUBLIC_SUPABASE_URL",
+      "target": [
+        "preview"
+      ],
+      "branch": "codex/calendly-backend-remediation-2026-11-04",
+      "type": "plain"
+    },
+    {
+      "key": "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+      "target": [
+        "preview"
+      ],
+      "branch": "codex/calendly-backend-remediation-2026-11-04",
+      "type": "plain"
+    },
+    {
+      "key": "NEXT_PUBLIC_SUPABASE_URL",
+      "target": [
+        "preview"
+      ],
+      "branch": "fix/ai-billing-lifecycle-safety-2026-11",
+      "type": "plain"
+    },
+    {
+      "key": "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+      "target": [
+        "preview"
+      ],
+      "branch": "fix/ai-billing-lifecycle-safety-2026-11",
+      "type": "plain"
+    },
+    {
+      "key": "JINA_API_KEY",
+      "target": [
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "GROQ_API_KEY",
+      "target": [
+        "preview"
+      ],
+      "type": "sensitive"
+    },
+    {
+      "key": "BREVO_API_KEY",
+      "target": [
+        "production"
+      ],
+      "type": "sensitive"
+    }
+  ],
+  "migrationCounts": {
+    "production": 229,
+    "test": 25
+  },
+  "functions": {
+    "production": [
+      {
+        "name": "careerdev-intake-engine",
+        "version": 13,
+        "verify_jwt": true,
+        "sha256": "00a12701c3fbc40b5e0082df231a583609047cf774e2022263f596fc983525ff"
+      },
+      {
+        "name": "careerdev-intake-engine-v2",
+        "version": 17,
+        "verify_jwt": true,
+        "sha256": "fe95875c1393462179fd72456840d253b9e4b48a9d3ec0df2d81ca1c06455ba6"
+      },
+      {
+        "name": "careerdev-document-ingestion",
+        "version": 12,
+        "verify_jwt": true,
+        "sha256": "bd9b070c36ddc18953d537c40f25a023c0175d16d9a93065a3537d7ddf1b1d7d"
+      },
+      {
+        "name": "careerdev-ai-evaluation-engine",
+        "version": 12,
+        "verify_jwt": true,
+        "sha256": "51a46375ea965282212ec08d58da06d6e87f2c845833990520b4deaf4d78e98d"
+      },
+      {
+        "name": "careerdev-document-processor",
+        "version": 19,
+        "verify_jwt": true,
+        "sha256": "3e72b9ee999e0f0018e527800263016f8d7575970bd28c0fdecd8be250a971d3"
+      },
+      {
+        "name": "careerdev-document-fact-classifier",
+        "version": 15,
+        "verify_jwt": true,
+        "sha256": "2b5066e790d7646638a080305542e3e7b03a180a5bb98a23b24d51146d6a311e"
+      },
+      {
+        "name": "careerdev-document-intelligence",
+        "version": 18,
+        "verify_jwt": true,
+        "sha256": "4511ba645a12fad5120ddb5082e5739f16dd717361ffabd4f526069c3cb40f1f"
+      },
+      {
+        "name": "careerdev-ai-intake-answer-intelligence",
+        "version": 14,
+        "verify_jwt": true,
+        "sha256": "4075ab9d889ee3b9183940c2808cbae0c087c63f2398094b22b240c6d8453c4a"
+      },
+      {
+        "name": "careerdev-ai-service-execution-agent",
+        "version": 14,
+        "verify_jwt": true,
+        "sha256": "f8f7ef7ba096f4924eb91fe1ad692dc343c251de6b4dfc9d7b391f2ab0346a74"
+      },
+      {
+        "name": "careerdev-ai-revision-execution-agent",
+        "version": 14,
+        "verify_jwt": true,
+        "sha256": "2ded1d831d85448330f902251581557abebe9cb784ab980a044f7b9eee008cce"
+      },
+      {
+        "name": "careerdev-ai-agent-runtime",
+        "version": 25,
+        "verify_jwt": true,
+        "sha256": "9f32bb81cba19849668a9098cc9aeefb8d851cfc393c7a6a1a84969a5112759b"
+      },
+      {
+        "name": "careerdev-coach-matching",
+        "version": 17,
+        "verify_jwt": false,
+        "sha256": "e1e750ab7e7cefcdb6ca4c9385867232778105f79fc59850ddb102fd47d1c2af"
+      },
+      {
+        "name": "careerdev-coach-semantic-sync",
+        "version": 14,
+        "verify_jwt": true,
+        "sha256": "eb23a7019e65edcb590cd38a9a4b1ba14761f505c12df880bacaa49fce8018c0"
+      },
+      {
+        "name": "careerdev-marketplace-payments",
+        "version": 15,
+        "verify_jwt": true,
+        "sha256": "c621654e895e0bb470363bee5d9222186eceb4f7354052cf5514a0d0fdde6a08"
+      },
+      {
+        "name": "careerdev-paystack-webhook",
+        "version": 15,
+        "verify_jwt": false,
+        "sha256": "f230f5a78f63b21ac995d5da8ad508afbe124957330cca5a55d9078df1202458"
+      },
+      {
+        "name": "careerdev-email-notifications",
+        "version": 10,
+        "verify_jwt": true,
+        "sha256": "d56e15a9d920af620a2110883fb538ddf86604b6f8430276bc1bded1022fdd85"
+      },
+      {
+        "name": "careerdev-email-dispatcher",
+        "version": 10,
+        "verify_jwt": true,
+        "sha256": "afc50786834da12dd23152bec435e2de4137c52fe5aba1933886df81dbc0ced1"
+      },
+      {
+        "name": "careerdev-coach-payout-recipient",
+        "version": 9,
+        "verify_jwt": true,
+        "sha256": "90176b87dd6c10b51c6b0a13964d1ea25caa0ae9db94d4934539bd6bf806c226"
+      },
+      {
+        "name": "careerdev-paystack-payout-transfer",
+        "version": 10,
+        "verify_jwt": true,
+        "sha256": "f43b51e553774748e901bbfa2eecdf5658f00ce0b239b17a0edca9bd3ac46575"
+      },
+      {
+        "name": "careerdev-paystack-payout-webhook",
+        "version": 9,
+        "verify_jwt": false,
+        "sha256": "c2c9f3614f2d87b501416cb5f7f7eb8c328ab064cd5534a2f0f8165a1c185755"
+      },
+      {
+        "name": "careerdev-career-intelligence-report",
+        "version": 13,
+        "verify_jwt": true,
+        "sha256": "0fc3e87f63c4e769c4e21e7b2bb2a186bf53f0657fe527727894a851262efb85"
+      },
+      {
+        "name": "careerdev-calendly-oauth",
+        "version": 11,
+        "verify_jwt": false,
+        "sha256": "5088c5ca364b460b4cbc3a76232634dd3f539ba4f7678f143fcea2c38aa7dbfe"
+      },
+      {
+        "name": "careerdev-calendly-booking",
+        "version": 12,
+        "verify_jwt": true,
+        "sha256": "b6b2ea24560875f09e295080791ae8208faa268287013bcb3f977aef28aeef7b"
+      },
+      {
+        "name": "careerdev-ai-subscription-checkout",
+        "version": 7,
+        "verify_jwt": true,
+        "sha256": "023c271a82ae5a3d20e4b47a546f0ae97055b4c49b26881e14d69328d85ec22d"
+      },
+      {
+        "name": "careerdev-ai-subscription-verify",
+        "version": 4,
+        "verify_jwt": true,
+        "sha256": "519e01279e79e642da797e82d287f9f1f89aa0e59671bfd933d76602c2511538"
+      },
+      {
+        "name": "careerdev-support-ticket",
+        "version": 4,
+        "verify_jwt": true,
+        "sha256": "55691a3952438cffd5f917a16c8b2aaece137b67ec4bcea9a398bf8165b98c7d"
+      },
+      {
+        "name": "careerdev-cross-border-intelligence",
+        "version": 4,
+        "verify_jwt": true,
+        "sha256": "e6d64809713e8e0b2e2607126b6d1245cd5fe8452fb5ecdfd3a9631baad4fc79"
+      },
+      {
+        "name": "careerdev-ai-test-suite-runner",
+        "version": 3,
+        "verify_jwt": true,
+        "sha256": "c1a3ba80df7e8fda3234354f395a4dec8a5e230ecd0edf0b8cd9f363142b30e9"
+      },
+      {
+        "name": "careerdev-ai-staff-admin-test-suite",
+        "version": 3,
+        "verify_jwt": true,
+        "sha256": "4f0b64c2b63c977dc2bfd023b86b5877251cc009aae2fa0590d2dcbc039ff9f9"
+      }
+    ],
+    "test": [
+      {
+        "name": "pilot-paystack-sandbox-preflight",
+        "version": 3,
+        "verify_jwt": true,
+        "sha256": "8588d85483457f602fe7f808d41dd3ea2d9d3a97354cac6b8f380f9064005a67"
+      },
+      {
+        "name": "careerdev-ai-intake-answer-intelligence",
+        "version": 3,
+        "verify_jwt": true,
+        "sha256": "03f86ee0062a94d18cc5855ea486e470db27fbef3b72ccf8b0f86e0d7fc7e20a"
+      },
+      {
+        "name": "careerdev-ai-revision-execution-agent",
+        "version": 3,
+        "verify_jwt": true,
+        "sha256": "53842678de43cd2906acd441b9f0170c1682921cf216139c1cfc0a41131b1f1e"
+      },
+      {
+        "name": "careerdev-ai-service-execution-agent",
+        "version": 3,
+        "verify_jwt": true,
+        "sha256": "04eda60fcb2d626d8ae1fed7cecf22f5b91877de5384e4f66e1aa83a776112ca"
+      },
+      {
+        "name": "careerdev-career-intelligence-report",
+        "version": 3,
+        "verify_jwt": true,
+        "sha256": "48916893d152ddb78f2ca627138c45a6887451992265fd683003d11df9dee38c"
+      },
+      {
+        "name": "careerdev-document-fact-classifier",
+        "version": 3,
+        "verify_jwt": true,
+        "sha256": "2f28aef3672dab90a6a04a75de961986731a8caad31e851ae9497608b8f11a86"
+      },
+      {
+        "name": "careerdev-document-intelligence",
+        "version": 3,
+        "verify_jwt": true,
+        "sha256": "7eb40d0f6144bb204298a6e89fccf6bf52df91a67032fb9733a54fd9facdeba1"
+      },
+      {
+        "name": "careerdev-document-processor",
+        "version": 3,
+        "verify_jwt": true,
+        "sha256": "f47fbfcf8ec11d9bb1e0a578ac9d6db29e9b12ab760bb74a984a57dff1e6a4bf"
+      },
+      {
+        "name": "careerdev-intake-engine",
+        "version": 3,
+        "verify_jwt": true,
+        "sha256": "6306105bcd9515d0d5982f983a58e225aa468dda45ef0cf2a94e8800c1e10b4e"
+      },
+      {
+        "name": "careerdev-intake-engine-v2",
+        "version": 3,
+        "verify_jwt": true,
+        "sha256": "63d91d07fd0500ab06f3b60d31ad0559a45112e1c7f341cd2cfd1fce99bf4bf7"
+      },
+      {
+        "name": "billing-sandbox-readiness",
+        "version": 3,
+        "verify_jwt": false,
+        "sha256": "caa92906356c3a5bda99f69671051a1473b12261f78aa2d4277ee35ac89262b1"
+      },
+      {
+        "name": "careerdev-ai-subscription-checkout",
+        "version": 6,
+        "verify_jwt": true,
+        "sha256": "668dbb126aa1e74f9594843fdd602bec91bd883ab437c64a2e688f239de6a08c"
+      },
+      {
+        "name": "careerdev-ai-subscription-verify",
+        "version": 5,
+        "verify_jwt": true,
+        "sha256": "5e80dd43f2cf52e3e6181e1bfe0e182bb6787f688b32a723369af3449aa32c54"
+      },
+      {
+        "name": "careerdev-ai-subscription-manage",
+        "version": 5,
+        "verify_jwt": true,
+        "sha256": "c186765ee9c7716f652bc9c5a4e78307d9a66ac4f1f07c5fd289dd9ebdfb2451"
+      },
+      {
+        "name": "careerdev-paystack-webhook",
+        "version": 10,
+        "verify_jwt": false,
+        "sha256": "f8e06b644b2f19428d4b54bbe40dd9c3b3bbddffae26433ae5868634f10716e3"
+      },
+      {
+        "name": "careerdev-ai-billing-reconcile",
+        "version": 4,
+        "verify_jwt": true,
+        "sha256": "7dbe70d02152c7410fdf54319fed089e300f215b7aaa8974ee76c1076dcc1f9f"
+      },
+      {
+        "name": "billing-sandbox-provider-checks",
+        "version": 3,
+        "verify_jwt": true,
+        "sha256": "ca9e6e796b4170a68c8a1ff92331de8ee70a0647b055f17882c947172a82dda0"
+      },
+      {
+        "name": "careerdev-ai-agent-runtime",
+        "version": 2,
+        "verify_jwt": true,
+        "sha256": "98870d5940cfde6d6cbc7620854c07be9f8f2fa56ce04deecc97f614942a12b9"
+      },
+      {
+        "name": "billing-sandbox-paid-checks",
+        "version": 3,
+        "verify_jwt": true,
+        "sha256": "1f0cacfbab1bddf5276f21953d253ccd9ea1f30ab7c1be674caf3de9d033853e"
+      },
+      {
+        "name": "billing-sandbox-concurrency-checks",
+        "version": 1,
+        "verify_jwt": true,
+        "sha256": "c5e72a9ff85bd24f69a524854d78137b8dc89339ae0b7eaf41c57943cf10d63f"
+      },
+      {
+        "name": "billing-sandbox-marketplace-checks",
+        "version": 2,
+        "verify_jwt": true,
+        "sha256": "1942da4d372751177cf3133f6b4a0d0e629350b6d763b2e59bb5bb6df898062d"
+      },
+      {
+        "name": "careerdev-ai-payment-adjustment",
+        "version": 1,
+        "verify_jwt": true,
+        "sha256": "68679dcec560bbaa6cd047f43745b33cd1859d530b09ed23f72cfbb2db26c3e3"
+      },
+      {
+        "name": "billing-sandbox-replacement-checks",
+        "version": 1,
+        "verify_jwt": true,
+        "sha256": "4ff3c09843f60baf20e8940e1160a2965c243fa380aaa240e8db5f72916b55a9"
+      },
+      {
+        "name": "billing-sandbox-replacement-verify",
+        "version": 3,
+        "verify_jwt": true,
+        "sha256": "2bc8667cdee463b74329b970b510163b42a8e02ee303a9c1a53f33a120dab7a6"
+      },
+      {
+        "name": "billing-sandbox-provider-refund",
+        "version": 1,
+        "verify_jwt": true,
+        "sha256": "a745fbbbf2a2670bf59e56ba196c7eec85f2f0357521d3c7238ef5db34d2c866"
+      },
+      {
+        "name": "billing-sandbox-refund-status",
+        "version": 1,
+        "verify_jwt": true,
+        "sha256": "4b19f4902ede8b15aacca203d6fc02e89772dde139c9556bad980578344e8335"
+      },
+      {
+        "name": "billing-sandbox-history-replay",
+        "version": 1,
+        "verify_jwt": true,
+        "sha256": "84315accbda9b783d074cd1ec99754b5af2174c9049641c0ce00a7bb54903fdf"
+      },
+      {
+        "name": "billing-sandbox-full-refund",
+        "version": 1,
+        "verify_jwt": true,
+        "sha256": "07cbd409a5f53f91ed50ddd27c981e9e91addd0a72a4c242aa399abf492ceedf"
+      },
+      {
+        "name": "billing-sandbox-full-refund-status",
+        "version": 1,
+        "verify_jwt": true,
+        "sha256": "0bb5899b0476baed973208bbd36ebe406e84a2651cc26d35dda22091292d8d33"
+      },
+      {
+        "name": "billing-sandbox-source-revalidation",
+        "version": 5,
+        "verify_jwt": true,
+        "sha256": "9d9c707526a1cbfe610b5035f103c21c08c91805e5e683d9a7bbb72cc2a9b4de"
+      },
+      {
+        "name": "billing-sandbox-provider-delivery",
+        "version": 4,
+        "verify_jwt": true,
+        "sha256": "c6271b7e7150b55084e3af1cbee8f684c671143e4bb65e3da2336c69751dadc2"
+      },
+      {
+        "name": "billing-sandbox-acknowledgment",
+        "version": 3,
+        "verify_jwt": true,
+        "sha256": "b9b9a88b3dac2732eb940440574fe61669fe34af68a0c71379e2ffe5b91933d0"
+      },
+      {
+        "name": "billing-sandbox-matched-acceptance",
+        "version": 4,
+        "verify_jwt": true,
+        "sha256": "04c442cadf7d1ccf8f992664340b749b8437b6d81616d07626f415c0e97e730d"
+      }
+    ]
+  },
+  "marketplaceCounts": [
+    {
+      "metric": "coaches",
+      "total": 1
+    },
+    {
+      "metric": "approved_coaches",
+      "total": 1
+    },
+    {
+      "metric": "verified_active_marketplace_profiles",
+      "total": 1
+    },
+    {
+      "metric": "active_offerings",
+      "total": 2
+    },
+    {
+      "metric": "eligible_public_coaches_owner_count",
+      "total": 1
+    },
+    {
+      "metric": "eligible_public_services_owner_count",
+      "total": 2
+    },
+    {
+      "metric": "active_calendly_connections",
+      "total": 1
+    }
+  ],
+  "agents": [
+    {
+      "agent_key": "academic_career_transition_agent",
+      "name": "Academic/Career Transition Agent",
+      "active": true,
+      "status": "testing",
+      "agent_category": "career_intelligence",
+      "ai_dependency_mode": "ai_optional",
+      "ai_fallback_strategy": "structured_baseline_and_queue_ai_enhancement",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "career_assessment_agent",
+      "name": "Career Assessment Agent",
+      "active": true,
+      "status": "testing",
+      "agent_category": "career_intelligence",
+      "ai_dependency_mode": "works_without_ai",
+      "ai_fallback_strategy": "deterministic_rules",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "career_coach_agent",
+      "name": "Career Coach Agent",
+      "active": true,
+      "status": "testing",
+      "agent_category": "career_intelligence",
+      "ai_dependency_mode": "ai_optional",
+      "ai_fallback_strategy": "structured_baseline_and_queue_ai_enhancement",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "career_discovery_agent",
+      "name": "Career Discovery Agent",
+      "active": true,
+      "status": "testing",
+      "agent_category": "career_intelligence",
+      "ai_dependency_mode": "ai_optional",
+      "ai_fallback_strategy": "structured_baseline_and_queue_ai_enhancement",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "career_discovery_ai",
+      "name": "Career Discovery AI",
+      "active": true,
+      "status": "testing",
+      "agent_category": "career_intelligence",
+      "ai_dependency_mode": "ai_required",
+      "ai_fallback_strategy": "preserve_context_queue_ai_and_require_human_review",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "career_research_agent",
+      "name": "Career Research Agent",
+      "active": true,
+      "status": "testing",
+      "agent_category": "research",
+      "ai_dependency_mode": "ai_optional",
+      "ai_fallback_strategy": "structured_baseline_and_queue_ai_enhancement",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "ceo_operations_ai",
+      "name": "CEO & Operations AI",
+      "active": true,
+      "status": "testing",
+      "agent_category": "operations",
+      "ai_dependency_mode": "ai_required",
+      "ai_fallback_strategy": "preserve_context_queue_ai_and_require_human_review",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "cover_letter_agent",
+      "name": "Cover Letter Agent",
+      "active": true,
+      "status": "testing",
+      "agent_category": "service_delivery",
+      "ai_dependency_mode": "ai_required",
+      "ai_fallback_strategy": "preserve_context_queue_ai_and_require_human_review",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "cv_linkedin_ai",
+      "name": "CV & LinkedIn AI",
+      "active": true,
+      "status": "testing",
+      "agent_category": "service_delivery",
+      "ai_dependency_mode": "ai_required",
+      "ai_fallback_strategy": "preserve_context_queue_ai_and_require_human_review",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "cv_resume_agent",
+      "name": "CV/Resume Agent",
+      "active": true,
+      "status": "testing",
+      "agent_category": "service_delivery",
+      "ai_dependency_mode": "ai_required",
+      "ai_fallback_strategy": "preserve_context_queue_ai_and_require_human_review",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "employer_talent_agent",
+      "name": "Employer/Talent Agent",
+      "active": true,
+      "status": "testing",
+      "agent_category": "service_delivery",
+      "ai_dependency_mode": "ai_optional",
+      "ai_fallback_strategy": "structured_baseline_and_queue_ai_enhancement",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "ethics_quality_assurance_agent",
+      "name": "Ethics & Quality Assurance Agent",
+      "active": true,
+      "status": "testing",
+      "agent_category": "governance",
+      "ai_dependency_mode": "works_without_ai",
+      "ai_fallback_strategy": "deterministic_rules",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "interview_coach_agent",
+      "name": "Interview Coach Agent",
+      "active": true,
+      "status": "testing",
+      "agent_category": "career_intelligence",
+      "ai_dependency_mode": "ai_required",
+      "ai_fallback_strategy": "preserve_context_queue_ai_and_require_human_review",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "job_search_intelligence_agent",
+      "name": "Job Search Intelligence Agent",
+      "active": true,
+      "status": "testing",
+      "agent_category": "research",
+      "ai_dependency_mode": "ai_optional",
+      "ai_fallback_strategy": "structured_baseline_and_queue_ai_enhancement",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "lead_generation_ai",
+      "name": "Lead Generation AI",
+      "active": true,
+      "status": "testing",
+      "agent_category": "growth",
+      "ai_dependency_mode": "ai_required",
+      "ai_fallback_strategy": "preserve_context_queue_ai_and_require_human_review",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "leadership_coach_agent",
+      "name": "Leadership Coach Agent",
+      "active": true,
+      "status": "testing",
+      "agent_category": "career_intelligence",
+      "ai_dependency_mode": "ai_required",
+      "ai_fallback_strategy": "preserve_context_queue_ai_and_require_human_review",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "learning_development_agent",
+      "name": "Learning & Development Agent",
+      "active": true,
+      "status": "testing",
+      "agent_category": "career_intelligence",
+      "ai_dependency_mode": "works_without_ai",
+      "ai_fallback_strategy": "deterministic_rules",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "linkedin_optimization_agent",
+      "name": "LinkedIn Optimization Agent",
+      "active": true,
+      "status": "testing",
+      "agent_category": "service_delivery",
+      "ai_dependency_mode": "ai_required",
+      "ai_fallback_strategy": "preserve_context_queue_ai_and_require_human_review",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "marketing_content_ai",
+      "name": "Marketing & Content AI",
+      "active": true,
+      "status": "testing",
+      "agent_category": "marketing",
+      "ai_dependency_mode": "ai_required",
+      "ai_fallback_strategy": "preserve_context_queue_ai_and_require_human_review",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "research_opportunities_ai",
+      "name": "Research & Opportunities AI",
+      "active": true,
+      "status": "testing",
+      "agent_category": "research",
+      "ai_dependency_mode": "ai_required",
+      "ai_fallback_strategy": "preserve_context_queue_ai_and_require_human_review",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "sales_proposal_ai",
+      "name": "Sales & Proposal AI",
+      "active": true,
+      "status": "testing",
+      "agent_category": "sales",
+      "ai_dependency_mode": "ai_required",
+      "ai_fallback_strategy": "preserve_context_queue_ai_and_require_human_review",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "skills_gaps_agent",
+      "name": "Skills/Gaps Agent",
+      "active": true,
+      "status": "testing",
+      "agent_category": "career_intelligence",
+      "ai_dependency_mode": "works_without_ai",
+      "ai_fallback_strategy": "deterministic_rules",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    },
+    {
+      "agent_key": "talent_mobility_agent",
+      "name": "Talent Mobility Agent",
+      "active": true,
+      "status": "testing",
+      "agent_category": "career_intelligence",
+      "ai_dependency_mode": "works_without_ai",
+      "ai_fallback_strategy": "deterministic_rules",
+      "ai_fallback_enabled": true,
+      "human_approval_required": false
+    }
+  ],
+  "schema": {
+    "views": [
+      {
+        "name": "marketplace_coach_earnings_summary",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "marketplace_coach_payout_summary",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "ai_regression_dashboard",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "ai_evaluation_dashboard",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "ai_observability_dashboard",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "ai_observability_alert_dashboard",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "marketplace_payment_status_summary",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "marketplace_dispute_summary",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "marketplace_communication_risk_summary",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "marketplace_financial_ledger_integrity",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "marketplace_coach_discovery",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "coach_marketplace_dashboard",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "coach_marketplace_services",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "coach_marketplace_reviews",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "coach_marketplace_earnings",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "coach_marketplace_payouts",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "coach_marketplace_availability",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "ai_test_control_center_v57",
+        "options": null
+      },
+      {
+        "name": "client_marketplace_dashboard",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "ai_governance_runtime_health",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "ai_governance_agent_performance",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "ai_usage_daily_summary",
+        "options": null
+      },
+      {
+        "name": "ai_revenue_payment_intelligence",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "service_unit_economics",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "client_marketplace_progress_view",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "client_marketplace_transactions_view",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "client_marketplace_reviews_view",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "ai_service_cost_margin_intelligence",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "ai_cost_guardrail_status",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "ai_service_profitability_intelligence",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "ai_service_profitability_dashboard",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "careerdev_financial_intelligence_dashboard",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "careerdev_marketplace_economics_summary",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "marketplace_notification_inbox",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "marketplace_financial_compliance_dashboard",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "marketplace_financial_operations_command_center",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "marketplace_financial_operations_by_currency",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "marketplace_financial_operations_exceptions",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "marketplace_financial_operations_alert_dashboard",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "marketplace_coach_directory",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "marketplace_coach_matching_candidates",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "marketplace_available_slots",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "marketplace_transaction_summary",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "coach_marketplace_onboarding_dashboard",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "coach_marketplace_verification_dashboard",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "ai_governance_dashboard_summary",
+        "options": null
+      },
+      {
+        "name": "ai_usage_by_agent",
+        "options": null
+      },
+      {
+        "name": "ai_agent_certification_status",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "client_marketplace_upcoming_bookings",
+        "options": [
+          "security_invoker=true"
+        ]
+      },
+      {
+        "name": "coach_marketplace_upcoming_bookings",
+        "options": [
+          "security_invoker=true"
+        ]
+      }
+    ],
+    "tables": 243,
+    "triggers": 43,
+    "storage_buckets": [
+      {
+        "name": "client-documents",
+        "public": false,
+        "file_size_limit": null
+      },
+      {
+        "name": "coach-credentials",
+        "public": false,
+        "file_size_limit": 10485760
+      },
+      {
+        "name": "avatars",
+        "public": true,
+        "file_size_limit": 5242880
+      },
+      {
+        "name": "career-insights",
+        "public": true,
+        "file_size_limit": null
+      }
+    ],
+    "tables_without_rls": null
+  },
+  "advisors": {
+    "prod_security": [
+      {
+        "name": "rls_enabled_no_policy",
+        "level": "INFO",
+        "count": 16,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+      },
+      {
+        "name": "anon_security_definer_function_executable",
+        "level": "WARN",
+        "count": 1,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable"
+      },
+      {
+        "name": "authenticated_security_definer_function_executable",
+        "level": "WARN",
+        "count": 52,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable"
+      },
+      {
+        "name": "auth_leaked_password_protection",
+        "level": "WARN",
+        "count": 1,
+        "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection"
+      }
+    ],
+    "test_security": [
+      {
+        "name": "rls_enabled_no_policy",
+        "level": "INFO",
+        "count": 33,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+      },
+      {
+        "name": "function_search_path_mutable",
+        "level": "WARN",
+        "count": 4,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable"
+      },
+      {
+        "name": "extension_in_public",
+        "level": "WARN",
+        "count": 2,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public"
+      },
+      {
+        "name": "anon_security_definer_function_executable",
+        "level": "WARN",
+        "count": 9,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable"
+      },
+      {
+        "name": "authenticated_security_definer_function_executable",
+        "level": "WARN",
+        "count": 44,
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable"
+      },
+      {
+        "name": "auth_leaked_password_protection",
+        "level": "WARN",
+        "count": 1,
+        "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection"
+      }
+    ]
+  },
+  "prs": [
+    {
+      "number": 48,
+      "title": "Rehearse durable Calendly bookings and client rescheduling",
+      "state": "open",
+      "merged": false,
+      "draft": true,
+      "head": "0af7e6ac483a66c68b63e084f036c94ec1ecd29a",
+      "branch": "codex/calendly-backend-remediation-2026-11-04",
+      "base": "c96c085d974b312622308f81d1c9bc00a19d34a4",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/48"
+    },
+    {
+      "number": 47,
+      "title": "Add Log out to Client and Coach dashboard sidebar menus",
+      "state": "open",
+      "merged": false,
+      "draft": true,
+      "head": "e188410b021ffc2c21cea47385525108cb6b8ec6",
+      "branch": "fix/dashboard-sidebar-logout-2026-11-04",
+      "base": "c96c085d974b312622308f81d1c9bc00a19d34a4",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/47"
+    },
+    {
+      "number": 46,
+      "title": "Add Log out to main navigation for signed-in users",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "a022b8d797003991231198b8982787d7cdca4f6b",
+      "branch": "feat/main-menu-logout-2026-11-04",
+      "base": "90de64ed749d3173f5da2294b06b16a669aa9f88",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/46"
+    },
+    {
+      "number": 45,
+      "title": "Fix/subscription cancellation tests",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "48495791fefe95f29445c5f2a27ea22debf0f91d",
+      "branch": "fix/subscription-cancellation-tests",
+      "base": "580032ffdb9cbff11c2b80bf1216cf35e9485529",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/45"
+    },
+    {
+      "number": 44,
+      "title": "[Draft] Calendly scheduling reliability — frontend safeguards and backend remediation plan",
+      "state": "open",
+      "merged": false,
+      "draft": true,
+      "head": "e91f995093e5544b176a45f9f6b8c8d15ea51250",
+      "branch": "codex/calendly-scheduling-reliability-2026-11-04",
+      "base": "580032ffdb9cbff11c2b80bf1216cf35e9485529",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/44"
+    },
+    {
+      "number": 43,
+      "title": "Draft: guarded OpenAI/Groq pilot and Exa/Tavily evaluation (no LiteLLM)",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "d9ed44730738d0f7362979536228bf3fb88fbe26",
+      "branch": "design-groq-research-gateway-2026-11-04",
+      "base": "580032ffdb9cbff11c2b80bf1216cf35e9485529",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/43"
+    },
+    {
+      "number": 42,
+      "title": "Harden gated AI billing lifecycle and durable webhook acknowledgments",
+      "state": "open",
+      "merged": false,
+      "draft": true,
+      "head": "4513c87f5efcb399871cb78ccd663243f2f218e1",
+      "branch": "fix/ai-billing-lifecycle-safety-2026-11",
+      "base": "580032ffdb9cbff11c2b80bf1216cf35e9485529",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/42"
+    },
+    {
+      "number": 41,
+      "title": "Draft: self-service AI subscription management",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "7d3df83ba4bbd6238059c09e092355f14ab99684",
+      "branch": "feature/ai-subscription-management",
+      "base": "32b9fe45638e5f2c790f212f76d5231a6a3ebe9b",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/41"
+    },
+    {
+      "number": 40,
+      "title": "Add responsive sidebar navigation to client and coach dashboards",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "d2eb4fa89cf048e97404cc4092d74a259f60464e",
+      "branch": "feat/responsive-dashboard-sidebar",
+      "base": "daf9c9697482bd59f72ab69fe5ee9dd2394cd767",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/40"
+    },
+    {
+      "number": 39,
+      "title": "Draft: structured-only no-OpenAI pilot runtime, pricing and billing safeguards",
+      "state": "open",
+      "merged": false,
+      "draft": true,
+      "head": "4ad6a7cc5a7e714e90c06c826cd24324fea9d9f5",
+      "branch": "pilot-no-openai-pricing-2026",
+      "base": "daf9c9697482bd59f72ab69fe5ee9dd2394cd767",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/39"
+    },
+    {
+      "number": 38,
+      "title": "Security: Calendly marketplace booking hardening (review in progress)",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "19915f3626a631500652cfa0b95d3b45b884c31f",
+      "branch": "security/calendly-booking-hardening-review",
+      "base": "0298ea5ce32463fe0ddd3fbe3db22cee7ffb48d3",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/38"
+    },
+    {
+      "number": 37,
+      "title": "Add direct Calendly booking link fallback",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "90f8cfa550d321e0fc5bf2852636811f9e9339c6",
+      "branch": "feat/calendly-direct-booking-fallback",
+      "base": "19197f6d6ca8c6a8cd8ed27f59b665c22d74b3ef",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/37"
+    },
+    {
+      "number": 36,
+      "title": "Draft: establish Supabase schema source-of-truth recovery",
+      "state": "open",
+      "merged": false,
+      "draft": true,
+      "head": "97f25b16882423e3d076e5da1685be471f1d144e",
+      "branch": "chore/supabase-authoritative-baseline",
+      "base": "83704ac37c453731a27cb35f1e6c0dc4ad361827",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/36"
+    },
+    {
+      "number": 35,
+      "title": "Draft: restore intake engine source and add document evidence retrieval",
+      "state": "open",
+      "merged": false,
+      "draft": true,
+      "head": "83704ac37c453731a27cb35f1e6c0dc4ad361827",
+      "branch": "fix/linkedin-intake-document-evidence",
+      "base": "14946203c442caaf599455c49d00d10a8835ab2e",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/35"
+    },
+    {
+      "number": 34,
+      "title": "Add adaptive intake for LinkedIn Optimization Agent",
+      "state": "open",
+      "merged": false,
+      "draft": false,
+      "head": "14946203c442caaf599455c49d00d10a8835ab2e",
+      "branch": "feature/linkedin-optimization-adaptive-intake",
+      "base": "19197f6d6ca8c6a8cd8ed27f59b665c22d74b3ef",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/34"
+    },
+    {
+      "number": 33,
+      "title": "Place framework arrows between stage boxes",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "aa3cb313397cc38a5ffb3959e01ab9e74cc79aea",
+      "branch": "fix/framework-arrows-between-boxes",
+      "base": "a743ccad587855ba047e479f3d0521daa5d16c84",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/33"
+    },
+    {
+      "number": 32,
+      "title": "Reduce homepage tagline font size by 2px",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "8be393197430ffb1db32c0d0b39fcd16f798a4dd",
+      "branch": "fix/homepage-tagline-font-size-v2",
+      "base": "735cec6ae01afd3d82ef2847cdc315011e87c647",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/32"
+    },
+    {
+      "number": 31,
+      "title": "Reduce homepage tagline font size by 2px",
+      "state": "closed",
+      "merged": false,
+      "draft": false,
+      "head": "1b7d27f0a07da411efcb18ca72340f22924eec95",
+      "branch": "fix/homepage-tagline-font-size",
+      "base": "735cec6ae01afd3d82ef2847cdc315011e87c647",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/31"
+    },
+    {
+      "number": 30,
+      "title": "Reduce homepage tagline font size by 2px",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "e868e1fc0e7557f83d7f7d52aa1995f541824f09",
+      "branch": "fix/homepage-tagline-font-size",
+      "base": "5eeadeace1a18b4093e9d41287706f8d578d53e0",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/30"
+    },
+    {
+      "number": 29,
+      "title": "docs: security remediation plan and release gates",
+      "state": "open",
+      "merged": false,
+      "draft": true,
+      "head": "e866828aa4d4e29e584917fdb7b42c9451cc3e82",
+      "branch": "audit/security-remediation-2026-10-23",
+      "base": "5eeadeace1a18b4093e9d41287706f8d578d53e0",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/29"
+    },
+    {
+      "number": 28,
+      "title": "Refine homepage framework card width",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "0ab6c49aea017c0731b0c53b699add382cfd2ee9",
+      "branch": "fix/refine-framework-card-width",
+      "base": "2b42fc3cd5651499751c330333a4954232bfabe0",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/28"
+    },
+    {
+      "number": 27,
+      "title": "Widen homepage framework card for single-line journey",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "e3b4ac35902476fce710fb2275a22013510df88d",
+      "branch": "fix/homepage-framework-journey-single-line",
+      "base": "25b3c5299a3e2742a6887e80e53c2861d6f2e244",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/27"
+    },
+    {
+      "number": 26,
+      "title": "Match homepage framework card to CI glass panel",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "1f644986b684bc6f93de7c2e832bf03e4b5db254",
+      "branch": "fix/homepage-framework-card-glass-style",
+      "base": "cd6b5ffb006f2120398075539de2a6b5a996fe18",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/26"
+    },
+    {
+      "number": 25,
+      "title": "Extend premium scroll and touch motion across the website",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "840650ebc0db0371aa942cfadb39e8b16bb51de3",
+      "branch": "feat/sitewide-scroll-card-motion",
+      "base": "f0fab0cbcf5d68dee2a93ec4b06f81da32795a19",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/25"
+    },
+    {
+      "number": 24,
+      "title": "Animate Career Intelligence cards on scroll and touch",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "8a80dd274ad166077a50747c70dd52fdd397e8e3",
+      "branch": "fix/career-intelligence-card-motion",
+      "base": "163ce5adadb8740c133d045cae28e865b66a3c52",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/24"
+    },
+    {
+      "number": 23,
+      "title": "Add premium motion across CareerDev Global experiences",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "6b37f8dc69c4ba814885fdd534246a14cc29f2ac",
+      "branch": "feat/homepage-premium-motion",
+      "base": "fa7fb705af462ec956fff9b188c16727e2b2795f",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/23"
+    },
+    {
+      "number": 22,
+      "title": "Fix legacy routes and canonical site links",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "173fb6753bd2a028a5f0491872fbc0dd52f755ca",
+      "branch": "fix/sitewide-routing-links",
+      "base": "26ace482663a99c909472d9eb8b8a0ca0542f5be",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/22"
+    },
+    {
+      "number": 21,
+      "title": "Fix broken blog service and coach CTA links",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "3af460506d32ce75a0650a3765e125ca19403df1",
+      "branch": "fix/blog-cta-links",
+      "base": "0a22abdc098d72624b345420a7d8842ea55fa581",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/21"
+    },
+    {
+      "number": 20,
+      "title": "Fix AI governance feedback visibility and persistence",
+      "state": "open",
+      "merged": false,
+      "draft": true,
+      "head": "155315b2d6c00bb98d1cb850cbe2b82f50413b0b",
+      "branch": "fix/admin-governance-feedback",
+      "base": "0a22abdc098d72624b345420a7d8842ea55fa581",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/20"
+    },
+    {
+      "number": 18,
+      "title": "Build CareerDev Global sales and revenue growth system",
+      "state": "open",
+      "merged": false,
+      "draft": true,
+      "head": "5e2a9f10f32a64a3335012ee43163b08ad834a99",
+      "branch": "feature/sales-revenue-growth-system",
+      "base": "0a22abdc098d72624b345420a7d8842ea55fa581",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/18"
+    },
+    {
+      "number": 17,
+      "title": "fix: use allowed Edge Function secret name",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "c4cd3028a89927cdfc7108279bf37d9409e5515c",
+      "branch": "production-coach-matching-config",
+      "base": "fbe4a1c38e42182beb8163db0a5a819c61e48785",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/17"
+    },
+    {
+      "number": 16,
+      "title": "Fix production coach-matching control defaults",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "76cafaf7d6b09d1bb3b923fa49c2810939142051",
+      "branch": "production-coach-matching-config",
+      "base": "25d607fc74f600e35373ce26bdbfb1c59ed15b4c",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/16"
+    },
+    {
+      "number": 15,
+      "title": "Phase 4: add preview validation and operational readiness",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "427d92611feab70174a8e478da32f1539ccb8480",
+      "branch": "phase-4-preview-validation",
+      "base": "2c4c93d043fe3d38492f0076783165c71d199b20",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/15"
+    },
+    {
+      "number": 14,
+      "title": "Phase 3: prepare distributed AI quotas and rate limits",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "367554886d7dba6b0a0fedd7ff2be7aac64f6c1e",
+      "branch": "phase-3-distributed-quotas",
+      "base": "45507aa4aa632622071e1d1f90dc7e8716289549",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/14"
+    },
+    {
+      "number": 13,
+      "title": "Phase 2: add preview-ready Edge Function security adapter",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "11ab6b127f015426e51f7df64f585bd41061d64d",
+      "branch": "phase-2-server-hardening",
+      "base": "e49b126285919087827ed4518fcaa76d2293834f",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/13"
+    },
+    {
+      "number": 12,
+      "title": "Phase 1: establish AI safety and reliability foundation",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "77b2ae584aff32a3af22b89b2ebcb4b305fe76fc",
+      "branch": "phase-1-safety-foundation",
+      "base": "107af72b10afeb14e811653087e2d44fdd282492",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/12"
+    },
+    {
+      "number": 10,
+      "title": "Add baseline security response headers",
+      "state": "open",
+      "merged": false,
+      "draft": true,
+      "head": "912e09c731bc067af114bdce38a6fbe732a27557",
+      "branch": "security/baseline-response-headers",
+      "base": "107af72b10afeb14e811653087e2d44fdd282492",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/10"
+    },
+    {
+      "number": 9,
+      "title": "fix: use supplied symbol PNG for WhatsApp previews",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "ee1a64bbe12254de85a233aa88fe268bbef51211",
+      "branch": "fix/whatsapp-symbol-png",
+      "base": "d67c4110e02a3556ce99a645a3f865a0592c81af",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/9"
+    },
+    {
+      "number": 8,
+      "title": "fix: use PNG Open Graph image for WhatsApp previews",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "1d6c9a543b26eec38f4d76b63c1fe00b66486210",
+      "branch": "feat/whatsapp-og-png",
+      "base": "9893b0a3a8a2dcea14649d8dab73e70f345f373e",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/8"
+    },
+    {
+      "number": 7,
+      "title": "feat: add symbol logo to SEO structured metadata",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "70f8b27f1882a475aeb6479a1d5a5e15bd7fbe65",
+      "branch": "feat/seo-structured-logo",
+      "base": "2fc940b89882da5aaca2bf32779bd0851f50fdaf",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/7"
+    },
+    {
+      "number": 6,
+      "title": "feat: add social sharing metadata with symbol logo",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "ee1aba1565e7a1cc738cb1660b541ed6811be9fd",
+      "branch": "feat/social-symbol-metadata",
+      "base": "7cc32b7e476d61679bb7779aee57891a1952318b",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/6"
+    },
+    {
+      "number": 5,
+      "title": "feat: use symbol-only logo for favicon metadata",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "a5a1f1f7fc0a1ec321211fe6d67da82d5924fdc4",
+      "branch": "feat/favicon-symbol-metadata",
+      "base": "3023455e4fcefeacb573b06d6849bf8d54926ee5",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/5"
+    },
+    {
+      "number": 4,
+      "title": "feat: add official logo to PWA install prompt",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "706208a302b8a66c61d8b44bfd2e5e6e0bc63942",
+      "branch": "feat/pwa-install-logo",
+      "base": "0536a7ccd3ebf2ca9df7a954e555bb99a8ead4c1",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/4"
+    },
+    {
+      "number": 3,
+      "title": "feat: add CareerDev Global mobile PWA and smart install experience",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "007638fc21d667387e4c61ec724a7992e71515b4",
+      "branch": "feat/careerdev-pwa-mobile-app",
+      "base": "89c0aeb7d720c6c25cc5fe0f9068595c16787552",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/3"
+    },
+    {
+      "number": 2,
+      "title": "Apply official CareerDev Global logo responsively",
+      "state": "closed",
+      "merged": true,
+      "draft": false,
+      "head": "9fdf588a597e5da672c3e31554ae02485251b90f",
+      "branch": "logo/careerdev-global-official",
+      "base": "2ae512b7b4ebe93f7fc8f6bd8a5e6023046499f1",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/2"
+    },
+    {
+      "number": 1,
+      "title": "Add CareerDev Global Sentry observability",
+      "state": "closed",
+      "merged": false,
+      "draft": false,
+      "head": "40ea1cf85edeb7137f8b298c9b74e298aaf9a5f8",
+      "branch": "observability/sentry-careerdev-global",
+      "base": "1be173e2f7ce180bf88459623535615863240927",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/pull/1"
+    }
+  ],
+  "ci": [
+    {
+      "id": 43317641399,
+      "name": "Phase 1 validation",
+      "sha": "0af7e6ac483a66c68b63e084f036c94ec1ecd29a",
+      "conclusion": "failure",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43317641399"
+    },
+    {
+      "id": 43317641371,
+      "name": "Calendly database rehearsal",
+      "sha": "0af7e6ac483a66c68b63e084f036c94ec1ecd29a",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43317641371"
+    },
+    {
+      "id": 43301670600,
+      "name": "Phase 1 validation",
+      "sha": "40028779154cc2297e3da394dfa8d853ef8a165b",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43301670600"
+    },
+    {
+      "id": 43301670550,
+      "name": "Calendly database rehearsal",
+      "sha": "40028779154cc2297e3da394dfa8d853ef8a165b",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43301670550"
+    },
+    {
+      "id": 43300808813,
+      "name": "Phase 1 validation",
+      "sha": "29be1404047d48ec10b62d29c947023c5fc1472d",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43300808813"
+    },
+    {
+      "id": 43300808811,
+      "name": "Calendly database rehearsal",
+      "sha": "29be1404047d48ec10b62d29c947023c5fc1472d",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43300808811"
+    },
+    {
+      "id": 42153732953,
+      "name": "Phase 1 validation",
+      "sha": "8ca79c0ea5124ea55d8f7aa81f0ab4451ac15580",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/42153732953"
+    },
+    {
+      "id": 42153410019,
+      "name": "Phase 1 validation",
+      "sha": "d9ed44730738d0f7362979536228bf3fb88fbe26",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/42153410019"
+    },
+    {
+      "id": 42153198203,
+      "name": "Phase 1 validation",
+      "sha": "45584668d330d33ce817b788eb487b97ed2f6313",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/42153198203"
+    },
+    {
+      "id": 42153162207,
+      "name": "Phase 1 validation",
+      "sha": "7ae5d10291b76f543942e0c9d84385806932c869",
+      "conclusion": "cancelled",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/42153162207"
+    },
+    {
+      "id": 42153040442,
+      "name": "Phase 1 validation",
+      "sha": "029408d1824690eb17cd4d729da05e74fbbe1b2f",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/42153040442"
+    },
+    {
+      "id": 42153030984,
+      "name": "Phase 1 validation",
+      "sha": "2f828de9caf1e0b26121f75eec0211633d28cd74",
+      "conclusion": "cancelled",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/42153030984"
+    },
+    {
+      "id": 42152969087,
+      "name": "Phase 1 validation",
+      "sha": "00e69c27b91d9e160b8f4ad6448374cda27c213b",
+      "conclusion": "failure",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/42152969087"
+    },
+    {
+      "id": 42152873292,
+      "name": "Phase 1 validation",
+      "sha": "fa53d051154ddc4ecfb7b20550252d75dede149f",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/42152873292"
+    },
+    {
+      "id": 42146164261,
+      "name": "Phase 1 validation",
+      "sha": "f31c8988b65caa95a5fecc809f771a6710991856",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/42146164261"
+    },
+    {
+      "id": 42146164188,
+      "name": "Calendly database rehearsal",
+      "sha": "f31c8988b65caa95a5fecc809f771a6710991856",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/42146164188"
+    },
+    {
+      "id": 42144651135,
+      "name": "AI billing regression guards",
+      "sha": "4513c87f5efcb399871cb78ccd663243f2f218e1",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/42144651135"
+    },
+    {
+      "id": 42142265419,
+      "name": "AI billing regression guards",
+      "sha": "f75237fe26ee1b4d48d6de7a8430f963d918e7f8",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/42142265419"
+    },
+    {
+      "id": 42139507066,
+      "name": "AI billing regression guards",
+      "sha": "7ef525ca2fac1675572db186fb7e74b90f21f105",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/42139507066"
+    },
+    {
+      "id": 41925108991,
+      "name": "Phase 1 validation",
+      "sha": "32a0975fe2ec26f482c8b5c09ed24067c45e10b2",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41925108991"
+    },
+    {
+      "id": 41924866958,
+      "name": "Phase 1 validation",
+      "sha": "7566b88af3ebc3fba1aad1b2148af63f2495bb4b",
+      "conclusion": "failure",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41924866958"
+    },
+    {
+      "id": 41924853920,
+      "name": "Phase 1 validation",
+      "sha": "ab0d8e9deb075d7674785ba5ed237888d3cae6b1",
+      "conclusion": "cancelled",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41924853920"
+    },
+    {
+      "id": 41924722225,
+      "name": "Phase 1 validation",
+      "sha": "2d8541110b015e4319152c8534b5312d3d3ebc82",
+      "conclusion": "failure",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41924722225"
+    },
+    {
+      "id": 41924677057,
+      "name": "Phase 1 validation",
+      "sha": "bbbe1f9289a22d360f382287e08ee5fc34285b18",
+      "conclusion": "failure",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41924677057"
+    },
+    {
+      "id": 41923953500,
+      "name": "Phase 1 validation",
+      "sha": "cb8d4c7ba14b2736848831e4ba1254f6e3cb0c34",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41923953500"
+    },
+    {
+      "id": 41923894123,
+      "name": "Phase 1 validation",
+      "sha": "71b0e94014b5ac7b6331c012b3153f2aecd3da64",
+      "conclusion": "cancelled",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41923894123"
+    },
+    {
+      "id": 41923863688,
+      "name": "Phase 1 validation",
+      "sha": "5145cd2d27221aa0ea8079c8ddac23d83465963f",
+      "conclusion": "cancelled",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41923863688"
+    },
+    {
+      "id": 41923813511,
+      "name": "Phase 1 validation",
+      "sha": "f734765cc7b637052e9b7ff28bc15e639e89a734",
+      "conclusion": "cancelled",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41923813511"
+    },
+    {
+      "id": 41923059149,
+      "name": "Phase 1 validation",
+      "sha": "0065675026df7dfc64561c55f498529539d121fb",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41923059149"
+    },
+    {
+      "id": 41922962829,
+      "name": "Phase 1 validation",
+      "sha": "3fb652356892c2a908d4ef83e15c26a1e96941ec",
+      "conclusion": "cancelled",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41922962829"
+    },
+    {
+      "id": 41922942190,
+      "name": "Phase 1 validation",
+      "sha": "4c2b2f112266431b869d61433b55d96b8c44e6a8",
+      "conclusion": "cancelled",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41922942190"
+    },
+    {
+      "id": 41922872505,
+      "name": "Phase 1 validation",
+      "sha": "a16ba56ce54b68d598d4155bfe01be4301557bdd",
+      "conclusion": "cancelled",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41922872505"
+    },
+    {
+      "id": 41922788051,
+      "name": "Phase 1 validation",
+      "sha": "ebde66611cbf16e1ee56ee209334bc8f84043134",
+      "conclusion": "cancelled",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41922788051"
+    },
+    {
+      "id": 41921935654,
+      "name": "Phase 1 validation",
+      "sha": "bee84430325f996102d7a167cfc52bc6bfe87a1a",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41921935654"
+    },
+    {
+      "id": 41921868854,
+      "name": "Phase 1 validation",
+      "sha": "37bc3d706c6fc3268e2f4ff75e314aac3ac80f45",
+      "conclusion": "cancelled",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41921868854"
+    },
+    {
+      "id": 41921781838,
+      "name": "Phase 1 validation",
+      "sha": "af30eaa940100f232f7498b49a82802c84b1a1d4",
+      "conclusion": "failure",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41921781838"
+    },
+    {
+      "id": 41852180703,
+      "name": "Phase 1 validation",
+      "sha": "e188410b021ffc2c21cea47385525108cb6b8ec6",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41852180703"
+    },
+    {
+      "id": 41851857707,
+      "name": "Phase 1 validation",
+      "sha": "c96c085d974b312622308f81d1c9bc00a19d34a4",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41851857707"
+    },
+    {
+      "id": 41851198735,
+      "name": "Phase 1 validation",
+      "sha": "a022b8d797003991231198b8982787d7cdca4f6b",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41851198735"
+    },
+    {
+      "id": 41842807071,
+      "name": "Phase 1 validation",
+      "sha": "90de64ed749d3173f5da2294b06b16a669aa9f88",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41842807071"
+    },
+    {
+      "id": 41842642763,
+      "name": "Phase 1 validation",
+      "sha": "48495791fefe95f29445c5f2a27ea22debf0f91d",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41842642763"
+    },
+    {
+      "id": 41842494239,
+      "name": "Phase 1 validation",
+      "sha": "e91f995093e5544b176a45f9f6b8c8d15ea51250",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41842494239"
+    },
+    {
+      "id": 41837582001,
+      "name": "Phase 1 validation",
+      "sha": "69dc8d309b97951b8332cc66fbb8b151ac32fd51",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41837582001"
+    },
+    {
+      "id": 41837581840,
+      "name": "AI billing regression guards",
+      "sha": "69dc8d309b97951b8332cc66fbb8b151ac32fd51",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41837581840"
+    },
+    {
+      "id": 41837572547,
+      "name": "AI billing regression guards",
+      "sha": "69dc8d309b97951b8332cc66fbb8b151ac32fd51",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41837572547"
+    },
+    {
+      "id": 41837462002,
+      "name": "Phase 1 validation",
+      "sha": "fdaf3a03b36a9cb86a1d6cac55c55d3f7bfc6f9a",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41837462002"
+    },
+    {
+      "id": 41837461860,
+      "name": "AI billing regression guards",
+      "sha": "fdaf3a03b36a9cb86a1d6cac55c55d3f7bfc6f9a",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41837461860"
+    },
+    {
+      "id": 41837454601,
+      "name": "AI billing regression guards",
+      "sha": "fdaf3a03b36a9cb86a1d6cac55c55d3f7bfc6f9a",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41837454601"
+    },
+    {
+      "id": 41835311833,
+      "name": "AI billing regression guards",
+      "sha": "62285f5b3907cda80b0f2692ebdf84bdc21bf2b2",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41835311833"
+    },
+    {
+      "id": 41835311580,
+      "name": "Phase 1 validation",
+      "sha": "62285f5b3907cda80b0f2692ebdf84bdc21bf2b2",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/41835311580"
+    },
+    {
+      "id": 39997452584,
+      "name": "Phase 1 validation",
+      "sha": "e866828aa4d4e29e584917fdb7b42c9451cc3e82",
+      "conclusion": "failure",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/39997452584"
+    },
+    {
+      "id": 40492379336,
+      "name": "Phase 1 validation",
+      "sha": "14946203c442caaf599455c49d00d10a8835ab2e",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/40492379336"
+    },
+    {
+      "id": 40519139383,
+      "name": "LinkedIn intake evidence validation",
+      "sha": "83704ac37c453731a27cb35f1e6c0dc4ad361827",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/40519139383"
+    },
+    {
+      "id": 40519130299,
+      "name": "LinkedIn intake evidence validation",
+      "sha": "83704ac37c453731a27cb35f1e6c0dc4ad361827",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/40519130299"
+    },
+    {
+      "id": 40620604306,
+      "name": "Phase 1 validation",
+      "sha": "4ad6a7cc5a7e714e90c06c826cd24324fea9d9f5",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/40620604306"
+    },
+    {
+      "id": 40654129503,
+      "name": "Phase 1 validation",
+      "sha": "d2eb4fa89cf048e97404cc4092d74a259f60464e",
+      "conclusion": "success",
+      "url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/40654129503"
+    }
+  ],
+  "testGates": [
+    {
+      "enabled_billing_rows": 0,
+      "enabled_refund_rows": 0
+    }
+  ],
+  "testCreditGuard": [
+    {
+      "proname": "reserve_ai_credits",
+      "md5": "b9c0ffb6432e9f9da7d8010845df0e77",
+      "execution_binding": true,
+      "payment_guard": true
+    }
+  ],
+  "publicRpcPermissions": [
+    {
+      "name": "finalize_ai_credit_charge",
+      "anon": false,
+      "authenticated": true
+    },
+    {
+      "name": "get_public_calendly_booking_links",
+      "anon": true,
+      "authenticated": true
+    },
+    {
+      "name": "get_public_coach_directory",
+      "anon": false,
+      "authenticated": true
+    },
+    {
+      "name": "get_public_service_directory",
+      "anon": false,
+      "authenticated": true
+    },
+    {
+      "name": "reserve_ai_credits",
+      "anon": false,
+      "authenticated": true
+    },
+    {
+      "name": "create_marketplace_booking_request",
+      "anon": false,
+      "authenticated": true
+    },
+    {
+      "name": "find_public_coach_matches",
+      "anon": false,
+      "authenticated": true
+    },
+    {
+      "name": "get_my_role",
+      "anon": false,
+      "authenticated": true
+    },
+    {
+      "name": "get_public_coach_matching_candidates",
+      "anon": false,
+      "authenticated": true
+    }
+  ],
+  "aclReview": [
+    {
+      "relname": "ai_governance_dashboard_summary",
+      "reloptions": null,
+      "anon_select": false,
+      "auth_select": false
+    },
+    {
+      "relname": "ai_test_control_center_v57",
+      "reloptions": null,
+      "anon_select": false,
+      "auth_select": false
+    },
+    {
+      "relname": "ai_usage_by_agent",
+      "reloptions": null,
+      "anon_select": false,
+      "auth_select": false
+    },
+    {
+      "relname": "ai_usage_daily_summary",
+      "reloptions": null,
+      "anon_select": false,
+      "auth_select": false
+    },
+    {
+      "relname": "career_profile_comparisons",
+      "reloptions": null,
+      "anon_select": false,
+      "auth_select": true
+    },
+    {
+      "relname": "career_profile_quality_runs",
+      "reloptions": null,
+      "anon_select": false,
+      "auth_select": true
+    },
+    {
+      "relname": "career_profile_versions",
+      "reloptions": null,
+      "anon_select": false,
+      "auth_select": true
+    },
+    {
+      "relname": "document_processing_jobs",
+      "reloptions": null,
+      "anon_select": false,
+      "auth_select": true
+    }
+  ],
+  "storagePolicies": [
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "Users can delete own avatar",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "((bucket_id = 'avatars'::text) AND ((storage.foldername(name))[1] = (( SELECT auth.uid() AS uid))::text))",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "Users can update own avatar",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "((bucket_id = 'avatars'::text) AND ((storage.foldername(name))[1] = (( SELECT auth.uid() AS uid))::text))",
+      "with_check": "((bucket_id = 'avatars'::text) AND ((storage.foldername(name))[1] = (( SELECT auth.uid() AS uid))::text))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "Users can upload own avatar",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((bucket_id = 'avatars'::text) AND ((storage.foldername(name))[1] = (( SELECT auth.uid() AS uid))::text))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "approved coaches delete career insight images",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "((bucket_id = 'career-insights'::text) AND ((storage.foldername(name))[1] = 'career-insights'::text) AND ((storage.foldername(name))[2] = ( SELECT (auth.uid())::text AS uid)))",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "approved coaches update career insight images",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "((bucket_id = 'career-insights'::text) AND ((storage.foldername(name))[1] = 'career-insights'::text) AND ((storage.foldername(name))[2] = ( SELECT (auth.uid())::text AS uid)))",
+      "with_check": "((bucket_id = 'career-insights'::text) AND ((storage.foldername(name))[1] = 'career-insights'::text) AND ((storage.foldername(name))[2] = ( SELECT (auth.uid())::text AS uid)))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "approved coaches upload career insight images",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((bucket_id = 'career-insights'::text) AND ((storage.foldername(name))[1] = 'career-insights'::text) AND ((storage.foldername(name))[2] = ( SELECT (auth.uid())::text AS uid)) AND (EXISTS ( SELECT 1\n   FROM (profiles p\n     JOIN coaches c ON ((c.profile_id = p.id)))\n  WHERE ((p.id = ( SELECT auth.uid() AS uid)) AND ((p.role)::text = 'coach'::text) AND (p.status = 'active'::text) AND ((c.application_status)::text = 'approved'::text) AND (c.approved_at IS NOT NULL)))))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "client_documents_delete",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "((bucket_id = 'client-documents'::text) AND (split_part(name, '/'::text, 1) = (( SELECT auth.uid() AS uid))::text))",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "client_documents_insert",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((bucket_id = 'client-documents'::text) AND (split_part(name, '/'::text, 1) = (( SELECT auth.uid() AS uid))::text))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "client_documents_select",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((bucket_id = 'client-documents'::text) AND (split_part(name, '/'::text, 1) = (( SELECT auth.uid() AS uid))::text))",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "client_documents_update",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "((bucket_id = 'client-documents'::text) AND (split_part(name, '/'::text, 1) = (( SELECT auth.uid() AS uid))::text))",
+      "with_check": "((bucket_id = 'client-documents'::text) AND (split_part(name, '/'::text, 1) = (( SELECT auth.uid() AS uid))::text))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "coaches delete own credential files",
+      "roles": "{authenticated}",
+      "cmd": "DELETE",
+      "qual": "((bucket_id = 'coach-credentials'::text) AND ((storage.foldername(name))[1] = ( SELECT (auth.uid())::text AS uid)))",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "coaches read own credential files",
+      "roles": "{authenticated}",
+      "cmd": "SELECT",
+      "qual": "((bucket_id = 'coach-credentials'::text) AND ((storage.foldername(name))[1] = ( SELECT (auth.uid())::text AS uid)))",
+      "with_check": null
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "coaches update own credential files",
+      "roles": "{authenticated}",
+      "cmd": "UPDATE",
+      "qual": "((bucket_id = 'coach-credentials'::text) AND ((storage.foldername(name))[1] = ( SELECT (auth.uid())::text AS uid)))",
+      "with_check": "((bucket_id = 'coach-credentials'::text) AND ((storage.foldername(name))[1] = ( SELECT (auth.uid())::text AS uid)))"
+    },
+    {
+      "schemaname": "storage",
+      "tablename": "objects",
+      "policyname": "coaches upload own credential files",
+      "roles": "{authenticated}",
+      "cmd": "INSERT",
+      "qual": null,
+      "with_check": "((bucket_id = 'coach-credentials'::text) AND ((storage.foldername(name))[1] = ( SELECT (auth.uid())::text AS uid)))"
+    }
+  ]
+}
