@@ -43,6 +43,9 @@ jobs:
       - name: Run isolated AI provider pilot tests (no credentials or network calls)
         run: npm run test:ai-pilot
 
+      - name: Test Help Center search
+        run: npm run test:help-search
+
       - name: Run source-secret audit
         run: npm run audit:source
 
