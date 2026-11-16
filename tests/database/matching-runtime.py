@@ -14,12 +14,12 @@ def call(body,origin=None,method='POST'):
  try:
   with urllib.request.urlopen(r,timeout=120) as x:return x.status,x.read()
  except urllib.error.HTTPError as e:return e.code,e.read()
-for attempt in range(20):
+for attempt in range(60):
  try:status,body=call({},method='OPTIONS')
  except urllib.error.URLError:status=0
- if status==200:break
+ if status==204:break
  time.sleep(1)
-assert status==200,'Local Edge function not ready'
+assert status==204,'Local Edge function not ready: HTTP '+str(status)
 def check(name,ok):
  results.append({'case':name,'status':'PASS' if ok else 'FAIL'})
  if not ok:raise RuntimeError(name)

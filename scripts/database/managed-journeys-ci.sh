@@ -37,7 +37,8 @@ ALLOWED_ORIGINS=http://localhost:3000
 ENV
 supabase functions serve careerdev-coach-matching --workdir "$stack" --env-file "$stack/local-functions.env" >"$stack/edge.log" 2>&1 &
 edge_pid=$!
-CAREERDEV_MANAGED_CI=synthetic-local-only python tests/database/matching-runtime.py || { tail -n 35 "$stack/edge.log"; exit 1; }
+matching_status=0
+CAREERDEV_MANAGED_CI=synthetic-local-only python tests/database/matching-runtime.py || { tail -n 35 "$stack/edge.log"; matching_status=1; }
 
 export NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
 export NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$ANON_KEY"
@@ -61,3 +62,5 @@ npm install --prefix "$browser_tools" --ignore-scripts --no-audit --no-fund play
 node "$browser_tools/node_modules/playwright/cli.js" install --with-deps chromium >>"$stack/browser-install.log" 2>&1
 cp tests/database/browser-acceptance.mjs "$browser_tools/browser-acceptance.mjs"
 CAREERDEV_BROWSER_FIXTURE=synthetic-local-only node "$browser_tools/browser-acceptance.mjs" || { tail -n 30 "$stack/app.log"; exit 1; }
+
+exit "$matching_status"
