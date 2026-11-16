@@ -1,5 +1,30 @@
 # Phase 1 evidence — 16 November 2026
 
+## Browser, native matching and object recovery — verified continuation
+
+**Phase 1 remains PARTIAL; production release remains HOLD.** The [integrated rehearsal](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43968692269) passes with the recovered schema, pinned #49 frontend `2358aae` and #48 matching source `8a77624`.
+
+| Boundary | Verified result |
+| --- | --- |
+| Rebuild, archive integrity and synthetic DB restoration | CI pass; 7 archive/renderer tests, 17 role cases and 23 specialized cache/publication cases, including restored checks |
+| Real Auth, PostgREST and Storage | 41/41 checks; six synthetic password logins, ownership/assignment/admin restrictions and private Storage |
+| Native matching runtime | 7/7 checks using actual local gte-small execution; finite scores, approved-only results, private-field exclusion, input and origin denial |
+| Chromium UI → API → database → UI | 12/12 checks: client/coach/admin login, profile save and reload, directories, native matching, client admin denial and admin logout |
+
+The expanded tests found and fixed two additional development defects. An invalidated embedding must be excluded from SQL rankings so the native fallback runs instead of returning null scores. Client and coach profile forms must remain disabled until account loading completes; otherwise the initial response can overwrite an early edit. The latter fix is in #49; the SQL candidate and isolated acceptance driver are in #36. Nothing was applied to production.
+
+The object recovery drill backed up real synthetic bytes, deleted the object, restored it as its original owner, compared hashes and ownership, confirmed unrelated-client denial and checked persistence after a Storage service restart. This proves one representative API backup/reimport drill, **not** all-bucket volume recovery, production PITR or disaster recovery.
+
+Evidence: [Auth/Storage](managed-storage-recovery-result.json), [native runtime](matching-runtime-result.json), [browser](browser-acceptance-result.json). Generated passwords/JWTs were not committed or uploaded. The browser allowed only the two local service ports and made no attempt to access a production Supabase/Vercel endpoint.
+
+The runtime fixture explicitly uses an emergency local rate limiter; production distributed/shared quotas are not certified by this run. The browser suite is bounded to the listed journeys: complete booking, provider cancellation/rescheduling, subscriptions, refunds, signup/email verification and all staff/governance operations are not claimed.
+
+Next actions: obtain the designated nonproduction Calendly host/application and verify plan, callback and scopes; establish an isolated publicly reachable acceptance callback without unapproved spending; run scheduling/payment-linkage acceptance; obtain exact Paystack TEST financial scope before any operation; verify production quota/configuration fidelity and complete recovery/release gates. The owner question about Calendly designation/settings remains pending. Cloud free capacity remains exhausted; no paid resource, provider appointment, payment, populated AI-test write, production mutation or release occurred.
+
+The workspace disk was recovered by removing only the verified synthetic local container and the exact unreferenced failed task-created Docker copy. The canonical managed environment is ephemeral CI and is recreated on every run. Its six accounts are destroyed at cleanup; it is not a persistent public review backend.
+
+
+
 ## Continued acceptance — current status
 
 **PARTIAL / HOLD.** The coach-edit blocker described in the original report below is now fixed in a local-only reviewed candidate. All **17/17** SQL acceptance checks and **22/22** semantic-cache/publication checks pass, including on a restored synthetic database. Candidate rollback was also exercised: it restores the prior single permission failure; reapplication restores all passing cases. The recovered historical snapshot and original invoker invalidator are unchanged.

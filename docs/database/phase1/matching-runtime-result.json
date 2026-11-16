@@ -1,0 +1,46 @@
+{
+  "run_url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43968692269",
+  "commit": "8e786da39254a60d16a3dd057df9cc7c0959c349",
+  "frontend_commit": "2358aaef3c5466e82e8be54adae314e916adb252",
+  "matching_commit": "8a776246f2a7eeb9b9db5b86b0c21e5dc4623c3a",
+  "result": {
+    "environment": "local Supabase Edge Runtime and native gte-small model; reviewed #48 source with recovered schema candidates",
+    "passed": 7,
+    "failed": 0,
+    "results": [
+      {
+        "case": "Reviewed Edge function runs native gte-small",
+        "status": "PASS"
+      },
+      {
+        "case": "Approved eligible coach only",
+        "status": "PASS"
+      },
+      {
+        "case": "Invalidated cache uses native semantic fallback",
+        "status": "PASS"
+      },
+      {
+        "case": "Native embedding yields finite numeric scores",
+        "status": "PASS"
+      },
+      {
+        "case": "Public response excludes private evidence",
+        "status": "PASS"
+      },
+      {
+        "case": "Invalid matching input rejected",
+        "status": "PASS"
+      },
+      {
+        "case": "Untrusted browser origin rejected",
+        "status": "PASS"
+      }
+    ],
+    "limits": [
+      "Local emergency rate limiter explicitly configured for fixture; production distributed quota not exercised",
+      "No paid model/provider API invoked",
+      "Not frontend matching UI acceptance"
+    ]
+  }
+}

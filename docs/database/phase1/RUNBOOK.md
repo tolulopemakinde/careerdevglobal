@@ -1,5 +1,16 @@
 # Local reconstruction and recovery runbook
 
+## Full managed acceptance in CI
+
+The workflow checks out the pinned #49 frontend and #48 matching implementation, then runs `bash scripts/database/managed-journeys-ci.sh` on a standard public-repository GitHub runner. That driver refuses an undesignated environment, starts a fresh named local Supabase stack, verifies empty application/Auth tables, restores with its local cluster administrator and creates only synthetic accounts. It never links a hosted project.
+
+The driver verifies Storage backup/reimport and restart, serves the actual matching function locally, builds the pinned Next.js frontend with local Supabase settings, and runs pinned Chromium/Playwright role journeys. Credentials stay in a mode-0600 temporary file and are removed by the cleanup trap; they must never be uploaded as artifacts. Browser traffic is restricted to local ports 3000/54321. The SQL and role checks remain separate from provider acceptance.
+
+A recreated run changes random passwords and session tokens. No persistent browser login URL is supplied. Review the sanitized result JSON and run logs, or rerun the PR's workflow through GitHub. The owner-hosted workspace remains too small for this full stack; the lower-footprint SQL fixture can be recreated separately when enough space is available.
+
+A single restored Storage object is representative evidence, not a complete recovery procedure for all production buckets. Provider credentials and payment gates are never introduced by this runbook.
+
+
 Run from the #36 continuation repository root, with Python 3 and Docker. Never link this fixture to a hosted project. The scripts accept no production connection URL. The pinned image must already exist (CI explicitly pulls it). The database uses tmpfs: stopping/removing its container destroys the fixture.
 
 ```sh

@@ -1,0 +1,65 @@
+{
+  "run_url": "https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43968692269",
+  "commit": "8e786da39254a60d16a3dd057df9cc7c0959c349",
+  "frontend_commit": "2358aaef3c5466e82e8be54adae314e916adb252",
+  "matching_commit": "8a776246f2a7eeb9b9db5b86b0c21e5dc4623c3a",
+  "result": {
+    "environment": "Chromium against pinned #49 frontend and recovered local Supabase schema; synthetic logins only",
+    "passed": 12,
+    "failed": 0,
+    "results": [
+      {
+        "case": "Client login renders authenticated dashboard",
+        "status": "PASS"
+      },
+      {
+        "case": "Client UI save persists owned profile",
+        "status": "PASS"
+      },
+      {
+        "case": "Client profile persists after reload",
+        "status": "PASS"
+      },
+      {
+        "case": "Recovered public coach directory renders eligible coach",
+        "status": "PASS"
+      },
+      {
+        "case": "Recovered service directory renders eligible offering",
+        "status": "PASS"
+      },
+      {
+        "case": "Browser matching executes native Edge model and renders eligible result",
+        "status": "PASS"
+      },
+      {
+        "case": "Client denied administrator workspace",
+        "status": "PASS"
+      },
+      {
+        "case": "Coach login renders owned dashboard",
+        "status": "PASS"
+      },
+      {
+        "case": "Coach UI save persists and invalidates embedding",
+        "status": "PASS"
+      },
+      {
+        "case": "Admin login loads authorized administration data",
+        "status": "PASS"
+      },
+      {
+        "case": "Admin sign out returns to login",
+        "status": "PASS"
+      },
+      {
+        "case": "Browser never attempts production backend/deployment access",
+        "status": "PASS"
+      }
+    ],
+    "limits": [
+      "Bounded role login/profile/admin journeys only",
+      "No scheduled appointment or financial provider transaction"
+    ]
+  }
+}
