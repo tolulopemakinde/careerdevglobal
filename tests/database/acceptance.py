@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse,subprocess,json
 from pathlib import Path
-p=argparse.ArgumentParser();p.add_argument('--stage',choices=['baseline','candidate','restored'],required=True);p.add_argument('--database',choices=['careerdev_acceptance','careerdev_restore'],default='careerdev_acceptance');a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('--stage',choices=['baseline','candidate','restored','semantic-restored'],required=True);p.add_argument('--database',choices=['careerdev_acceptance','careerdev_restore','careerdev_semantic_restore'],default='careerdev_acceptance');a=p.parse_args()
 container='careerdev-phase1-db'
 label=subprocess.check_output(['docker','inspect','--format','{{index .Config.Labels "careerdev.acceptance"}}',container],text=True).strip()
 assert label=='phase1-disposable'

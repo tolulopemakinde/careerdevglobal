@@ -1,0 +1,85 @@
+{
+  "application_schema_pass": true,
+  "sections": {
+    "enums": {
+      "source_count": 7,
+      "restored_count": 7,
+      "missing": 0,
+      "extra": 0
+    },
+    "relations": {
+      "source_count": 293,
+      "restored_count": 293,
+      "missing": 0,
+      "extra": 0
+    },
+    "columns": {
+      "source_count": 3546,
+      "restored_count": 3546,
+      "missing": 0,
+      "extra": 0
+    },
+    "constraints": {
+      "source_count": 1187,
+      "restored_count": 1187,
+      "missing": 0,
+      "extra": 0
+    },
+    "indexes": {
+      "source_count": 718,
+      "restored_count": 718,
+      "missing": 0,
+      "extra": 0
+    },
+    "functions": {
+      "source_count": 233,
+      "restored_count": 233,
+      "missing": 0,
+      "extra": 0
+    },
+    "policies": {
+      "source_count": 379,
+      "restored_count": 379,
+      "missing": 0,
+      "extra": 0
+    },
+    "triggers": {
+      "source_count": 45,
+      "restored_count": 45,
+      "missing": 0,
+      "extra": 0
+    },
+    "grants": {
+      "source_count": 7670,
+      "restored_count": 7670,
+      "missing": 0,
+      "extra": 0
+    },
+    "function_grants": {
+      "source_count": 756,
+      "restored_count": 756,
+      "missing": 0,
+      "extra": 0
+    },
+    "default_grants": {
+      "source_count": 96,
+      "restored_count": 96,
+      "missing": 0,
+      "extra": 0
+    }
+  },
+  "normalization": [
+    "extension vector type qualification",
+    "dropped-column physical ordinal gaps",
+    "function source MD5 excluded because bootstrap identity is redacted; function definitions compared",
+    "relation ACL text ordering ignored; expanded effective grants compared"
+  ],
+  "source_version": "17.12 (Debian 17.12-1.pgdg12+1)",
+  "local_version": "17.12 (Debian 17.12-1.pgdg12+1)",
+  "managed_service_parity": false,
+  "limitations": [
+    "Managed Auth/Storage are explicit minimal adapters, not service acceptance",
+    "Four managed/observability extensions not installed; local pgcrypto/uuid/vector/btree_gist versions may differ",
+    "Original bootstrap identity intentionally redacted; original hash retained in provenance"
+  ]
+}

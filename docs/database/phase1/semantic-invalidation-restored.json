@@ -1,0 +1,141 @@
+{
+  "environment": "network-disabled local PostgreSQL17, synthetic records and managed adapters only",
+  "database": "careerdev_semantic_restore",
+  "candidate": "coach-semantic-invalidation.sql",
+  "results": [
+    {
+      "case": "owner edits invalidate vector and recompute source without changing model",
+      "status": "PASS",
+      "expected": "t",
+      "actual": "t"
+    },
+    {
+      "case": "marketplace edit invalidates vector",
+      "status": "PASS",
+      "expected": "t",
+      "actual": "t"
+    },
+    {
+      "case": "only own semantic identifier visible",
+      "status": "PASS",
+      "expected": "1",
+      "actual": "1"
+    },
+    {
+      "case": "semantic source cannot be read",
+      "status": "PASS",
+      "expected": "SQLSTATE 42501",
+      "actual": "ERROR:  42501"
+    },
+    {
+      "case": "vectors cannot be read",
+      "status": "PASS",
+      "expected": "SQLSTATE 42501",
+      "actual": "ERROR:  42501"
+    },
+    {
+      "case": "vectors cannot be planted",
+      "status": "PASS",
+      "expected": "SQLSTATE 42501",
+      "actual": "ERROR:  42501"
+    },
+    {
+      "case": "forged matching source rejected",
+      "status": "PASS",
+      "expected": "SQLSTATE 42501",
+      "actual": "ERROR:  42501"
+    },
+    {
+      "case": "model changes rejected",
+      "status": "PASS",
+      "expected": "SQLSTATE 42501",
+      "actual": "ERROR:  42501"
+    },
+    {
+      "case": "identifier reassignment rejected",
+      "status": "PASS",
+      "expected": "SQLSTATE 42501",
+      "actual": "ERROR:  42501"
+    },
+    {
+      "case": "cannot invalidate another coach",
+      "status": "PASS",
+      "expected": "0",
+      "actual": "0"
+    },
+    {
+      "case": "pending coach can edit biography",
+      "status": "PASS",
+      "expected": "t",
+      "actual": "t"
+    },
+    {
+      "case": "pending coach cannot change application_status",
+      "status": "PASS",
+      "expected": "SQLSTATE 42501",
+      "actual": "ERROR:  42501"
+    },
+    {
+      "case": "pending coach cannot change verified_at",
+      "status": "PASS",
+      "expected": "SQLSTATE 42501",
+      "actual": "ERROR:  42501"
+    },
+    {
+      "case": "pending coach cannot change approved_at",
+      "status": "PASS",
+      "expected": "SQLSTATE 42501",
+      "actual": "ERROR:  42501"
+    },
+    {
+      "case": "pending coach cannot change verification_status",
+      "status": "PASS",
+      "expected": "SQLSTATE 42501",
+      "actual": "ERROR:  42501"
+    },
+    {
+      "case": "pending coach cannot change marketplace_status",
+      "status": "PASS",
+      "expected": "SQLSTATE 42501",
+      "actual": "ERROR:  42501"
+    },
+    {
+      "case": "pending coach cannot change profile_completion_pct",
+      "status": "PASS",
+      "expected": "SQLSTATE 42501",
+      "actual": "ERROR:  42501"
+    },
+    {
+      "case": "inactive coach cannot edit",
+      "status": "PASS",
+      "expected": "SQLSTATE 42501",
+      "actual": "ERROR:  42501"
+    },
+    {
+      "case": "client cannot read semantic identifiers",
+      "status": "PASS",
+      "expected": "0",
+      "actual": "0"
+    },
+    {
+      "case": "authenticated receives no table-wide cache grants",
+      "status": "PASS",
+      "expected": "f",
+      "actual": "f"
+    },
+    {
+      "case": "invalidation remains invoker",
+      "status": "PASS",
+      "expected": "t",
+      "actual": "t"
+    },
+    {
+      "case": "server cache refresh still allowed",
+      "status": "PASS",
+      "expected": "t",
+      "actual": "t"
+    }
+  ],
+  "passed": 22,
+  "failed": 0
+}

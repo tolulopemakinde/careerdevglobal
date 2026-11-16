@@ -27,6 +27,16 @@ jobs:
           bash scripts/database/rehearse-local.sh > /tmp/baseline.log
           python scripts/database/extract-snapshot.py /tmp/baseline.log /tmp/local-schema.json
           python scripts/database/compare-baseline.py supabase/baseline/current-state-2026-11-16.json /tmp/local-schema.json /tmp/reconstruction-result.json
+      - name: Verify local candidate authorization and synthetic recovery
+        run: |
+          docker exec -i careerdev-phase1-db psql -Xq -U postgres -d careerdev_acceptance -v ON_ERROR_STOP=1 < tests/database/synthetic-seed.sql
+          bash scripts/database/apply-local-candidates.sh
+          bash scripts/database/apply-semantic-candidate.sh
+          python tests/database/acceptance.py --stage candidate
+          python tests/database/semantic-invalidation.py
+          CAREERDEV_RESTORE_TARGET=careerdev_semantic_restore bash scripts/database/restore-local.sh
+          python tests/database/acceptance.py --stage semantic-restored --database careerdev_semantic_restore
+          python tests/database/semantic-invalidation.py --database careerdev_semantic_restore
       - name: Explicit acceptance limitation
         run: echo 'Application catalog regression only. Real Supabase Auth/Storage, provider acceptance and production release remain HOLD.'
       - name: Remove only this disposable fixture
@@ -36,3 +46,30 @@ jobs:
             test "$(docker inspect --format '{{index .Config.Labels "careerdev.acceptance"}}' careerdev-phase1-db)" = phase1-disposable
             docker rm -f careerdev-phase1-db
           fi
+  managed-supabase:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: supabase/setup-cli@689adcfb80d947100a1eab127289b97d1fb07b13
+        with:
+          version: 2.122.0
+      - name: Reconstruct in real local Supabase and exercise synthetic sessions and Storage
+        shell: bash
+        run: |
+          set -euo pipefail
+          stack="$(mktemp -d)"
+          trap 'supabase stop --workdir "$stack" --no-backup >/dev/null 2>&1 || true' EXIT
+          supabase init --workdir "$stack"
+          sed -i 's/^project_id = .*/project_id = "careerdev-baseline-ci"/' "$stack/supabase/config.toml"
+          supabase start --workdir "$stack" -x studio,imgproxy,realtime,mailpit,postgres-meta,edge-runtime,logflare,vector,supavisor >"$stack/start.log" 2>&1 || { tail -n 40 "$stack/start.log"; exit 1; }
+          supabase status --workdir "$stack" -o env >"$stack/local.env"
+          set -a
+          source "$stack/local.env"
+          set +a
+          [[ "$API_URL" == http://127.0.0.1:54321 ]]
+          [[ $(docker exec supabase_db_careerdev-baseline-ci psql -U postgres -d postgres -Atc "select count(*) from pg_tables where schemaname='public'") == 0 ]]
+          docker exec -i supabase_db_careerdev-baseline-ci psql -Xq -U postgres -d postgres -v ON_ERROR_STOP=1 < supabase/baseline/current-state-2026-11-16.sql
+          CAREERDEV_MANAGED_CI=synthetic-local-only python tests/database/managed-supabase.py

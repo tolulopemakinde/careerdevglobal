@@ -116,12 +116,12 @@
     },
     {
       "case": "safe coach profile update succeeds",
-      "status": "FAIL",
+      "status": "PASS",
       "expected": "Synthetic updated coach",
-      "actual": "denied",
-      "error": "ERROR:  permission denied for table coach_semantic_profiles\nCONTEXT:  SQL statement \"update public.coach_semantic_profiles\n     set embedding = null,\n         source_text = public.coach_semantic_source_text(target_coach_id),\n         updated_at = now()\n   where coach_id = target_coach_id\"\nPL/pgSQL function mark_coach_semantic_profile_stale() line 11 at SQL statement"
+      "actual": "Synthetic updated coach",
+      "error": null
     }
   ],
-  "passed": 16,
-  "failed": 1
+  "passed": 17,
+  "failed": 0
 }
