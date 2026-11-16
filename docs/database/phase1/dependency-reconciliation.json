@@ -1,0 +1,10 @@
+{
+  "source": "29 current deployed Edge function bundles; static literal calls only",
+  "edge_rpc_names_missing": [],
+  "edge_relation_names_missing": [],
+  "dynamic_calls": "Not resolved by literal extraction; authenticated runtime acceptance still required",
+  "storage_bucket_references": [
+    "client-documents"
+  ],
+  "storage_bucket_note": "Verified private bucket from read-only storage metadata; .storage.from is not a table reference"
+}

@@ -1,0 +1,38 @@
+name: Database baseline regression (not release approval)
+on:
+  pull_request:
+    paths:
+      - 'supabase/baseline/**'
+      - 'supabase/diagnostics/current_schema_snapshot.sql'
+      - 'scripts/database/**'
+      - 'tests/database/**'
+      - '.github/workflows/database-baseline.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  recovered-baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Verify archive hashes and deterministic fail-closed renderer
+        run: python -m unittest discover -s tests/database -v
+      - name: Reconstruct application schema in network-disabled local PostgreSQL
+        run: |
+          docker pull pgvector/pgvector@sha256:b513c48566e4777cd3370451400000c78eda6a08131d68f4c31d4a76f27bd8fd
+          bash scripts/database/start-local.sh
+          bash scripts/database/rehearse-local.sh > /tmp/baseline.log
+          python scripts/database/extract-snapshot.py /tmp/baseline.log /tmp/local-schema.json
+          python scripts/database/compare-baseline.py supabase/baseline/current-state-2026-11-16.json /tmp/local-schema.json /tmp/reconstruction-result.json
+      - name: Explicit acceptance limitation
+        run: echo 'Application catalog regression only. Real Supabase Auth/Storage, provider acceptance and production release remain HOLD.'
+      - name: Remove only this disposable fixture
+        if: always()
+        run: |
+          if docker inspect careerdev-phase1-db >/dev/null 2>&1; then
+            test "$(docker inspect --format '{{index .Config.Labels "careerdev.acceptance"}}' careerdev-phase1-db)" = phase1-disposable
+            docker rm -f careerdev-phase1-db
+          fi

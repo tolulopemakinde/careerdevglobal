@@ -1,0 +1,12 @@
+{
+  "checked_at": "2026-11-16",
+  "connected_account_access": true,
+  "timezone": "Africa/Lagos",
+  "organization_plan": "basic",
+  "organization_stage": "free",
+  "event_type_count": 2,
+  "has_more": false,
+  "compatible_candidate_count": 1,
+  "app_oauth_scopes_and_callback": "not exposed by connected account tools; must verify CareerDev application separately",
+  "sandbox_designation": "not established; no booking/cancellation/mutation performed"
+}

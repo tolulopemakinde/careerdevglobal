@@ -1,5 +1,7 @@
 # Supabase source-of-truth recovery and production-readiness plan
 
+> Phase 1 update, 16 November 2026: all 229 migration SQL bodies were subsequently recovered from the production ledger. Current application-schema reconstruction and synthetic backup/restore comparisons pass locally; actual managed Auth/Storage parity and one coach-edit case remain blocked. The [Phase 1 report](phase1/README.md) and [recovery runbook](phase1/RUNBOOK.md) supersede the historical gaps below. No production mutation was performed.
+
 **Status:** Recovery in progress — do not treat this branch as a production release.
 **Production project:** `ufmhrmzumqkjvaezrmxf` (`careerdev-global`)
 **Isolated test project:** `yyevuwvtrktrzwuzeddo` (`careerdevglobal-ai-test`)

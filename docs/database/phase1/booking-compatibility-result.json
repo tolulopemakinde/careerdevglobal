@@ -1,0 +1,18 @@
+{
+  "environment": "local restored database; no provider calls",
+  "source_pr": 48,
+  "source_candidate": "docs/scheduling/rehearsal/booking-request.sql",
+  "baseline": {
+    "success": false,
+    "actual": "",
+    "error": "ERROR:  column \"actor_profile_id\" of relation \"marketplace_booking_events\" does not exist\nLINE 1: ....marketplace_booking_events(booking_id,event_type,actor_prof...\n                                                             ^\nQUERY:  insert into public.marketplace_booking_events(booking_id,event_type,actor_profile_id,metadata) values(v_booking.id,'booking_requested',auth.uid(),jsonb_build_object('source','coach_profile'))\nCONTEXT:  PL/pgSQL function create_marketplace_booking_request(uuid,uuid,uuid,uuid,timestamp with time zone,timestamp with time zone,text,text) line 17 at SQL statement"
+  },
+  "candidate": {
+    "success": true,
+    "actual": "requested",
+    "error": ""
+  },
+  "fixture_rollback": "Each booking attempt is wrapped in a transaction and rolled back",
+  "source_commit": "0af7e6ac483a66c68b63e084f036c94ec1ecd29a",
+  "source_sha256": "d4bebbd01120aeea369e73df1a6d5ff6f9e69e30f72332bad9a9dca77ea2fb1d"
+}

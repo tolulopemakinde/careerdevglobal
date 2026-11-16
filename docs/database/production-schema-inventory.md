@@ -1,5 +1,7 @@
 # Production schema and runtime inventory
 
+> Phase 1 update, 16 November 2026: all 229 migration SQL bodies were subsequently recovered from the production ledger. Current application-schema reconstruction and synthetic backup/restore comparisons pass locally; actual managed Auth/Storage parity and one coach-edit case remain blocked. The [Phase 1 report](phase1/README.md) and [recovery runbook](phase1/RUNBOOK.md) supersede the historical gaps below. No production mutation was performed.
+
 **Captured:** 2026-10-27 (UTC; connector-observed snapshot)
 **Project ref:** `ufmhrmzumqkjvaezrmxf`
 **Project name:** `careerdev-global`

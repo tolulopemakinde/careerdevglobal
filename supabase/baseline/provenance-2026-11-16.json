@@ -1,0 +1,16 @@
+{
+  "project_ref": "ufmhrmzumqkjvaezrmxf",
+  "capture": "read-only Supabase MCP catalog and migration-ledger SELECT",
+  "raw_snapshot_sha256": "0bc1146590f0e19a9d71e061de3380ddb1260564a7d394e99d9ebbbeca635aac",
+  "historical_bodies_recovered": 229,
+  "historical_raw_private_path": "/tmp/careerdev-production-migrations-private.json",
+  "redactions": [
+    {
+      "object": "bootstrap_initial_platform_admin",
+      "reason": "Production-specific bootstrap email and display name redacted; original source hash retained",
+      "source_md5": "c46657f8ae1c3bd4b8fc0219df08621c"
+    }
+  ],
+  "managed_schemas": "Local helper adapters only; actual Supabase Auth/Storage services absent. No production rows or cron jobs exported.",
+  "not_a_pg_dump": true
+}

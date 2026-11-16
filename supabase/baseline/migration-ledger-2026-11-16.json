@@ -1,0 +1,1605 @@
+[
+  {
+    "version": "20260914233715",
+    "name": "create_careerdev_global_core_schema_v2",
+    "sha256": "392a0bd37367f026ed0ebb19936eace37a82ae815dd1edbf32b9b942cffe2b24",
+    "bytes": 32845,
+    "statement_count": 1
+  },
+  {
+    "version": "20260914233725",
+    "name": "seed_careerdev_global_catalog",
+    "sha256": "29760fc3b4e767c920b87bf08162c1efd60ec85e4dc62796eb3abc3fa46dda3c",
+    "bytes": 5313,
+    "statement_count": 1
+  },
+  {
+    "version": "20260914233737",
+    "name": "harden_careerdev_global_rls",
+    "sha256": "3ae0c43b35df4905ef1e9048a7bfa710814a9f70edd193a0f8cd76fc56e854b5",
+    "bytes": 2854,
+    "statement_count": 1
+  },
+  {
+    "version": "20260914233742",
+    "name": "lock_profile_role_trigger",
+    "sha256": "0a22916bd0b42a9cb2197633561b348e9028a83e837d619ae0f0fd533ab17865",
+    "bytes": 169,
+    "statement_count": 1
+  },
+  {
+    "version": "20260914233747",
+    "name": "revoke_public_trigger_function_execution",
+    "sha256": "93b8ae8e6bbdebe7d2dc02ee9a43f08dd1f405d90b9e0be99621d64196cf9886",
+    "bytes": 177,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915011531",
+    "name": "build_08_career_intelligence_foundation",
+    "sha256": "fa5be01d71a725972b1b5e39483d45296fed7b9d73110873d6d7a146a9075151",
+    "bytes": 6447,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915011550",
+    "name": "build_08_career_intelligence_rls",
+    "sha256": "ea9f4eb607147e6105a30600a70ed3d3f474f5e63f420dd3e21afd81733224f0",
+    "bytes": 2063,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915011557",
+    "name": "harden_career_intelligence_trigger_function",
+    "sha256": "90b238449f03c8067dbfa9f3b2ba5779dd5f83668c2ac03f90c042d7419ff07a",
+    "bytes": 206,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915095705",
+    "name": "build_06f_dynamic_intake_and_service_delivery",
+    "sha256": "98d5eb187594490bbaf10f7f660f2be21ada11e71356972a5b5a108ac9ec9d8d",
+    "bytes": 28595,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915095727",
+    "name": "harden_06f_dynamic_intake_indexes",
+    "sha256": "8049b0d0719059017eca26235606399ce9722afb5020d368d0af4e0814c9491e",
+    "bytes": 492,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915102634",
+    "name": "add_document_intelligence_pipeline",
+    "sha256": "31b789925e20f48f2118b4b55e95e794cadff600a1bd9d352a00d79522d73548",
+    "bytes": 2953,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915104238",
+    "name": "add_evidence_verification_workflow_v3",
+    "sha256": "9a9b0df079ee521b311ed5a5fe9c30c0e05076f8ba52ad6a12dc2ce65dad7a86",
+    "bytes": 2584,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915104426",
+    "name": "career_intelligence_profile_sync_v1",
+    "sha256": "4adf93df6de2fe31c02a0cfe8ea476ae8c680e68f21062ec6f64541cf743599a",
+    "bytes": 7637,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915104549",
+    "name": "add_structured_evidence_mapping_v1",
+    "sha256": "6b6c3d7a251bb8fd4453cc34193585dfe1093e0c89b38e446ec602036d5d450e",
+    "bytes": 3603,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915104737",
+    "name": "add_document_intelligence_test_harness_v1",
+    "sha256": "3e85d224cd27597dad067cba79fa08fe5a99f2c57ad6b58413387ce304a7130f",
+    "bytes": 2017,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915104746",
+    "name": "fix_ai_test_harness_grants_and_seed_v1",
+    "sha256": "ba043d95a1de509f170a91a2347a07e008802a0c01dcfae7284d275e573e242f",
+    "bytes": 1290,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915105416",
+    "name": "add_ai_quality_gates_v1",
+    "sha256": "080f8d9fbbf9aba66efe6c0aaaf28f821f450953252abd2dce97f655615c82c3",
+    "bytes": 3877,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915130019",
+    "name": "add_ai_evaluation_reporting_v1",
+    "sha256": "7e037936415f70a0a955a616d951af11a205372b47da54ad7f2e6c82b10bcbfe",
+    "bytes": 6067,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915130457",
+    "name": "add_ai_regression_retest_engine_v1",
+    "sha256": "fc73106090900cc7a2ad4db80c28fb0ef1f4c76c834f5f56dd278b31ae82ed61",
+    "bytes": 5189,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915130548",
+    "name": "add_ai_governance_version_control_v1",
+    "sha256": "e0dcce53b9a1cb963bf52945ea5d0976c389434da10062dad174648b40fbc898",
+    "bytes": 7778,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915130559",
+    "name": "tighten_ai_governance_event_permissions_v1",
+    "sha256": "d610031a2b7f1ae247eadbce9e57a7c6504ef67c46b95b99148849d626b93837",
+    "bytes": 173,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915130726",
+    "name": "add_ai_production_safety_gate_v1",
+    "sha256": "cec147e71fa6b74eca8c56011ccc24aa7fcbaa13d40cc9c71f94fc9a36485b12",
+    "bytes": 8137,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915131202",
+    "name": "add_ai_observability_monitoring_v1",
+    "sha256": "2c942b7304a94ea40bd60e30f731cfdaa52a27f455a33a819484fda894bf019a",
+    "bytes": 8486,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915131624",
+    "name": "add_ai_usage_cost_control_v1",
+    "sha256": "a2cbc5bfbd917f0893ac5c3f40aa9fbd322d36f5409f72353cdf0e5785558333",
+    "bytes": 8832,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915134144",
+    "name": "add_ai_service_orchestration_layer_v1",
+    "sha256": "c37bb7980cb1cf6fabae17ada851e3ee448b79960b17f914995706b9ed8281c5",
+    "bytes": 9409,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915134223",
+    "name": "add_ai_orchestration_cost_safety_checks_v1",
+    "sha256": "027b15ba914a0f21c1100dfca06e1b86bdb8c51c69e99e4a871da93e07670f4f",
+    "bytes": 5410,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915134257",
+    "name": "add_ai_orchestration_automation_hooks_v1",
+    "sha256": "c1c0d258a8fe77144ccc0644f50769ae31fe4ab423a1a0d425f048271146b628",
+    "bytes": 2907,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915135720",
+    "name": "add_client_self_service_request_rpc_v1",
+    "sha256": "586887cf45fdb5c4f9b66fdfb6f930fdcf30c0615c5c753adf13a9b8ddac844e",
+    "bytes": 2169,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915140820",
+    "name": "add_document_intelligence_processing_v1",
+    "sha256": "8e64d4155d1b6aebe7e18c13f55afc016153e93e310d696f0fff0f26749245d1",
+    "bytes": 3794,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915140825",
+    "name": "add_document_processing_status_v1",
+    "sha256": "2ead2600f4fc823c87fa5892bace6e5b5fd386189d05170c4e7d4170e84945c5",
+    "bytes": 323,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915140841",
+    "name": "add_document_intelligence_job_fields_v1",
+    "sha256": "3d6a41a0cdf2983e114020bfae352c78225dda32b0851d326e2cb5f4d7b99cac",
+    "bytes": 306,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915140854",
+    "name": "add_document_intelligence_job_visibility_v1",
+    "sha256": "b54560bc40cc7d375733cd0b9e8fb2bf359041e8f3da5b44af01d788adea16d2",
+    "bytes": 239,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915140906",
+    "name": "add_document_intelligence_security_v1",
+    "sha256": "0c4129bdccaeebf319ee6a107354341beefac97ac6725f11545c16431d4f4376",
+    "bytes": 122,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915140919",
+    "name": "add_document_processing_claims_v1",
+    "sha256": "668a519f1a928512217ee9bc41ec4638edd6165fb17e96455eb47c9ed6f939f8",
+    "bytes": 775,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915140930",
+    "name": "add_document_processing_admin_claim_v1",
+    "sha256": "ac54d2911242ffde8b2a7ae289ced758d12f3d975343cfe1a0e19fecc048f74d",
+    "bytes": 679,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915140936",
+    "name": "add_document_processing_admin_execute_v1",
+    "sha256": "aec633b0ee159919458bf94865f2bb5603942fef632c92b4395cdd559aad35f8",
+    "bytes": 91,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915140940",
+    "name": "add_document_processing_stage_trigger_v1",
+    "sha256": "04b2eb43432e17827c898bb057d3d15778a1494195d9fbc789e236c1d8fedb81",
+    "bytes": 559,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915140950",
+    "name": "harden_document_processing_claim_v1",
+    "sha256": "1774d953659d3d7a3bb72b257a3e13b75a7fb34a73e08639ba4e0c776b2207e8",
+    "bytes": 187,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915141214",
+    "name": "add_ai_document_fact_classification_v1",
+    "sha256": "c7b5576f3d87702638dd7dcff8f4a942de83108807e27be7dbe73332839aa94f",
+    "bytes": 3419,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915141357",
+    "name": "harden_create_client_service_request_v1",
+    "sha256": "e1cacaca40f0a371307460683437c38e889a97ece67ec227d20cdef88b28677c",
+    "bytes": 2268,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915141412",
+    "name": "add_document_fact_classifier_function_v1",
+    "sha256": "4a42d44e284cb1422ac0e1d035c9d392320a5530c5f4d9bf58d5d55108161771",
+    "bytes": 840,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915141417",
+    "name": "add_ai_document_fact_classifier_function_v1",
+    "sha256": "3a5a2c3ea28cce1ad3bff2b601c2ca0a1ddf3892fb416ca7fd5c2bc9e499d1b9",
+    "bytes": 510,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915141828",
+    "name": "add_profile_sync_approval_workflow_v1",
+    "sha256": "e9bb33438da78eda9d9a388854fd8240f27e9f2c70627d5a27ab1961fc6124a9",
+    "bytes": 4353,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915141838",
+    "name": "add_profile_sync_proposal_integrity_v1",
+    "sha256": "235c42c95af552b328a2f421aae452e71d00bb18aafdca15bb73551588da1685",
+    "bytes": 1583,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915142514",
+    "name": "add_controlled_profile_update_engine_v1",
+    "sha256": "12c46a345ee1fb8650c4e562c8ad7f8e7b9deb3b10cebd0e5a0628ed63df36ff",
+    "bytes": 10831,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915145047",
+    "name": "add_ai_evaluation_engine_v1",
+    "sha256": "23f4185cd8a0c0ade5fd086c1dc81a0c81db08f495435a51173f94ed17a782b9",
+    "bytes": 3841,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915145238",
+    "name": "add_ai_evaluation_test_suite_v1",
+    "sha256": "f9b371bf0645de1707c2a680362d7af620393e29a2e49cf6a111babd972bbfdb",
+    "bytes": 10174,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915145403",
+    "name": "add_ai_evaluation_runner_v1",
+    "sha256": "c41d5edb4dc8a18ccebfc06bfdb381fb8be58ef407bc8ff11a907cb8ad00345e",
+    "bytes": 3959,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915145747",
+    "name": "add_evidence_profile_mapping_v1",
+    "sha256": "e5008581827efa1e514e11442a6f0f4835240eb993c4a41db4f17c02c1a79f6c",
+    "bytes": 4887,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915145810",
+    "name": "add_profile_sync_approval_v2",
+    "sha256": "482200177b592ffc569adfad8c8fd0a995f6cca79ca9b5a3bfe6549d88eff786",
+    "bytes": 4682,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915150400",
+    "name": "add_typed_evidence_sync_engine_v1",
+    "sha256": "091d505bb5e390408d9ca36664e61dfb7739149e8a41cf996a035ca9a685b9e0",
+    "bytes": 10513,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915150554",
+    "name": "add_profile_versioning_engine_v1",
+    "sha256": "df24809843958bde462531ea70875c89e6b4878ac633bbf71005859b6251eae2",
+    "bytes": 7763,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915150652",
+    "name": "add_profile_compare_rollback_engine_v1",
+    "sha256": "d3b6d576d378297cd8b5544284a323705987c14a201df2ed141e1893ed812c2d",
+    "bytes": 10403,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915150827",
+    "name": "add_career_profile_quality_engine_v1",
+    "sha256": "004b87f05fd3c6938f57c7ebd50ddd70e1bd586b707e36a5b264b20f3a470a53",
+    "bytes": 8078,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915150924",
+    "name": "add_profile_enrichment_gap_engine_v1",
+    "sha256": "9496bb5427a7febe86f6c5d85909f5ddc43bc9db93731812e53160589eb4552d",
+    "bytes": 7235,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915151047",
+    "name": "add_dynamic_intake_orchestrator_v1_fix",
+    "sha256": "2f88eff243c9b9c6fe8631b916f1e77f18c9cd25e9ab6ab91de368a1ddca8c27",
+    "bytes": 12206,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915151206",
+    "name": "add_service_requirement_intelligence_matrix_v1",
+    "sha256": "12d3c18430d12c8cc57485124f897128fbef41904287251c3a4d9b9a56bbb230",
+    "bytes": 3510,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915151406",
+    "name": "seed_service_intelligence_blueprint_v1_final",
+    "sha256": "179e1b3f13f364d225a79308275bc226b2361193e0a2e312fbd90a55e9c8bff7",
+    "bytes": 2957,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915151618",
+    "name": "add_service_aware_intake_decision_engine_v1_fix",
+    "sha256": "679b1a2bf6bbcc33e14af9172d4aa0155e1ec3f5c5a305e1f4f91bfbc6dd779c",
+    "bytes": 5493,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915151717",
+    "name": "add_intelligent_question_selection_v1",
+    "sha256": "87d25aef5251d6fefa68f2d0c6343a0f4d39b0526f674258f1d3b430a0e75395",
+    "bytes": 6205,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915151824",
+    "name": "add_intake_answer_processing_v1",
+    "sha256": "0785b67b1c6610a1fa66159b25093ef8f90e739349508bb82adf10fe32cadca2",
+    "bytes": 4558,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915151957",
+    "name": "add_ai_intake_answer_intelligence_v1",
+    "sha256": "0e84519efe94020779dcfc7d8c8bf50bfd9909d2205ef8fec90c2e30dc6ef5da",
+    "bytes": 3326,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915152115",
+    "name": "add_intake_answer_evidence_mapping_v1",
+    "sha256": "142fcf1a6a48d1e47d1a7d7116b998ddc50f4450ca1fd1b5f7f17c7d7ec9af1d",
+    "bytes": 4414,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915153332",
+    "name": "add_intake_evidence_verification_bridge_v1",
+    "sha256": "5550be0ed895f176c21b82648385dfd6f27cbff3822d644443e2b9cc268c6aaa",
+    "bytes": 3915,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915153446",
+    "name": "add_intake_to_profile_sync_bridge_v1",
+    "sha256": "ee79f580da57ba963ca64c1da3654d35a121dc2b5263e3d2c73e7a49554f0a3c",
+    "bytes": 3156,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915153620",
+    "name": "add_intake_completion_service_readiness_engine_v1",
+    "sha256": "98cae22b8346be9fbef90c3cebf97c83317737d376f3eb207de0ba539d46b73c",
+    "bytes": 6466,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915153726",
+    "name": "add_ai_service_delivery_orchestrator_v1",
+    "sha256": "02768f0ca328611b2b73de237669f855ad8128b10b3f5f78d83a57a527ed26ae",
+    "bytes": 6771,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915154003",
+    "name": "add_service_specific_ai_workflow_engine_v1",
+    "sha256": "baf4f9aed2157b13df26d361a4229f653cab13b0cdeaf0a33c9cf6a31c7dd386",
+    "bytes": 11545,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915154110",
+    "name": "add_ai_workflow_execution_engine_v1",
+    "sha256": "024e1b59149c4fc07c95b31db279bd6de380fe6f4842dc2ccc65fd9d7b62cf2b",
+    "bytes": 8724,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915154210",
+    "name": "add_ai_workflow_quality_gate_evaluator_v1",
+    "sha256": "c938b2bc4e17a7e396c2f392bf857cb5b9c51ccc64ce56587074f5900bcf2e5a",
+    "bytes": 6498,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915154350",
+    "name": "add_ai_output_gate_enforcement_v1",
+    "sha256": "1c1efb58aa5de0a73444efa30f07b69d83ad6507c0b89e3d4cc39fd01fac9f9f",
+    "bytes": 6966,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915154404",
+    "name": "enforce_ai_quality_before_workflow_advance_v1",
+    "sha256": "13b86c80be61fd35a7c535ccbd81eb297c3b846d4b7dd7385103b2525139e90e",
+    "bytes": 3632,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915154502",
+    "name": "add_ai_human_review_revision_loop_v1",
+    "sha256": "7fb2b38b94cb758c4ca77ea80f86a44cc6538bda36d9df00dda970bb6920330f",
+    "bytes": 9014,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915154709",
+    "name": "add_ai_deliverable_versioning_audit_v1",
+    "sha256": "871adf6061a893c2b1f64cd85b6e887af29176f6e313d33609a5e6633aba418c",
+    "bytes": 8256,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915154758",
+    "name": "add_final_approval_client_delivery_gateway_v1",
+    "sha256": "75f1010e54aac62b5770a3219f70c59821fa68d739b9325fb5d33ea1ab921903",
+    "bytes": 8175,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915154854",
+    "name": "add_client_outcome_impact_engine_v1",
+    "sha256": "0e186f872e36889a241b33f45af57e1f79925e9903ac790f7fe725061df9c926",
+    "bytes": 9330,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915155922",
+    "name": "add_service_performance_impact_analytics_v1",
+    "sha256": "fad2d8c6bda1d1a8f05e4051501dd09acdb5443fb4e58907fc0fab1685544bc7",
+    "bytes": 9472,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915160010",
+    "name": "add_ceo_operations_intelligence_layer_v1",
+    "sha256": "617d7c4a909c5e1c10a10f061e51c8eb067f77cdceab2d3e0206f6c9926a4911",
+    "bytes": 8452,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915160109",
+    "name": "add_ai_continuous_improvement_loop_v1",
+    "sha256": "3b741a248ca4e8a78212c86c202ce3981e97b77479da6b9f2552a56daa37ad18",
+    "bytes": 9316,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915160227",
+    "name": "add_ai_governance_prompt_configuration_registry_v1",
+    "sha256": "3ac5d6e8995465d4efe613ca49cbf4c96bcd68716d98bfef2d188473f1ff0eb6",
+    "bytes": 12272,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915160324",
+    "name": "add_ai_agent_registry_orchestration_layer_v1",
+    "sha256": "e183f6617593765f77d47a2e5ea9b2e3f66ce86f7d153feaf333c61342921e5f",
+    "bytes": 9573,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915160441",
+    "name": "register_core_careerdev_ai_agents_v2",
+    "sha256": "2c58f3762a33a2b7cb856968c5ccf2c624c94e4c89761d7a55f3206be990c71e",
+    "bytes": 1876,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915160458",
+    "name": "configure_core_careerdev_ai_agents_v1",
+    "sha256": "0ef9a1371a8d47b7a3b496bfdc3c3b9e9f11f70778be3f5a17a37656d03d40a8",
+    "bytes": 9632,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915160554",
+    "name": "bind_core_ai_agents_to_governed_configuration_v1",
+    "sha256": "7415d0d2fa2cc6ff32b19a6a22d77239922e15715f7450de8a7115a0b4fda544",
+    "bytes": 5989,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915160602",
+    "name": "seed_core_ai_agent_governed_configs_v1",
+    "sha256": "4283d24091ca3921682a816104f81670934d1122cad0b935bcafe96d8cb95475",
+    "bytes": 2633,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915160608",
+    "name": "bind_core_ai_agents_to_governed_configs_v2",
+    "sha256": "8d5f3cb1efbc3b0638937f8dfa34db201a2b17b73420e7efbdd9ac0ecd687719",
+    "bytes": 1586,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915160753",
+    "name": "add_unified_ai_agent_execution_gateway_v1",
+    "sha256": "44ea129ce1bdbfdc388edc1cfc2fa0fd46ff388233149f3ee4a825833bbe28ca",
+    "bytes": 9443,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915161231",
+    "name": "add_ai_service_step_output_and_runtime_helpers",
+    "sha256": "b642594565ba5ff18f290f369be2225bdf09d44e2f60793d2a598023710c694f",
+    "bytes": 1942,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915161403",
+    "name": "add_ai_revision_runtime_v50",
+    "sha256": "21475df4b14c7f49ee294a0d8ebcd65ec901736b9664a3df5173ea69753af3ee",
+    "bytes": 12096,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915161419",
+    "name": "refine_ai_revision_review_routing_v50",
+    "sha256": "e94a1f4527ed39ed8799de0d1f845b3a63fc3e77e3089bff8c982a7ae3f48014",
+    "bytes": 5617,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915161526",
+    "name": "add_ai_output_versioning_provenance_v51",
+    "sha256": "c3b22e4ff750d841430a559413e8bbf42536e73e70b7dc0960a27b9260a0db26",
+    "bytes": 8637,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915161630",
+    "name": "add_ai_governance_observability_v52",
+    "sha256": "c496d198115aa560d7b44abb5c0241600b441b4bf51f0606978c7fb6d22ca90b",
+    "bytes": 9591,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915162102",
+    "name": "add_ai_runtime_observability_v55_fix",
+    "sha256": "ab1f8bf97aaf1ce052eda5300f73d2964b45a8ee635957aa7e3baf4ec0afcbbf",
+    "bytes": 6338,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915162327",
+    "name": "integrate_step_output_versioning_audit_v56",
+    "sha256": "45e82ff5a4725e48c11c88e995ad287a25e570420228fbc901dc15f7b44256b4",
+    "bytes": 2653,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915162502",
+    "name": "harden_ai_runtime_state_machine_v56",
+    "sha256": "3319b2e5fee5ae8d89b25c85f5c7df9fbbd425157c094bc1861215f464bc9a8a",
+    "bytes": 4641,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915162657",
+    "name": "build_ai_test_control_center_v57b",
+    "sha256": "41a31572b5c5484a30f6d91cf9631e702ac31d5a0b8832aba59aa52399f34207",
+    "bytes": 4615,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915162850",
+    "name": "connect_ai_quality_governance_loop_v58",
+    "sha256": "88014bdf095a966a7998ed87445ae4dd61f7e0e0962114a767b6c5d58fb2929f",
+    "bytes": 7533,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915162949",
+    "name": "harden_ai_usage_telemetry_v59",
+    "sha256": "7ce16312e2bba7d14aa7478756f9ed0e8973d5ab646ea59dd8598a54d6fec886",
+    "bytes": 3033,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915163301",
+    "name": "build_service_unit_economics_v60",
+    "sha256": "0c3389617389c243cf8f362c688fe6fdfdae00deb4c64ba6ef2706f685dc7222",
+    "bytes": 6416,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915163451",
+    "name": "build_ai_service_cost_margin_intelligence_v61",
+    "sha256": "ce923efbce6e4fe79eaa3be12fcacab2cdffd3b2075e34ea426e59c80ed4e0a8",
+    "bytes": 5390,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915163548",
+    "name": "build_ai_cost_control_budget_guardrails_v62",
+    "sha256": "4a27af49498a09dbf8a23b80afe1ebab77d09b9975fec432589e18824dc96426",
+    "bytes": 5692,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915163707",
+    "name": "build_ai_service_profitability_pricing_intelligence_v63_final",
+    "sha256": "a974a076cac82b35748507d51578b673d35b1ac29dd1dd9468820b4c405d1d11",
+    "bytes": 7665,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915163816",
+    "name": "build_ai_revenue_payment_intelligence_v64",
+    "sha256": "3dc952a7864214f950126d5cb685350e95bfec51de2c7aaa2d735ab337e30991",
+    "bytes": 2569,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915165319",
+    "name": "build_careerdev_financial_intelligence_dashboard_v65",
+    "sha256": "480a21e47f73ff1721b366713d6c94b127073cde3ed5637f23e3f8784657b31b",
+    "bytes": 5144,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915165731",
+    "name": "build_marketplace_foundation_v66_final2",
+    "sha256": "c16ef48aec25d808f124f331b8a47de85c92920cc9fa8ad8ebe33df306261220",
+    "bytes": 12539,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915170156",
+    "name": "build_coach_matching_intelligence_v67_fix",
+    "sha256": "4ca87abd78b0681b44f169f9d7f20f245915ffbc79cdbadbde6c7ef86d987ffa",
+    "bytes": 8699,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915170344",
+    "name": "build_marketplace_booking_scheduling_v68",
+    "sha256": "2e9b9cfa4b3560a77ef56b020db672af827575cef676b3214668b5d4cb9d57cd",
+    "bytes": 9434,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915170450",
+    "name": "build_marketplace_transaction_escrow_v69",
+    "sha256": "c11da295062bddcfa5fbcbc0d7ee119606d806cfaa9924d4144a6326bdd466c4",
+    "bytes": 14193,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915170643",
+    "name": "build_marketplace_coach_earnings_payout_engine_v70b",
+    "sha256": "f2900e6e3f60f7679606a50e984ec30febd5016d77942f11e9d9532cdc9185c4",
+    "bytes": 7313,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915170741",
+    "name": "fix_marketplace_payment_adapter_v71",
+    "sha256": "93f4d2ead7d9e8b6d094a55a29f5bcf0943de379656666769700a12e468b7ea3",
+    "bytes": 7010,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915171123",
+    "name": "build_marketplace_communication_offplatform_protection_v73",
+    "sha256": "49b9eef9228c797c51dd674819868734250311f0815a586af2feba1099b6f116",
+    "bytes": 9850,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915171348",
+    "name": "build_coach_dashboard_architecture_v74",
+    "sha256": "2f983209a592bc6eee5511afef7fc903d9a96872e884330a12d4cd4ac2a3bbd0",
+    "bytes": 5785,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915171504",
+    "name": "build_client_dashboard_coaching_journey_v75_fix",
+    "sha256": "6230b7d004bb7b3c086846cb3eff715a222d96aac560dd3a216200d449350aff",
+    "bytes": 7880,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915171802",
+    "name": "build_marketplace_notifications_engagement_v76",
+    "sha256": "78880799da185cddc504b83dabf99f43c67d15681d8fece322231e251c58d82e",
+    "bytes": 10021,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915172008",
+    "name": "build_marketplace_event_notification_automation_v77",
+    "sha256": "875e84733ffba477119cac3431851a7a7180a7c803616639036e7e0176cd2975",
+    "bytes": 10713,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915172201",
+    "name": "build_marketplace_scheduler_reminder_engine_v78",
+    "sha256": "81c796092c8bd1a28ac4a5389dbb99c7c6be8fb7adfba4e762df9f6ead6992d7",
+    "bytes": 8507,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915172403",
+    "name": "build_marketplace_scheduler_orchestration_v79",
+    "sha256": "2377c203d4c7f054fcaf5a5c59fa34bc9dbc3ecd71bff8f3806ca5ed05be3127",
+    "bytes": 5384,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915172836",
+    "name": "harden_marketplace_payment_security_v80",
+    "sha256": "9ba986b9616683de0587e9d4fc068e9c3a6e61a51b38d312fdab47ce7ae46bd5",
+    "bytes": 3934,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915173012",
+    "name": "harden_marketplace_transaction_state_machine_v81",
+    "sha256": "e6ad5990982fbe8f4b6240b063ec86677619285e96496de60d73b18259acd64c",
+    "bytes": 7066,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915173135",
+    "name": "build_marketplace_payment_webhook_idempotency_v82_fix",
+    "sha256": "680b846593ad7d5f1586a2eb4c03d08cbff0e157b9daee7cae892fdf60e6f339",
+    "bytes": 7127,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915173329",
+    "name": "build_marketplace_payment_state_sync_v83",
+    "sha256": "d3525ea7a61861ce3d7e4d96a92b011280ff1aff05d0f0515398a06c3c8bdd50",
+    "bytes": 7365,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915174029",
+    "name": "build_marketplace_payment_reconciliation_integrity_v84",
+    "sha256": "bdf5b505434c6baa0345d11940be658f1f2a26148d6c5a936769e264a0e7672d",
+    "bytes": 2709,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915174158",
+    "name": "build_marketplace_financial_ledger_integrity_v85",
+    "sha256": "06f7514d6e36139b1eae20276c5bf5c7b31823ca5b7a69736f07a7a17a36f106",
+    "bytes": 4788,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915174257",
+    "name": "build_marketplace_payout_release_controls_v86a",
+    "sha256": "cbc6ae641290cc15a01bbc5ed87535cb9ffe2360d56c831aff5e478bb4bc8b9a",
+    "bytes": 914,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915174305",
+    "name": "add_marketplace_payout_release_check_v86b",
+    "sha256": "fde0bae48c11081ed9a59215ddee103f42acbc477bafd470643095abec0d685f",
+    "bytes": 3417,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915174456",
+    "name": "build_marketplace_financial_audit_compliance_v87",
+    "sha256": "4570e57cec8e556d617e6955e5a0ddc4dc9d55e95e8824643486215c01b3f0c3",
+    "bytes": 5081,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915174552",
+    "name": "build_marketplace_financial_operations_command_center_v88_fix",
+    "sha256": "7f733e8c87bb487f9113156d9fe1b408c7d66b400791bad1babb1dffc96a2ec9",
+    "bytes": 2416,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915175123",
+    "name": "build_marketplace_financial_operations_alerting_v89_fix",
+    "sha256": "840a1896cee0bfe6da48fbd06005c33947fc086a794568b49c2407e52cf7553a",
+    "bytes": 6613,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915180351",
+    "name": "create_coach_marketplace_onboarding_v90",
+    "sha256": "39e334f14bb753f1b76641f7ff2cf69625a6a6b8f925c3006303dfd7ee574fc5",
+    "bytes": 2824,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915180405",
+    "name": "secure_coach_marketplace_onboarding_v90",
+    "sha256": "bbfbc47593f2dacba58c8d7fbf1398f8e491b3aaecc8669340ec1124cce3390f",
+    "bytes": 2490,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915180420",
+    "name": "add_coach_marketplace_eligibility_v90",
+    "sha256": "d5755c58cb003b61a421a8bd494fe68b8b2ac092ca41eb39419dc5fb1ce2ecdc",
+    "bytes": 3917,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915180453",
+    "name": "complete_coach_marketplace_activation_controls_v90",
+    "sha256": "edd61156d52a7a2b5970f2d6dc63fb373b819f963b8f48699a9e4acf0d185a7c",
+    "bytes": 6418,
+    "statement_count": 1
+  },
+  {
+    "version": "20260915180831",
+    "name": "build_marketplace_coach_discovery_v91",
+    "sha256": "0d77199e7065576c17c82ae112f7dae2678be386e2b02316f341197639b78237",
+    "bytes": 5695,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916030830",
+    "name": "build_coach_semantic_matching_v92",
+    "sha256": "5eb48bbffdf08b2b8481220d662f26c0ac556bfc9d177bdace8758f03e0fb037",
+    "bytes": 4143,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916031103",
+    "name": "coach_semantic_matching_v92_embedding_model",
+    "sha256": "dde318c6e9eed1040e8278fecaf45aebc5d7c87c2e37e9acaa5932fb323b6ecb",
+    "bytes": 4510,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916031112",
+    "name": "coach_public_semantic_search_v92",
+    "sha256": "07ad14ef53a3107df18187e72e8444116b2865fa455c05bdc0b561284b253778",
+    "bytes": 2185,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916032526",
+    "name": "coach_semantic_sync_trigger",
+    "sha256": "be305bdc2708d1efa1406a0c7b89bb46f9c3c35e5c39c602354b42677bf1a85f",
+    "bytes": 2737,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916032613",
+    "name": "coach_marketplace_registration_workflow",
+    "sha256": "c6be9f42a9c228768abd9e051133a509d041b2e13f1ad09ffc98218270268e05",
+    "bytes": 2891,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916032733",
+    "name": "coach_application_admin_workflow",
+    "sha256": "407113aa3d159842b14759af765213972513e368a00e2b5e7aff666ba4b4fc6c",
+    "bytes": 5388,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916032739",
+    "name": "coach_activation_gate",
+    "sha256": "c1507f08c510ff9558518015296c968dccd1a9392384ab89085c45311e1f7a3b",
+    "bytes": 2324,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916032945",
+    "name": "public_coach_profile_rpc_v2",
+    "sha256": "5b3a1134b8c90379e66e5c45e3794eb6bbefb8c2e96186f0bd01bac6b2b7ad7a",
+    "bytes": 1528,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916033037",
+    "name": "normalize_coach_admin_roles",
+    "sha256": "b4c2fd91c8904c66c2ede2d71579d256b9bcad3bb25c3a1d131846291cec9ff6",
+    "bytes": 7053,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916033057",
+    "name": "coach_admin_application_helpers",
+    "sha256": "fd092a53e2ea991574b9a07a57f15b39782c5636888d0a43adc705eef3d19f0d",
+    "bytes": 655,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916033254",
+    "name": "restore_admin_coach_application_helper",
+    "sha256": "643823b319ccc23f32db81aaad800c20f3bc26506c060c2d3b5700368f518a37",
+    "bytes": 744,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916033343",
+    "name": "add_coach_marketplace_admin_queue",
+    "sha256": "786121bff7bf108c06af59abcf061e0afb376280d0600653ffcf432e57e0b894",
+    "bytes": 1902,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916034356",
+    "name": "harden_marketplace_booking_integrity",
+    "sha256": "ea4847305e311c362be51f25db6444aaac302d972b7cf0371fd176338edb69e9",
+    "bytes": 4650,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916034529",
+    "name": "add_public_coach_booking_data",
+    "sha256": "abb061b3da2826b513ed3f861b1dddd92ad18f69c6c5d7175214bab9649ab5c7",
+    "bytes": 2081,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916034735",
+    "name": "coach_offerings_and_booking_notifications",
+    "sha256": "9475f228b77592f7b2e973b52ea36346cea6c39bafbdce16c917c487997d20eb",
+    "bytes": 5462,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916034935",
+    "name": "harden_marketplace_payment_intent_readiness",
+    "sha256": "a3415f6dcb75fe0bb02b796c1db2e34868c82fe3d3d8b60587f774772b3d6c25",
+    "bytes": 3695,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916035538",
+    "name": "secure_paystack_webhook_state_sync",
+    "sha256": "e6b84477eae712242320b78a9489686f1164d803914d90d38c59424e38f4ddd4",
+    "bytes": 5216,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916035544",
+    "name": "fix_paystack_webhook_state_sync",
+    "sha256": "d3fa0d68f4c3d5a3e92f7514e9faa4965d72ecbdbf306eea5a51eca4b5f8820b",
+    "bytes": 5151,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916044549",
+    "name": "add_platform_admin_dashboard_controls",
+    "sha256": "686bf169e595c629643ec59d2a5a87e121261cdfa5ad3356865072218f360f47",
+    "bytes": 3639,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916140309",
+    "name": "bootstrap_initial_platform_admin",
+    "sha256": "2c39391272713d61fa2189b5ea82380995d0e0fabf9cea6856c2cf6cfa3834f9",
+    "bytes": 1290,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916140626",
+    "name": "expand_platform_admin_operations",
+    "sha256": "18a1cd9936cb5f19c578f7ff751df21daf70a00c86265cce13e346ca77855ba1",
+    "bytes": 10160,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916140642",
+    "name": "complete_platform_admin_controls",
+    "sha256": "bc8a456ede2b71be37a2e313e69a39eb6f2cd353f2b6e3ee8456caf7ce8a29df",
+    "bytes": 2492,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916152130",
+    "name": "careerdev_email_event_automation",
+    "sha256": "e8e0bbfeb7b65a81524811674ee313c07b3504735ea7cfd062113a3bd0cd6264",
+    "bytes": 4174,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916152503",
+    "name": "enable_email_dispatcher_cron_extensions",
+    "sha256": "445429dfd878f3726f85c5c51c59e26ea0b03bb40f8de35f26d609b291b4da63",
+    "bytes": 124,
+    "statement_count": 1
+  },
+  {
+    "version": "20260916152529",
+    "name": "schedule_careerdev_email_dispatcher",
+    "sha256": "4ba9001c531aa2cd5f32742ab792b729093bcf2aebb53b70e8c65fe2b2c070be",
+    "bytes": 763,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917114003",
+    "name": "add_secure_current_role_rpc",
+    "sha256": "a5fbaf680dd1eb827fda61678fe35b33eafb5bbc9082f6db877ed6bb448215fd",
+    "bytes": 537,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917131722",
+    "name": "add_careerdev_professional_framework_governance_v1",
+    "sha256": "c36c1092211929504cbc8fefffc2793053de83c608174f510153d319ae867a13",
+    "bytes": 3242,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917140520",
+    "name": "expand_coaching_specialty_taxonomy_v1",
+    "sha256": "f8d7b2080dd08902a887964bc48d10aaabc681906bac189ad3d1734cb86fc184",
+    "bytes": 15762,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917140623",
+    "name": "extend_coach_applications_for_structured_matching",
+    "sha256": "1b5778f6e6f224b809289a19cf00c14d31b7938718d4a393f79288834c695396",
+    "bytes": 509,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917142223",
+    "name": "add_coach_agreement_acceptance",
+    "sha256": "40107a78ea9fafaaf112766b198f01e6178616da84f24e08ab2f1fdb70079127",
+    "bytes": 997,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917142322",
+    "name": "record_coach_agreement_acceptance_on_application",
+    "sha256": "34df24a0d1c66e7689012921bb392b44b64339ecc66883a37b26d9ec034c8502",
+    "bytes": 827,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917143246",
+    "name": "coach_payout_onboarding_v1",
+    "sha256": "b1e1e065fe7546ee62d27f80264595606cd2af3268b463d2c08c582804ecb903",
+    "bytes": 3361,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917144539",
+    "name": "coach_payout_history_rpc_v1",
+    "sha256": "3fa990cb906c3f2ccd4730d92af7db5ec44a610b1497c8973a128971fb29f3a4",
+    "bytes": 1127,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917144919",
+    "name": "admin_payout_approval_workflow_v1",
+    "sha256": "5ef30b812469e11e59f86aa99f84e97099f68592567c4316529ea10b1cfd66a0",
+    "bytes": 9303,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917144956",
+    "name": "fix_payout_release_check_column_v1",
+    "sha256": "9f56fafd81f6df88db2fbc94959ea11dddeabad0ae77c4c517f61e520989079b",
+    "bytes": 3227,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917145128",
+    "name": "coach_payout_transfer_guard_v1",
+    "sha256": "0f73eb40e3c49ee90f0d4a43f11a63acc5cb1beeb32a635254add1bf02084d7b",
+    "bytes": 3258,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917163947",
+    "name": "fix_admin_coach_application_profile_insert_v1",
+    "sha256": "d2ba1b3b9eda203a8ea6f402c939df3c71da68993f1ddea0a04de2b6c8becac1",
+    "bytes": 5397,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917164002",
+    "name": "fix_coach_semantic_stale_trigger_v1",
+    "sha256": "ed4edff0bfd0799c08bbe2f47e73a6a97f4fe3de2dc886a4962ca64de0e900e2",
+    "bytes": 581,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917164017",
+    "name": "fix_coach_marketplace_approval_status_v1",
+    "sha256": "a6e571ec3ccbd4037eb5db8b66dc60e1c905c8cefca83eb103359c7694d53833",
+    "bytes": 5311,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917164033",
+    "name": "fix_coach_onboarding_approval_status_v1",
+    "sha256": "5afe0ad4dbf1e27fc1bdc9f34c744ee14939577f63e39d470a2cae7e86bd6ce8",
+    "bytes": 5413,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917164431",
+    "name": "admin_pending_applications_and_user_details_v1",
+    "sha256": "5c001c5dd9dcd8c0650280672eb732f23824f5e8af3b1e64658d827c363b5d66",
+    "bytes": 7824,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917164506",
+    "name": "lock_admin_user_details_function_v1",
+    "sha256": "d12d3fcba38ecbe9964a70e525f9d237095905fdfcc3ac0d6d6df535049c900e",
+    "bytes": 221,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917170140",
+    "name": "fix_coach_availability_view_writes_v1",
+    "sha256": "bf7b5dcd286e29eb3a6f2797af44f119050b9752707c2c17c99401dc00180a54",
+    "bytes": 2773,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917170207",
+    "name": "dedupe_coach_availability_v1",
+    "sha256": "89b6259ee162af656682db1553d86447ef588490988762a90e4443e08a935297",
+    "bytes": 406,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917171949",
+    "name": "coach_account_edit_credentials_v1",
+    "sha256": "9469e9c832ef8090f89f43106e7958a69f64dcb9d7f712d5aec1831cceb3405f",
+    "bytes": 6118,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917172002",
+    "name": "coach_credential_submission_controls_v1",
+    "sha256": "5ecbaa92cc27fcfaeb969f16abc8ed54ce74bd51a3d078688d1ef23556936460",
+    "bytes": 1160,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917172437",
+    "name": "fix_coach_credential_storage_bucket_v1",
+    "sha256": "c1e4ff5651d3e7d60dd7473dc9a46e2141739ad461597d6e67715a1ba0093977",
+    "bytes": 358,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917173106",
+    "name": "fix_public_coach_profile_availability_v1",
+    "sha256": "a76bef8f66203a9ce610e942bcfc2607f951c7cd0eb61ac6fd66ff09b5a4dc0e",
+    "bytes": 2072,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917174102",
+    "name": "coach_matching_semantic_fallback_v1",
+    "sha256": "0098c21845223a7e70129a1d38d48c3fb90d9d2338a6e93161afccf06bef63ed",
+    "bytes": 1476,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917174125",
+    "name": "relax_public_coach_matching_gate_v1",
+    "sha256": "47786b81f1450bd26b7ef0b6efcaabe270b81adae2335792d3250ad27f1a294c",
+    "bytes": 1268,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917174525",
+    "name": "profile_avatar_storage_v1",
+    "sha256": "78b0b3b3a4392a551ace694c3928853252c6b9fd9cfbeef04d13a13de5396e73",
+    "bytes": 1153,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917174544",
+    "name": "public_coach_profile_avatar_v1_fix",
+    "sha256": "9bfc9b6cd30eb15a7066640ec0d0b6506ebfa97d412a3ff17773eb005cb698b9",
+    "bytes": 2022,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917175719",
+    "name": "fix_booking_request_coach_status_v1",
+    "sha256": "74c20afce702c6410bd2dbb2f4f6016532b2a89f948c3b23b7f8f3033d111cf9",
+    "bytes": 2762,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917175806",
+    "name": "fix_client_booking_request_insert_rls_v1",
+    "sha256": "71c09defcec3f5c701e56e76e7b2abfa2c430e70a3474630ef52a16ff9efe551",
+    "bytes": 1454,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917175826",
+    "name": "fix_booking_reminder_trigger_rls_v1",
+    "sha256": "20fe4d1bf4c5f997015f112779982467bbce5def3ec855df6e016ae6ce7e48ab",
+    "bytes": 1977,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917175840",
+    "name": "fix_booking_reminder_trigger_security_v2",
+    "sha256": "7326a0a63f72f670948a6b98b47d1f6c08636597e3380acaaae26c48a1f8a3ac",
+    "bytes": 479,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917180603",
+    "name": "fix_profile_avatar_email_and_booking_visibility_v1",
+    "sha256": "e5ed29d6d03f6009cb1991aa85e7236cc50d4814f24bb840dcf875147b8aa590",
+    "bytes": 1398,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917190317",
+    "name": "ensure_client_account_for_booking_v2",
+    "sha256": "f434d9cecc06d80837e1a3fcfbcb7ab6545b7e7d8e3d5621db0c127011a94cf2",
+    "bytes": 4073,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917190337",
+    "name": "sync_client_account_from_profile_v1",
+    "sha256": "885ca7dee0970a5dd4fab84b3a1a9d8e30ecae707b3553aceca79e6a4b8f6603",
+    "bytes": 954,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917191236",
+    "name": "public_booking_directories_v1",
+    "sha256": "9e70f9f0494f62bfe10127db727ac39d7d371b326bb67e0e478b354de60d56e1",
+    "bytes": 2751,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917200913",
+    "name": "save_career_intake_response_rpc",
+    "sha256": "e1e002b4853888e5a533bdd46e8926bba317df718900161336c5cc1f0e017572",
+    "bytes": 2302,
+    "statement_count": 1
+  },
+  {
+    "version": "20260917203231",
+    "name": "add_career_intelligence_reports",
+    "sha256": "29b2b90ed1f11a7cfa5f8eefee7f5c9a9e8551eb4a1df3d013e589210259e663",
+    "bytes": 1814,
+    "statement_count": 1
+  },
+  {
+    "version": "20260918015635",
+    "name": "fix_prepare_ai_agent_execution_alias_collision",
+    "sha256": "86fb19134e6a039ac87edf5fff2df258fb37e2aa44eaccf045fa91cc4ed77649",
+    "bytes": 2165,
+    "statement_count": 1
+  },
+  {
+    "version": "20260918015643",
+    "name": "fix_prepare_ai_agent_execution_approval_field",
+    "sha256": "8fa50de0d741f8d494db8318d568d2d365a08316e372ac2d2d040e97501e893e",
+    "bytes": 2120,
+    "statement_count": 1
+  },
+  {
+    "version": "20260918015914",
+    "name": "fix_transition_ai_agent_execution_request_timestamp",
+    "sha256": "354cf0ae33f314ee81d6d9e8ffaa86f7351e76afc064c5caa7b28dabb1c638cf",
+    "bytes": 2509,
+    "statement_count": 1
+  },
+  {
+    "version": "20260918015938",
+    "name": "align_ai_execution_status_machine",
+    "sha256": "a612cb462260f7dc2d03f2d275e0cc0a212579491af28bc81f279b1ef85f3e2a",
+    "bytes": 2744,
+    "statement_count": 1
+  },
+  {
+    "version": "20260918015957",
+    "name": "lock_down_email_notification_queue_rls",
+    "sha256": "f78bda790c3419023d4234716e5d695f705ef377cccc3ce57aaf7868e5469824",
+    "bytes": 70,
+    "statement_count": 1
+  },
+  {
+    "version": "20260918175741",
+    "name": "harden_ai_human_approval_gate",
+    "sha256": "6961f6a0c1b6a04d58bf0d552191ac20359f51c47f6f4daab9138020ea6de8ba",
+    "bytes": 7747,
+    "statement_count": 1
+  },
+  {
+    "version": "20260918175841",
+    "name": "harden_ai_governance_security_surface",
+    "sha256": "2e2638cbc2a1a19be190af9c17482684651ab9a7d991e5f9a52180e594624598",
+    "bytes": 1995,
+    "statement_count": 1
+  },
+  {
+    "version": "20260918191508",
+    "name": "add_calendly_booking_integration",
+    "sha256": "47894d4b167eee3f015948f56b6978579cec990d5b5bf57ddbe9067851572bf2",
+    "bytes": 2316,
+    "statement_count": 1
+  },
+  {
+    "version": "20260918191553",
+    "name": "add_calendly_event_mapping",
+    "sha256": "e5f88a206733f90cec092d76a17a91219c5b6884742617854143385f6a226951",
+    "bytes": 217,
+    "statement_count": 1
+  },
+  {
+    "version": "20260919114415",
+    "name": "secure_client_coach_ai_agent_access",
+    "sha256": "86af8ee4569d950e9e9cf4a34c61d165206c0c818ea771a67603099068b0b8d4",
+    "bytes": 1940,
+    "statement_count": 1
+  },
+  {
+    "version": "20260919114754",
+    "name": "harden_ai_agent_governance_execution_functions",
+    "sha256": "105bf22a4ee4e8917a793c482c4e0ed1ebeddbb36180898df9e39610bff0948e",
+    "bytes": 8158,
+    "statement_count": 1
+  },
+  {
+    "version": "20260919114840",
+    "name": "tighten_ai_human_approval_state_machine",
+    "sha256": "37911dd172dcaf30e1fb73bf9474de55df4e19f9834579773087c5f78bca592a",
+    "bytes": 6349,
+    "statement_count": 1
+  },
+  {
+    "version": "20260919114915",
+    "name": "restrict_anon_privileged_rpc_execution",
+    "sha256": "edb72d718c4c6020f25cd9352feda1512bd012dbce54cedd69aa70ddce96b381",
+    "bytes": 865,
+    "statement_count": 1
+  },
+  {
+    "version": "20260919114922",
+    "name": "remove_public_execute_from_privileged_functions",
+    "sha256": "6e261914ce86ddc359b2b1cdad3d250fa67898d565691820be0eb7a714123b57",
+    "bytes": 941,
+    "statement_count": 1
+  },
+  {
+    "version": "20260919115948",
+    "name": "tighten_ai_audit_and_profile_access",
+    "sha256": "dc5b3dc7c1f7b6076f8706d83cb2c5bb349f95c994ed42920abc491e4568795f",
+    "bytes": 305,
+    "statement_count": 1
+  },
+  {
+    "version": "20260919115956",
+    "name": "harden_function_search_paths",
+    "sha256": "53227cbd8fdd1315e821b8001bea699a11a7d322a025758e907cfcc112564ff5",
+    "bytes": 331,
+    "statement_count": 1
+  },
+  {
+    "version": "20260919120129",
+    "name": "link_ai_agent_validation_cases_to_quality_suite",
+    "sha256": "5c737e86be4828a1ad4da5674aa1233712234173bd95e5b571cd1fccdd701d3a",
+    "bytes": 1002,
+    "statement_count": 1
+  },
+  {
+    "version": "20260919120145",
+    "name": "link_validation_cases_to_quality_suite_cases",
+    "sha256": "57a218f804317b116f9c655ddf5e87b7178025808c5335c1a50e1e713318311e",
+    "bytes": 998,
+    "statement_count": 1
+  },
+  {
+    "version": "20260919120451",
+    "name": "fix_governed_quality_suite_case_evaluation",
+    "sha256": "3c5fd5688d241e7f00668a3e4e1fb39675ea2f3e307d37633b9553b92c386da7",
+    "bytes": 4401,
+    "statement_count": 1
+  },
+  {
+    "version": "20260919144159",
+    "name": "add_plan_service_entitlements",
+    "sha256": "b3826d148aa17e44c0a33348d828c6c9262ef28fd37814b8fad475eb26d6b750",
+    "bytes": 2533,
+    "statement_count": 1
+  },
+  {
+    "version": "20260919144423",
+    "name": "add_service_usage_quota_table",
+    "sha256": "2a0a52dcf2cf7747ceff19510c7258b89413f3ca51833652327d06a00c3a5c29",
+    "bytes": 857,
+    "statement_count": 1
+  },
+  {
+    "version": "20260921075721",
+    "name": "create_blog_and_comments_v2",
+    "sha256": "ac1de23fcf2a78fafa498591fa54744d2caf81f05b256a25f16d3e9e9b608354",
+    "bytes": 5714,
+    "statement_count": 1
+  },
+  {
+    "version": "20260921092131",
+    "name": "add_blog_views_analytics",
+    "sha256": "f3b264e47b38c45b3542edd5f021a3787808f3e5620d106efb12c85b671c14a9",
+    "bytes": 918,
+    "statement_count": 1
+  },
+  {
+    "version": "20260921100539",
+    "name": "add_admin_platform_analytics",
+    "sha256": "c279a547aa532b9135d2c45cb6425c0190d8152a87e1f3e0c243bd94bc671eb5",
+    "bytes": 4424,
+    "statement_count": 1
+  },
+  {
+    "version": "20260921100715",
+    "name": "expand_admin_platform_permissions",
+    "sha256": "ee47087a99f8d31c4b8af9befa55c13fdf1176e72bc631653f984afe927a986b",
+    "bytes": 2733,
+    "statement_count": 1
+  },
+  {
+    "version": "20260924012905",
+    "name": "harden_payout_and_trigger_functions",
+    "sha256": "7a2b99c1b5bc4d80e818923745530ca7ecaa5421b49f34b88a88746ae36fd3cd",
+    "bytes": 5736,
+    "statement_count": 1
+  },
+  {
+    "version": "20260924013102",
+    "name": "harden_client_coach_matching_rpc_surface",
+    "sha256": "02c388dc477597dd0dcd53cf9b007393f55ce72fd82d7736e95728b3b888fe7f",
+    "bytes": 777,
+    "statement_count": 1
+  },
+  {
+    "version": "20260924013256",
+    "name": "tighten_internal_ai_snapshot_execution",
+    "sha256": "41838397f91d4e87f0d6e7884c550443f0e73b82646c18d42da1a834f025192e",
+    "bytes": 207,
+    "statement_count": 1
+  },
+  {
+    "version": "20261002134820",
+    "name": "add_ai_dependency_modes",
+    "sha256": "9a837f334ea7a3fced6d26068d9c6dc03290306877dd01b4c6915c9e5e920403",
+    "bytes": 320,
+    "statement_count": 1
+  },
+  {
+    "version": "20261003221424",
+    "name": "create_ai_credit_metering_engine",
+    "sha256": "9e39829ebf7f56d819b4fb973954fadaefe97728fc8343846ecf4b3c094c4db2",
+    "bytes": 15891,
+    "statement_count": 1
+  },
+  {
+    "version": "20261011161257",
+    "name": "add_distributed_ai_rate_limits_and_shared_quotas",
+    "sha256": "fbe3b3896061d69b980a7594a1c596cb513a52daea94a80b51495debff8f73ec",
+    "bytes": 7753,
+    "statement_count": 1
+  },
+  {
+    "version": "20261011163530",
+    "name": "fix_distributed_rate_limit_request_count_reference",
+    "sha256": "ee6968420163d8802bad233df53ec8a3c47cd249a02884ca68697e5066090035",
+    "bytes": 2025,
+    "statement_count": 1
+  },
+  {
+    "version": "20261012104608",
+    "name": "secure_profile_role_and_status_integrity",
+    "sha256": "e5db4577e79374e4fd85768185d0a1f065b1ebfb806347c54c25900cb801325d",
+    "bytes": 697,
+    "statement_count": 1
+  },
+  {
+    "version": "20261027234854",
+    "name": "calendly_direct_booking_fallback",
+    "sha256": "3d86a692e386b2347249a5d535670162b774f818f670281b44db8aa23b23dc1e",
+    "bytes": 1524,
+    "statement_count": 1
+  }
+]
