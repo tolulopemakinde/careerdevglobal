@@ -1,5 +1,19 @@
 # Feature and production status matrix
 
+## Phase 1 evidence update — 16 November 2026
+
+**Phase 1: PARTIAL / HOLD; production release remains HOLD.** The continuation of [PR #36](https://github.com/tolulopemakinde/careerdevglobal/pull/36) contains the full evidence and recovery runbook (`docs/database/phase1/`). All 229 historical migration bodies were recovered from the production ledger; one bootstrap identity is explicitly redacted, with provenance hashes retained. The earlier assumption that historical SQL bodies were unavailable is superseded. Application catalog reconstruction and synthetic backup/restore comparisons pass; this is not a native production dump or real managed Auth/Storage parity.
+
+The selected Supabase organization is Free with two active projects and no eligible additional free slot. A generic $0 quote did not establish capacity: project creation was rejected before provisioning. No paid resources, upgrades or add-ons were created, and no complete paid quote was available. Full local Supabase image extraction exceeded the 8 GB workspace disk. A smaller network-disabled PostgreSQL 17 fixture works with six synthetic identity adapters, not working Auth login accounts.
+
+Baseline role checks: **9/17 pass**. Local candidate and restored checks: **16/17 pass**. Anonymous directory grants, vector status/operator resolution and assigned-coach isolation are corrected only in local candidates. The remaining failure is authenticated coach profile editing through `mark_coach_semantic_profile_stale()`; a narrow invalidation/approval-integrity design is still required. Existing #48 booking SQL was exercised against the restored full application schema: original fails on event columns, candidate returns `requested`, with booking transactions rolled back.
+
+Fresh isolated checks: **7 database regression tests, 96 scheduling/security/directory/matching-boundary tests and 144 billing tests pass**. Current-phase frontend validation also passed 4 Help Center and 139 AI tests plus typecheck/source checks before dependency-cache cleanup; prior build/browser evidence remains bounded. Deno/provider compilation and real authenticated/provider acceptance are pending. Calendly is Basic/free with one structurally suitable event type, but sandbox designation, app callback and sufficient OAuth scopes are unverified. Paystack remaining lifecycle/refund cases require isolated TEST readiness and explicit financial scope; no new payment or provider mutation was performed.
+
+Next: fix coach invalidation safely; obtain sufficient local disk for real Supabase services or an exact owner-approved cloud quote; create genuine synthetic logins; compile/test matching; complete Calendly and approved Paystack TEST acceptance; reconcile PR ancestry/conflicts and exact-head CI. Production and populated AI test remain unchanged. Passing catalog CI cannot satisfy release gates.
+
+## Original audit baseline (superseded where noted above)
+
 Baseline: 16 November 2026. Source SHA `8ca79c0`; production frontend identity verified through Vercel. H = direct current source/catalog/observation; M = implementation or historical evidence without complete current acceptance. Public browser evidence is scoped to the Vercel alias, not the unverified custom domain.
 
 | Capability | Implemented/source | Production/TEST evidence | Current status | Confidence / next gate |
