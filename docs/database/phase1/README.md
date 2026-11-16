@@ -1,5 +1,21 @@
 # Phase 1 evidence — 16 November 2026
 
+## Continued acceptance — current status
+
+**PARTIAL / HOLD.** The coach-edit blocker described in the original report below is now fixed in a local-only reviewed candidate. All **17/17** SQL acceptance checks and **22/22** semantic-cache/publication checks pass, including on a restored synthetic database. Candidate rollback was also exercised: it restores the prior single permission failure; reapplication restores all passing cases. The recovered historical snapshot and original invoker invalidator are unchanged.
+
+The fix grants no table-wide cache privileges and adds no SECURITY DEFINER code. Authenticated active coaches can see only their own semantic row identifier and update only invalidation fields. RLS requires a null embedding, database-derived source text and the current transaction timestamp; reading vectors/source, planting embeddings, changing models or identifiers, and affecting other coaches are denied. A separate invoker guard prevents ordinary coaches from altering approval, verification, publication, completion and ownership fields. Pending coaches can still edit biography; inactive coaches cannot edit. Server cache refresh remains permitted.
+
+A full local Supabase stack now runs ephemerally on the existing public-repository CI runner, avoiding the workspace disk limit and any paid cloud provisioning. The [managed-service run](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43963115523) reconstructs the recovered application schema without helper adapters, creates six genuine synthetic Auth users, and passes **33/33** Auth/PostgREST/Storage checks. These include password login, verified sessions, client ownership, assigned/unassigned coach access, admin review scope, approved-only anonymous directories, denial of raw matching evidence, API profile editing with invalidation, denied pending self-approval and real private Storage upload/download with unrelated-client and anonymous denial. See [sanitized evidence](managed-supabase-result.json). The earlier statement that only identity adapters were available is superseded for this CI fixture.
+
+The first managed rehearsal correctly failed when local `postgres` lacked authority to restore other roles' default ACLs. The successful run restores with the administrator of the explicitly named disposable local cluster; no hosted administrator credential is used and no source ACL is omitted. The new CI includes candidate checks and synthetic restore, not merely catalog comparison.
+
+The #48 matching continuation now passes standalone Deno 2.9.8 checking, with a pinned SDK/lockfile, corrected thenable/request-ID types, and three finite-384-dimension embedding boundary tests. No real model/provider invocation or function deployment occurred.
+
+Remaining acceptance: role-based browser journeys against this reconstructed stack; genuine embedding runtime execution; Calendly app/host/scopes/callback and provider lifecycle; explicitly approved Paystack TEST transactions; physical Storage recovery; and final version/configuration fidelity and release review. Cloud free capacity remains exhausted. No new spending, production/shared-test writes, payments or production deployments occurred. Do not call Phase 1 or production complete on the basis of these bounded checks.
+
+## Original Phase 1 report — historical findings
+
 **Decision: PARTIAL / HOLD. Phase 1 is not complete and production release is not authorized.** Production and the populated AI test project were inspected read-only. No production schema, RLS, records, provider appointments, billing gates or deployments were changed. No payment, paid project, upgrade or add-on was created.
 
 ## 1. Authoritative database recovery
