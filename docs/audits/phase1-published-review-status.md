@@ -1,0 +1,20 @@
+# Published Phase 1 review status — 16 November 2026
+
+**PARTIAL / HOLD. No merge or production release authorized.** This update supersedes earlier predictions about unpublished CI or merge conflicts; it does not close acceptance gates.
+
+| Review | Published implementation SHA | Verified checks |
+| --- | --- | --- |
+| [#36 database baseline](https://github.com/tolulopemakinde/careerdevglobal/pull/36) | `aca6258d3df025aa047c86f62029a175fdd39185` | [Catalog reconstruction regression PASS](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43961015831); preview ready |
+| [#48 scheduling/matching continuation](https://github.com/tolulopemakinde/careerdevglobal/pull/48) | `84715896a22c8dea9092e7220a37899c19d81162` | [Source/types/build PASS](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43961014988); [synthetic PostgreSQL and local Supabase Auth rescheduling PASS](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43961015084); preview ready |
+| [#49 safe fixes and audit](https://github.com/tolulopemakinde/careerdevglobal/pull/49) | `22f44e6572dc0ee8c5c6a83e436a011939912e66` | [Source/types/build PASS](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43961114869); preview ready |
+| [#42 billing](https://github.com/tolulopemakinde/careerdevglobal/pull/42) | `4513c87f5efcb399871cb78ccd663243f2f218e1` unchanged | Fresh local isolated billing suite: 144 pass; no new financial/provider test |
+
+The #48 local Supabase Auth job proves its smaller synthetic booking/reschedule fixture, with synthetic Calendly responses. It does not prove genuine Client/Coach/Admin browser acceptance against the recovered full application schema, Storage service behavior, embeddings, or live provider lifecycle. The full-schema local candidate still passes 16/17 cases, with coach semantic invalidation failing.
+
+At inspection, #36, #48 and #49 are draft and GitHub reports clean/mergeable against their respective bases. #36 is stacked on `fix/linkedin-intake-document-evidence`, not main; its #34 → #35 ancestry still needs review. #48 and #49 target main. Do not infer that every earlier predicted merge conflict still exists, or that clean means approved. Re-evaluate after any base change.
+
+Recommended review order: #49 safe fixes; #36 historical baseline chain/evidence; approve and rehearse marketplace/isolation changes; #48 scheduling ancestry; #42 billing reconciliation; authenticated/provider acceptance; separate production release review. Do not independently merge overlapping ancestors or apply recovered history/candidates to production.
+
+The full [Phase 1 report](https://github.com/tolulopemakinde/careerdevglobal/blob/aca6258d3df025aa047c86f62029a175fdd39185/docs/database/phase1/README.md) covers all nine deliverables. The [runbook](https://github.com/tolulopemakinde/careerdevglobal/blob/aca6258d3df025aa047c86f62029a175fdd39185/docs/database/phase1/RUNBOOK.md) is reproducible within its explicitly limited SQL-fixture scope. The organization has no additional free project slot; no complete paid quote or spending authorization exists. Prefer sufficient local disk for a full isolated Supabase rehearsal next.
+
+This status-only document follows the tested #49 implementation commit; its own final head must be checked independently. No implementation changes were made after the recorded check.

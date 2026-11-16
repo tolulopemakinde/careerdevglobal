@@ -1,5 +1,7 @@
 # CareerDev Global master audit — 16 November 2026
 
+See the [published Phase 1 review status](phase1-published-review-status.md) for verified final PR checks, current mergeability and the scope of the local Supabase Auth result.
+
 ## Phase 1 evidence update — 16 November 2026
 
 **Phase 1: PARTIAL / HOLD; production release remains HOLD.** The continuation of [PR #36](https://github.com/tolulopemakinde/careerdevglobal/pull/36) contains the full evidence and recovery runbook (`docs/database/phase1/`). All 229 historical migration bodies were recovered from the production ledger; one bootstrap identity is explicitly redacted, with provenance hashes retained. The earlier assumption that historical SQL bodies were unavailable is superseded. Application catalog reconstruction and synthetic backup/restore comparisons pass; this is not a native production dump or real managed Auth/Storage parity.
