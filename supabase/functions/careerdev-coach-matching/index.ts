@@ -2,7 +2,6 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { allowedOrigin, consumeDistributedRateLimit, consumeRateLimit, consumeSharedQuota, diagnosticRecord, preflightResponse, readJsonWithLimit, requestKey, securityError, securityResponse, validateCoachMatchingInput } from "../_shared/edge-security.ts";
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-const publishableKey = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
 const serviceRoleKey = Deno.env.get("CAREERDEV_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const distributedRateLimitEnabled = Deno.env.get("DISTRIBUTED_RATE_LIMIT_ENABLED") !== "false";
 const configuredOrigins = (Deno.env.get("ALLOWED_ORIGINS") ?? "").split(",").map((origin) => origin.trim()).filter(Boolean);
@@ -36,7 +35,10 @@ Deno.serve(async (request) => {
     const validated = validateCoachMatchingInput(parsed.value);
     if (!validated.ok) return securityError("INVALID_INPUT", 400, requestId, origin);
     const { goal, mode, signals } = validated.value;
-    const supabase = createClient(supabaseUrl, publishableKey);
+    if (!serviceRoleKey) return securityError("INTERNAL_ERROR", 503, requestId, origin, { retryAfterSeconds: 60 });
+    // Retrieve restricted matching evidence only inside this server-side function.
+    // The response remains limited by publicCoach and the public match RPC projection.
+    const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { autoRefreshToken: false, persistSession: false } });
     const { data: candidates, error: candidateError } = await supabase.rpc("get_public_coach_matching_candidates", { p_limit: 20 });
     if (candidateError) throw candidateError;
     const list = Array.isArray(candidates) ? candidates : [];

@@ -13,3 +13,8 @@ Verification: 93 scheduling/operation/reschedule/source-audit/directory tests pa
 Local browser acceptance against a deliberately invalid backend verifies unavailable messaging. This is failure-path acceptance only, not restored marketplace availability. Full local Supabase Auth was not rerun; remote database-rehearsal CI is separately recorded evidence. Real Calendly sandbox, full schema/rollback, meeting replacement, multiple moves/webhook recovery, confirmation/cancellation cutover, authorization and payment regressions remain release gates.
 
 No remote push, CI rerun, merge, deployment, live provider action, production/shared-test database modification or billing policy/gate change occurred. Reconcile the main audit branch's Next.js 16.4.6 security patch when updating this older branch; this continuation does not claim to patch production dependencies.
+
+
+## Phase 1 matching continuation
+
+Restricted matching RPCs remain unavailable to anonymous callers. The Edge candidate uses server authorization after validated bounded input; its public coach projection and quota/origin checks remain intact. This accompanies the local-only #36 SQL candidate for verified status, vector operator resolution and approved onboarding rules. Three source-boundary tests pass; they do not prove Deno compilation, embedding provider execution or authenticated browser acceptance. No Edge function or SQL was deployed. The combined scheduling script now runs these three guards alongside the prior 93 tests.
