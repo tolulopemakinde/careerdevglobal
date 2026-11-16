@@ -1,5 +1,13 @@
 # End-to-end acceptance matrix
 
+## Continued Phase 1 acceptance — superseding update
+
+The coach semantic invalidation failure is now resolved in a **local-only candidate**: **17/17** SQL acceptance and **22/22** cache/publication checks pass, including after restore. Rollback restores the previous single failure and reapplication passes again. The fix retains invoker execution, uses narrow column privileges and ownership/derived-value RLS, and independently denies coach self-approval/publication and cache forgery.
+
+A repeatable CI local Supabase stack reconstructs the recovered full application schema without helper adapters and passes **33/33 real Auth/PostgREST/Storage checks**, including six synthetic password logins, verified sessions, role/assignment isolation, public approved-only directories, profile invalidation and actual private file access with unrelated-client/anonymous denial. [Evidence](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43963115523). This supersedes earlier statements that only identity adapters were available. The organization still has no free cloud slot; no paid provisioning was needed.
+
+The #48 continuation passes standalone Deno compilation, three embedding-output boundary tests, all 96 scheduling/security checks and current application build checks. [Deno CI](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43963502892). Native embedding execution, role browser journeys, actual provider lifecycle and physical Storage recovery remain pending. **Phase 1 remains PARTIAL / production HOLD.** No production/shared-test mutation, financial transaction or production release occurred. The [published status](phase1-published-review-status.md) and [current full report](https://github.com/tolulopemakinde/careerdevglobal/blob/chore/supabase-authoritative-baseline/docs/database/phase1/README.md) carry the scope and next steps.
+
 See the [published Phase 1 review status](phase1-published-review-status.md) for verified final PR checks, current mergeability and the scope of the local Supabase Auth result.
 
 ## Phase 1 evidence update — 16 November 2026
@@ -66,3 +74,14 @@ Directory failure-path browser acceptance also passed locally on port 3101 with 
 | Billing | 144 isolated tests pass; historical TEST evidence retained | Fresh isolated TEST lifecycle/refund/owner-browser acceptance |
 
 These results do not replace the open end-to-end cases with PASS.
+
+## Continued acceptance evidence
+
+| Boundary | Verified result | Still open |
+| --- | --- | --- |
+| Coach profile/cache/publication | SQL 17/17 plus 22/22 specialized checks; rollback/reapplication pass | Reviewed migration and production approval; no deployment performed |
+| Real synthetic accounts | Six real Auth password logins and validated sessions in disposable CI | Role browser journeys and persistent review access |
+| JWT ownership/assignment | Client ownership, assigned/unassigned coach and admin scopes pass | Broader role journeys and production configuration fidelity |
+| Storage service | Real private upload/download; unrelated client and anon denied | Physical object backup/restoration and replacement variants |
+| Matching compilation | Deno check and 3 finite-384-vector boundary tests pass | Native model execution, live Edge request and frontend journey |
+| Scheduling/billing | Existing synthetic suites retained; no new provider operation | Calendly prerequisites/lifecycle; approved Paystack TEST financial scope |

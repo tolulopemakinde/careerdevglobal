@@ -1,5 +1,13 @@
 # Production release gates
 
+## Continued Phase 1 acceptance — superseding update
+
+The coach semantic invalidation failure is now resolved in a **local-only candidate**: **17/17** SQL acceptance and **22/22** cache/publication checks pass, including after restore. Rollback restores the previous single failure and reapplication passes again. The fix retains invoker execution, uses narrow column privileges and ownership/derived-value RLS, and independently denies coach self-approval/publication and cache forgery.
+
+A repeatable CI local Supabase stack reconstructs the recovered full application schema without helper adapters and passes **33/33 real Auth/PostgREST/Storage checks**, including six synthetic password logins, verified sessions, role/assignment isolation, public approved-only directories, profile invalidation and actual private file access with unrelated-client/anonymous denial. [Evidence](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43963115523). This supersedes earlier statements that only identity adapters were available. The organization still has no free cloud slot; no paid provisioning was needed.
+
+The #48 continuation passes standalone Deno compilation, three embedding-output boundary tests, all 96 scheduling/security checks and current application build checks. [Deno CI](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43963502892). Native embedding execution, role browser journeys, actual provider lifecycle and physical Storage recovery remain pending. **Phase 1 remains PARTIAL / production HOLD.** No production/shared-test mutation, financial transaction or production release occurred. The [published status](phase1-published-review-status.md) and [current full report](https://github.com/tolulopemakinde/careerdevglobal/blob/chore/supabase-authoritative-baseline/docs/database/phase1/README.md) carry the scope and next steps.
+
 ## Phase 1 evidence update — 16 November 2026
 
 **Phase 1: PARTIAL / HOLD; production release remains HOLD.** The continuation of [PR #36](https://github.com/tolulopemakinde/careerdevglobal/pull/36) contains the full evidence and recovery runbook (`docs/database/phase1/`). All 229 historical migration bodies were recovered from the production ledger; one bootstrap identity is explicitly redacted, with provenance hashes retained. The earlier assumption that historical SQL bodies were unavailable is superseded. Application catalog reconstruction and synthetic backup/restore comparisons pass; this is not a native production dump or real managed Auth/Storage parity.

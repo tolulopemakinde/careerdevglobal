@@ -1,5 +1,15 @@
 # Published Phase 1 review status — 16 November 2026
 
+## Continued review heads
+
+- #36: `4a94098e45d5b1e3b3916132024dae11ab659a78`. Earlier successful [full recovered-schema managed-service run](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43963115523): 33/33. [Final-head checks](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43963701962) must also pass. Local catalog/restore and 17 SQL + 22 specialized tests pass; rollback/reapplication verified.
+- #48: `8a776246f2a7eeb9b9db5b86b0c21e5dc4623c3a`. [Application build](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43963502550), [Deno](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43963502892) and [scheduling database/Auth rehearsal](https://github.com/tolulopemakinde/careerdevglobal/actions/runs/43963502661) pass. No genuine embedding/provider invocation.
+- #49 carries this updated master/acceptance record and retains the previously verified safe fixes. Its final documentation head requires its own application checks.
+
+The previous 16/17 and adapter-only account limitations are superseded by current candidate and real CI API results. The 33 full-schema managed-service checks are separate from #48's smaller rescheduling fixture. Role browser journeys, native embeddings/provider lifecycles and physical Storage restoration remain open. All PRs remain draft and unmerged. Review order remains #49 safe fixes, #36 ancestry/baseline plus reviewed candidates, #48 scheduling, #42 billing, then authenticated/provider/recovery release gates. No production authorization is implied.
+
+## Earlier published review snapshot
+
 **PARTIAL / HOLD. No merge or production release authorized.** This update supersedes earlier predictions about unpublished CI or merge conflicts; it does not close acceptance gates.
 
 | Review | Published implementation SHA | Verified checks |
