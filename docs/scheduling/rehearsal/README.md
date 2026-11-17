@@ -1,5 +1,7 @@
 # Calendly backend rehearsal
 
+> Configuration review (17 November 2026): [owner settings, scope/plan rules, test evidence and blockers](../acceptance-config-review-2026-11-17.md). The four supplied settings are placeholders; keep live acceptance pending. Current Calendly rules make scheduled-event write include read and permit Free-plan booking/webhooks subject to limits. Do not infer a designated host, granted scopes or a matching callback from these rules.
+
 These candidates are executable against an empty Postgres fixture. The files
 live outside the migration directory. The legacy app and Edge Function do not
 call the candidate operation module. The backend draft and its build-only
