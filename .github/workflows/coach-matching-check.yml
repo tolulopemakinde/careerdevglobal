@@ -7,6 +7,7 @@ on:
       - 'supabase/functions/careerdev-calendly-oauth/**'
       - 'supabase/functions/careerdev-calendly-operations/**'
       - 'supabase/functions/careerdev-calendly-webhook/**'
+      - 'supabase/functions/careerdev-calendly-reschedule/**'
       - '.github/workflows/coach-matching-check.yml'
 permissions:
   contents: read
@@ -21,5 +22,5 @@ jobs:
       - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed
         with:
           deno-version: 2.9.8
-      - run: deno check --node-modules-dir=none --no-config --frozen-lockfile --lock=supabase/functions/careerdev-coach-matching/deno.lock supabase/functions/careerdev-coach-matching/index.ts supabase/functions/careerdev-calendly-oauth/index.ts supabase/functions/careerdev-calendly-operations/index.ts supabase/functions/careerdev-calendly-webhook/index.ts
+      - run: deno check --node-modules-dir=none --no-config --frozen-lockfile --lock=supabase/functions/careerdev-coach-matching/deno.lock supabase/functions/careerdev-coach-matching/index.ts supabase/functions/careerdev-calendly-oauth/index.ts supabase/functions/careerdev-calendly-operations/index.ts supabase/functions/careerdev-calendly-webhook/index.ts supabase/functions/careerdev-calendly-reschedule/index.ts
       - run: deno test --no-config supabase/functions/_shared/embedding-vector.test.ts

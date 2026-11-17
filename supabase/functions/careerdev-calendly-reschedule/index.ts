@@ -1,5 +1,7 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "jsr:@supabase/supabase-js@2";
+import "jsr:@supabase/functions-js@2.119.0/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2.119.0";
+import { acceptanceTarget, calendlyScopes } from "../_shared/calendly-acceptance.mjs";
+import { createCalendlyLifecycle } from "../_shared/calendly-lifecycle.mjs";
 import { createRescheduleHandler } from "./handler.mjs";
 
 const url = Deno.env.get("SUPABASE_URL");
@@ -15,4 +17,6 @@ const db = enabled ? createClient(url!, serviceKey!, {
   auth: { persistSession: false, autoRefreshToken: false },
 }) : null;
 
-Deno.serve(createRescheduleHandler({ db, allowedOrigin, encryptionKey }));
+const target = acceptanceTarget({ enabled: Deno.env.get("CAREERDEV_CALENDLY_ACCEPTANCE_ENABLED"), projectRef, backendUrl: url, appOrigin: allowedOrigin, hostUri: Deno.env.get("CALENDLY_ACCEPTANCE_HOST_URI") });
+const lifecycle = target && db ? createCalendlyLifecycle({ config: { ...target, scopes: calendlyScopes, encryptionKey, clientId: Deno.env.get("CALENDLY_CLIENT_ID"), clientSecret: Deno.env.get("CALENDLY_CLIENT_SECRET") }, db }) : null;
+Deno.serve(createRescheduleHandler({ db: target ? db : null, allowedOrigin, encryptionKey, tokenForCoach: lifecycle ? async (coachId: string, hostUri: string) => { if (hostUri !== target!.hostUri) throw new Error("Wrong acceptance host"); return lifecycle.accessToken(coachId); } : null }));

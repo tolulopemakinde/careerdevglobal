@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import { createWebhookHandler, createWebhookWorker } from '../supabase/functions/careerdev-calendly-webhook/handler.mjs';
+import { calendlyScopes } from '../supabase/functions/_shared/calendly-acceptance.mjs';
 import { createOAuthHandler } from '../supabase/functions/careerdev-calendly-oauth/handler.mjs';
 import { createOperationHandler } from '../supabase/functions/careerdev-calendly-operations/handler.mjs';
 export async function runAcceptanceAdapterChecks({ admin, owner, signIn, check }) {
@@ -11,7 +13,7 @@ export async function runAcceptanceAdapterChecks({ admin, owner, signIn, check }
   await check(admin.from('coaches').update({profile_id:coach.id}).eq('id',coachId),'Link real local Auth coach');
   await check(admin.from('profiles').update({email:'client-owner@example.test',full_name:'Synthetic Client',timezone:'UTC'}).eq('id',owner.id),'Add synthetic invitee metadata');
   await check(admin.from('marketplace_booking_requests').update({requested_start:'2090-01-03T10:00:00Z',requested_end:'2090-01-03T10:30:00Z'}).eq('id',bookingId),'Set isolated future slot');
-  const config={appOrigin,hostUri,appName:'Synthetic local app',redirectUri:'http://127.0.0.1:54321/functions/v1/careerdev-calendly-oauth',clientId:randomUUID(),clientSecret:randomUUID(),encryptionKey:randomUUID(),scopes:['users:read','event_types:read','scheduled_events:write']};
+  const config={appOrigin,hostUri,appName:'Synthetic local app',redirectUri:'http://127.0.0.1:54321/functions/v1/careerdev-calendly-oauth',clientId:randomUUID(),clientSecret:randomUUID(),encryptionKey:randomUUID(),scopes:calendlyScopes,participantEmails:['client-owner@example.test'],webhookSigningKey:randomUUID()};
   let exchanges=0;
   const access=randomUUID();
   const oauth=createOAuthHandler({config,db:admin,async send(url){
@@ -26,10 +28,10 @@ export async function runAcceptanceAdapterChecks({ admin, owner, signIn, check }
   assert.equal(exchanges,1);assert.equal(callbacks.filter(r=>r.headers.get('Location').endsWith('=connected')).length,1);
   const remaining=await check(admin.from('calendly_oauth_states').select('id'),'Read synthetic consumed state');assert.equal(remaining.length,0);
   let posts=0,cancellations=0,canceled=false,tracking;
-  const handler=createOperationHandler({config,db:admin,encryptionKey:config.encryptionKey,participantEmails:['client-owner@example.test'],async send(url,request){
+  const send=async(url,request)=>{
     assert.ok(request.headers.Authorization==='Bearer '+access);
     if(url==='https://api.calendly.com/invitees'){
-      posts++;tracking=JSON.parse(request.body).tracking;return Response.json({resource:{event:eventUri,uri:inviteeUri}});
+      posts++;tracking=JSON.parse(request.body).tracking;throw new Error('Synthetic lost provider response after create');
     }
     if(url.endsWith('/cancellation')){cancellations++;canceled=true;return new Response(null,{status:204});}
     if(url===typeUri)return Response.json({resource:{uri:typeUri,active:true,kind:'solo',profile:{type:'User',owner:hostUri},duration:30,is_paid:false,booking_method:'instant',locations:[{kind:'zoom'}],custom_questions:[]}});
@@ -37,10 +39,22 @@ export async function runAcceptanceAdapterChecks({ admin, owner, signIn, check }
     const status=canceled?'canceled':'active';
     if(url===eventUri)return Response.json({resource:{uri:eventUri,event_type:typeUri,status,start_time:'2090-01-03T10:00:00Z',end_time:'2090-01-03T10:30:00Z',event_memberships:[{user:hostUri}]}});
     assert.equal(url,inviteeUri);return Response.json({resource:{uri:inviteeUri,event:eventUri,status,tracking}});
-  }});
+  };
+  const handler=createOperationHandler({config,db:admin,encryptionKey:config.encryptionKey,participantEmails:config.participantEmails,send});
   const invoke=kind=>handler(new Request('http://127.0.0.1:54321/functions/v1/careerdev-calendly-operations',{method:'POST',headers:{Origin:appOrigin,Authorization:'Bearer '+coach.token},body:JSON.stringify({booking_id:bookingId,kind,actor_id:'ignored-forgery'})}));
   const confirmations=await Promise.all([invoke('confirm'),invoke('confirm')]);
-  assert.ok(confirmations.some(r=>r.status===200));assert.equal(posts,1);
+  assert.ok(confirmations.every(r=>r.status===409));assert.equal(posts,1);
+  const pending=await check(admin.from('marketplace_booking_requests').select('booking_status').eq('id',bookingId).single(),'Read uncertain booking');assert.equal(pending.booking_status,'requested');
+  const worker=createWebhookWorker({config,db:admin,send});
+  const webhook=createWebhookHandler({config,db:admin,worker});
+  const raw=JSON.stringify({event:'invitee.created',payload:{event:eventUri,uri:inviteeUri,tracking}});
+  const stamp=String(Math.floor(Date.now()/1000));
+  const signing=await crypto.subtle.importKey('raw',new TextEncoder().encode(config.webhookSigningKey),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+  const bytes=new Uint8Array(await crypto.subtle.sign('HMAC',signing,new TextEncoder().encode(stamp+'.'+raw)));
+  const signature='t='+stamp+',v1='+Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');
+  const deliver=()=>webhook(new Request('http://127.0.0.1:54321/functions/v1/careerdev-calendly-webhook',{method:'POST',body:raw,headers:{'Calendly-Webhook-Signature':signature}}));
+  assert.equal((await deliver()).status,202);assert.equal((await deliver()).status,202);assert.equal(posts,1);
+  const receipts=await check(admin.from('calendly_acceptance_webhooks').select('state'),'Read deduplicated receipt');assert.equal(receipts.length,1);assert.equal(receipts[0].state,'done');
   const confirmed=await check(admin.from('marketplace_booking_requests').select('id,booking_status,calendly_event_uri').eq('id',bookingId).single(),'Read durable confirmation');
   assert.equal(confirmed.booking_status,'confirmed');assert.equal(confirmed.calendly_event_uri,eventUri);
   const transaction=await check(owner.client.rpc('create_marketplace_transaction',{p_booking_id:bookingId}),'Initialize synthetic transaction');
@@ -48,5 +62,5 @@ export async function runAcceptanceAdapterChecks({ admin, owner, signIn, check }
   const after=await check(admin.from('marketplace_booking_requests').select('id,booking_status,calendly_event_uri').eq('id',bookingId).single(),'Read durable cancellation');
   assert.equal(after.id,bookingId);assert.equal(after.booking_status,'cancelled');assert.equal(after.calendly_event_uri,eventUri);
   const retained=await check(admin.from('marketplace_transactions').select('id').eq('booking_id',bookingId).single(),'Read retained synthetic transaction');assert.equal(retained.id,transaction);
-  console.log('Acceptance adapter checks passed: real local Auth; atomic OAuth claim; one provider confirmation/cancellation; booking and synthetic transaction preserved. Provider responses were synthetic.');
+  console.log('Acceptance adapter checks passed: real local Auth; atomic OAuth claim; lost confirmation response recovered by signed webhook; duplicate receipt applied once; one provider confirmation/cancellation; booking and synthetic transaction preserved. Provider responses were synthetic.');
 }

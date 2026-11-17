@@ -12,7 +12,7 @@ async function decryptToken(ciphertext, encryptionKey) {
   return new TextDecoder().decode(plaintext);
 }
 
-export function createRescheduleHandler({ db, allowedOrigin, encryptionKey, send = fetch }) {
+export function createRescheduleHandler({ db, allowedOrigin, encryptionKey, tokenForCoach, send = fetch }) {
   return async request => {
     const headers = new Headers({
       "Cache-Control": "no-store",
@@ -53,10 +53,10 @@ export function createRescheduleHandler({ db, allowedOrigin, encryptionKey, send
       const { data: connection, error: connectionError } = await db.from("calendly_connections")
         .select("access_token_ciphertext,token_expires_at").eq("coach_id", booking.coach_id)
         .eq("calendly_user_uri", snapshot.provider_user_uri).eq("active", true).single();
-      if (connectionError || !connection || !(Date.parse(connection.token_expires_at) > Date.now())) {
+      if (connectionError || !connection || (!tokenForCoach && !(Date.parse(connection.token_expires_at) > Date.now()))) {
         return json({ error: "The coach must reconnect Calendly before rescheduling." }, 409);
       }
-      const transport = createCalendlyTransport(await decryptToken(connection.access_token_ciphertext, encryptionKey), send);
+      const transport = createCalendlyTransport(tokenForCoach ? await tokenForCoach(booking.coach_id, snapshot.provider_user_uri) : await decryptToken(connection.access_token_ciphertext, encryptionKey), send);
       const result = await rescheduleCalendlyBooking({
         bookingId,
         actorId: user.id,
