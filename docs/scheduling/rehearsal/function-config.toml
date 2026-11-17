@@ -1,0 +1,13 @@
+# Reviewed acceptance deployment fragment only. No hosted change is applied.
+# The provider callback has no Supabase user JWT; POST actions verify it inside
+# the handler. Never disable gateway authentication globally.
+[functions.careerdev-calendly-oauth]
+verify_jwt = false
+
+# Keep JWT verification on for the user-invoked durable operation endpoint.
+[functions.careerdev-calendly-operations]
+verify_jwt = true
+
+# Provider HMAC is checked over the bounded raw body by the receiver.
+[functions.careerdev-calendly-webhook]
+verify_jwt = false

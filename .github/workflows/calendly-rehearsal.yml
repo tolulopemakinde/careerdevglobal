@@ -1,0 +1,116 @@
+name: Calendly database rehearsal
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/scheduling/rehearsal/**'
+      - 'tests/calendly-rehearsal*'
+      - 'tests/calendly-local-supabase.mjs'
+      - 'tests/calendly-acceptance-adapter*'
+      - 'supabase/functions/careerdev-calendly-oauth/**'
+      - 'supabase/functions/careerdev-calendly-operations/**'
+      - 'supabase/functions/_shared/calendly-*.mjs'
+      - 'supabase/functions/careerdev-calendly-webhook/**'
+      - 'supabase/functions/careerdev-calendly-reschedule/**'
+      - '.github/workflows/calendly-rehearsal.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-postgres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: careerdev_scheduling_fixture
+          POSTGRES_PASSWORD: synthetic-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d careerdev_scheduling_fixture"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Exercise booking claims, roles and transaction initialization
+        env:
+          PGPASSWORD: synthetic-only
+        run: bash tests/calendly-rehearsal.sh
+
+  local-supabase-auth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.122.0
+      - name: Exercise rescheduling with local Supabase Auth and synthetic Calendly responses
+        shell: bash
+        run: |
+          set -euo pipefail
+          stack="$(mktemp -d)"
+          trap 'supabase stop --workdir "$stack" --no-backup >/dev/null 2>&1 || true' EXIT
+          supabase init --workdir "$stack"
+          supabase start --workdir "$stack" -x studio,imgproxy,storage-api,realtime,mailpit,postgres-meta,edge-runtime,logflare,vector,supavisor >"$stack/start.log" 2>&1 || { tail -n 50 "$stack/start.log"; exit 1; }
+          supabase status --workdir "$stack" -o env >"$stack/local.env"
+          set -a
+          source "$stack/local.env"
+          set +a
+          [[ "$API_URL" == http://127.0.0.1:54321 ]]
+          [[ "$DB_URL" == postgres://postgres:postgres@127.0.0.1:54322/postgres || "$DB_URL" == postgresql://postgres:postgres@127.0.0.1:54322/postgres ]]
+          psql "$DB_URL" -Xq -v ON_ERROR_STOP=1 -v local_supabase=1 \
+            -f tests/calendly-rehearsal-fixtures.sql \
+            -f docs/scheduling/rehearsal/calendly-operations.sql \
+            -f docs/scheduling/rehearsal/calendly-reschedule.sql \
+            -f docs/scheduling/rehearsal/marketplace-transaction.sql \
+            -f tests/calendly-acceptance-adapter-fixtures.sql \
+            -f docs/scheduling/rehearsal/calendly-lifecycle.sql
+          node tests/calendly-local-supabase.mjs
+
+  recovered-full-schema:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: a74ef4fda6c7a2eec4e4b49a80caaed8a840302f
+          path: .recovered-baseline
+          persist-credentials: false
+      - name: Reconstruct pinned full application schema and run scheduling candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull pgvector/pgvector@sha256:b513c48566e4777cd3370451400000c78eda6a08131d68f4c31d4a76f27bd8fd
+          (cd .recovered-baseline && bash scripts/database/start-local.sh && bash scripts/database/rehearse-local.sh >/tmp/calendly-baseline.log)
+          sql() { docker exec -i careerdev-phase1-db psql -Xq -U postgres -d careerdev_acceptance -v ON_ERROR_STOP=1; }
+          sql < .recovered-baseline/tests/database/synthetic-seed.sql
+          sql < docs/scheduling/rehearsal/calendly-operations.sql
+          sql < docs/scheduling/rehearsal/calendly-reschedule.sql
+          sql < docs/scheduling/rehearsal/calendly-lifecycle.sql
+          sql < tests/calendly-full-schema.sql
+          docker exec careerdev-phase1-db pg_dump -U postgres -d careerdev_acceptance -Fc > /tmp/calendly-full-schema.dump
+          docker exec careerdev-phase1-db createdb -U postgres careerdev_scheduling_restore
+          docker exec -i careerdev-phase1-db pg_restore -U postgres -d careerdev_scheduling_restore --exit-on-error < /tmp/calendly-full-schema.dump
+          test "$(docker exec careerdev-phase1-db psql -XAt -U postgres -d careerdev_scheduling_restore -c "select count(*) from public.marketplace_transactions where provider_transaction_reference='synthetic-not-a-payment' and payment_status='pending'")" = 1
+          echo FULL_SCHEMA_RESTORE_PASS
+      - name: Remove only guarded disposable fixture
+        if: always()
+        run: |
+          if docker inspect careerdev-phase1-db >/dev/null 2>&1; then
+            test "$(docker inspect --format '{{index .Config.Labels "careerdev.acceptance"}}' careerdev-phase1-db)" = phase1-disposable
+            docker rm -f careerdev-phase1-db
+          fi

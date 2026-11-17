@@ -1,9 +1,11 @@
 'use client';
 import {useEffect,useState} from 'react';
 import {createSupabaseBrowserClient} from '../../lib/supabase-browser';
+import {calendlyOperationMode} from '../../lib/calendly-acceptance-target.mjs';
 
 export default function CalendlyPanel({offerings=[],userId,onMapped}:any){
   const supabase=createSupabaseBrowserClient();
+  const operationMode=calendlyOperationMode(process.env.NEXT_PUBLIC_CALENDLY_OPERATIONS_REHEARSAL_PROJECT_REF,process.env.NEXT_PUBLIC_SUPABASE_URL);
   const calendlyOfferings=offerings.filter((o:any)=>String(o.title||'').trim().toLowerCase()!=='linkedin profile optimization');
   const[calendly,setCalendly]=useState<any>(null);
   const[eventTypes,setEventTypes]=useState<any[]>([]);
@@ -12,6 +14,7 @@ export default function CalendlyPanel({offerings=[],userId,onMapped}:any){
   const[bookingUrlDrafts,setBookingUrlDrafts]=useState<Record<string,string>>({});
 
   async function call(body:any){
+    if(operationMode==='blocked')throw new Error('The isolated Calendly target is not configured correctly.');
     const{data,error}=await supabase.functions.invoke('careerdev-calendly-oauth',{body});
     if(error)throw new Error(error.message);
     return data;
@@ -23,7 +26,7 @@ export default function CalendlyPanel({offerings=[],userId,onMapped}:any){
       const data=await call({action:'status'});
       setCalendly(data);
       if(data?.connected){
-        const{data:eventData,error}=await supabase.functions.invoke('careerdev-calendly-booking',{body:{action:'event_types'}});
+        const{data:eventData,error}=await supabase.functions.invoke(operationMode==='acceptance'?'careerdev-calendly-oauth':'careerdev-calendly-booking',{body:{action:'event_types'}});
         if(error)throw new Error(error.message);
         setEventTypes(eventData?.event_types||[]);
       }else setEventTypes([]);

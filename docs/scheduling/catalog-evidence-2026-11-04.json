@@ -1,0 +1,2716 @@
+{
+  "inspectionDate": "2026-11-04",
+  "timezone": "Africa/Lagos",
+  "project": "ufmhrmzumqkjvaezrmxf",
+  "repository": "tolulopemakinde/careerdevglobal",
+  "main": "580032ffdb9cbff11c2b80bf1216cf35e9485529",
+  "securityBranch": "2bef24aaf9509daf9624a5716615e71b9579ff0e",
+  "scope": "Read-only catalog and deployed source inspection. No row contents, tokens, credentials or provider calls. Not a schema dump or migration.",
+  "edgeFunctions": [
+    {
+      "slug": "careerdev-calendly-booking",
+      "version": 12,
+      "verify_jwt": true,
+      "bundle_sha256": "b6b2ea24560875f09e295080791ae8208faa268287013bcb3f977aef28aeef7b"
+    },
+    {
+      "slug": "careerdev-calendly-oauth",
+      "version": 11,
+      "verify_jwt": false,
+      "bundle_sha256": "5088c5ca364b460b4cbc3a76232634dd3f539ba4f7678f143fcea2c38aa7dbfe"
+    },
+    {
+      "slug": "careerdev-marketplace-payments",
+      "version": 15,
+      "verify_jwt": true,
+      "bundle_sha256": "c621654e895e0bb470363bee5d9222186eceb4f7354052cf5514a0d0fdde6a08"
+    }
+  ],
+  "controls": {
+    "views": [
+      {
+        "viewname": "client_marketplace_upcoming_bookings",
+        "definition": " SELECT b.id,\n    b.client_id,\n    b.coach_id,\n    b.service_id,\n    b.coach_service_offering_id,\n    b.requested_start,\n    b.requested_end,\n    b.timezone,\n    b.booking_status,\n    b.client_notes,\n    b.coach_notes,\n    b.calendly_event_uri,\n    b.calendly_invitee_uri,\n    b.calendly_booking_status,\n    b.meeting_platform,\n    b.meeting_platform_label,\n    b.meeting_join_url,\n    b.meeting_location_details,\n    b.created_at,\n    b.updated_at,\n    cmp.display_name AS coach_display_name,\n    cmp.headline AS coach_headline,\n    cso.title AS service_title,\n    cso.duration_minutes,\n    cso.price,\n    cso.currency,\n    cso.delivery_mode\n   FROM ((marketplace_booking_requests b\n     LEFT JOIN coach_marketplace_profiles cmp ON ((cmp.coach_id = b.coach_id)))\n     LEFT JOIN coach_service_offerings cso ON ((cso.id = b.coach_service_offering_id)))\n  WHERE ((b.client_id = ( SELECT c.id\n           FROM clients c\n          WHERE (c.profile_id = auth.uid()))) AND (b.requested_start >= now()) AND (b.booking_status = ANY (ARRAY['requested'::text, 'confirmed'::text])));"
+      },
+      {
+        "viewname": "coach_marketplace_upcoming_bookings",
+        "definition": " SELECT id,\n    coach_id,\n    client_id,\n    service_id,\n    coach_service_offering_id,\n    requested_start,\n    requested_end,\n    timezone,\n    booking_status,\n    client_notes,\n    coach_notes,\n    calendly_event_uri,\n    calendly_invitee_uri,\n    calendly_booking_status,\n    meeting_platform,\n    meeting_platform_label,\n    meeting_join_url,\n    meeting_location_details,\n    created_at,\n    updated_at\n   FROM marketplace_booking_requests b\n  WHERE ((EXISTS ( SELECT 1\n           FROM coaches c\n          WHERE ((c.id = b.coach_id) AND (c.profile_id = auth.uid())))) AND (booking_status = ANY (ARRAY['requested'::text, 'confirmed'::text])));"
+      }
+    ],
+    "grants": [
+      {
+        "grantee": "postgres",
+        "table_name": "calendly_connections",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "calendly_connections",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "calendly_connections",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "calendly_connections",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "calendly_connections",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "calendly_connections",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "calendly_connections",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "calendly_connections",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "calendly_connections",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "calendly_connections",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "calendly_connections",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "calendly_connections",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "calendly_connections",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "calendly_connections",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "calendly_oauth_states",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "calendly_oauth_states",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "calendly_oauth_states",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "calendly_oauth_states",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "calendly_oauth_states",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "calendly_oauth_states",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "calendly_oauth_states",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "calendly_oauth_states",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "calendly_oauth_states",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "calendly_oauth_states",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "calendly_oauth_states",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "calendly_oauth_states",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "calendly_oauth_states",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "calendly_oauth_states",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "coach_service_offerings",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_events",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_requests",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "postgres",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "TRIGGER"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "DELETE"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "TRUNCATE"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "service_role",
+        "table_name": "marketplace_booking_slots",
+        "privilege_type": "TRIGGER"
+      }
+    ],
+    "columns": [
+      {
+        "data_type": "uuid",
+        "table_name": "coach_availability",
+        "column_name": "id",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()"
+      },
+      {
+        "data_type": "uuid",
+        "table_name": "coach_availability",
+        "column_name": "coach_id",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "data_type": "integer",
+        "table_name": "coach_availability",
+        "column_name": "day_of_week",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "data_type": "time without time zone",
+        "table_name": "coach_availability",
+        "column_name": "start_time",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "data_type": "time without time zone",
+        "table_name": "coach_availability",
+        "column_name": "end_time",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "coach_availability",
+        "column_name": "timezone",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "data_type": "boolean",
+        "table_name": "coach_availability",
+        "column_name": "active",
+        "is_nullable": "NO",
+        "column_default": "true"
+      },
+      {
+        "data_type": "timestamp with time zone",
+        "table_name": "coach_availability",
+        "column_name": "created_at",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      },
+      {
+        "data_type": "uuid",
+        "table_name": "coach_service_offerings",
+        "column_name": "id",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()"
+      },
+      {
+        "data_type": "uuid",
+        "table_name": "coach_service_offerings",
+        "column_name": "coach_id",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "data_type": "uuid",
+        "table_name": "coach_service_offerings",
+        "column_name": "service_id",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "coach_service_offerings",
+        "column_name": "title",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "coach_service_offerings",
+        "column_name": "description",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "numeric",
+        "table_name": "coach_service_offerings",
+        "column_name": "price",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "coach_service_offerings",
+        "column_name": "currency",
+        "is_nullable": "NO",
+        "column_default": "'USD'::text"
+      },
+      {
+        "data_type": "integer",
+        "table_name": "coach_service_offerings",
+        "column_name": "duration_minutes",
+        "is_nullable": "NO",
+        "column_default": "60"
+      },
+      {
+        "data_type": "text",
+        "table_name": "coach_service_offerings",
+        "column_name": "delivery_mode",
+        "is_nullable": "NO",
+        "column_default": "'online'::text"
+      },
+      {
+        "data_type": "boolean",
+        "table_name": "coach_service_offerings",
+        "column_name": "active",
+        "is_nullable": "NO",
+        "column_default": "true"
+      },
+      {
+        "data_type": "timestamp with time zone",
+        "table_name": "coach_service_offerings",
+        "column_name": "created_at",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      },
+      {
+        "data_type": "timestamp with time zone",
+        "table_name": "coach_service_offerings",
+        "column_name": "updated_at",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      },
+      {
+        "data_type": "text",
+        "table_name": "coach_service_offerings",
+        "column_name": "calendly_event_type_uri",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "coach_service_offerings",
+        "column_name": "meeting_platform",
+        "is_nullable": "NO",
+        "column_default": "'calendly_configured'::text"
+      },
+      {
+        "data_type": "text",
+        "table_name": "coach_service_offerings",
+        "column_name": "meeting_platform_label",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "coach_service_offerings",
+        "column_name": "calendly_booking_url",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "uuid",
+        "table_name": "marketplace_booking_events",
+        "column_name": "id",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()"
+      },
+      {
+        "data_type": "uuid",
+        "table_name": "marketplace_booking_events",
+        "column_name": "booking_id",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "marketplace_booking_events",
+        "column_name": "event_type",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "marketplace_booking_events",
+        "column_name": "actor_type",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "data_type": "uuid",
+        "table_name": "marketplace_booking_events",
+        "column_name": "actor_id",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "jsonb",
+        "table_name": "marketplace_booking_events",
+        "column_name": "event_data",
+        "is_nullable": "NO",
+        "column_default": "'{}'::jsonb"
+      },
+      {
+        "data_type": "timestamp with time zone",
+        "table_name": "marketplace_booking_events",
+        "column_name": "created_at",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      },
+      {
+        "data_type": "uuid",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "id",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()"
+      },
+      {
+        "data_type": "uuid",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "client_id",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "data_type": "uuid",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_id",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "data_type": "uuid",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "service_id",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "data_type": "uuid",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_service_offering_id",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "uuid",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "service_request_id",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "timestamp with time zone",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "requested_start",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "timestamp with time zone",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "requested_end",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "timezone",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "booking_status",
+        "is_nullable": "NO",
+        "column_default": "'requested'::text"
+      },
+      {
+        "data_type": "text",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "client_notes",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_notes",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "timestamp with time zone",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "created_at",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      },
+      {
+        "data_type": "timestamp with time zone",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "updated_at",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      },
+      {
+        "data_type": "text",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_event_uri",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_invitee_uri",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_booking_status",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_last_error",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_platform",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_platform_label",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_join_url",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "jsonb",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_location_details",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "uuid",
+        "table_name": "marketplace_booking_slots",
+        "column_name": "id",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()"
+      },
+      {
+        "data_type": "uuid",
+        "table_name": "marketplace_booking_slots",
+        "column_name": "coach_id",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "data_type": "uuid",
+        "table_name": "marketplace_booking_slots",
+        "column_name": "availability_id",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "timestamp with time zone",
+        "table_name": "marketplace_booking_slots",
+        "column_name": "start_at",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "data_type": "timestamp with time zone",
+        "table_name": "marketplace_booking_slots",
+        "column_name": "end_at",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "marketplace_booking_slots",
+        "column_name": "timezone",
+        "is_nullable": "NO",
+        "column_default": null
+      },
+      {
+        "data_type": "text",
+        "table_name": "marketplace_booking_slots",
+        "column_name": "status",
+        "is_nullable": "NO",
+        "column_default": "'available'::text"
+      },
+      {
+        "data_type": "uuid",
+        "table_name": "marketplace_booking_slots",
+        "column_name": "booking_id",
+        "is_nullable": "YES",
+        "column_default": null
+      },
+      {
+        "data_type": "timestamp with time zone",
+        "table_name": "marketplace_booking_slots",
+        "column_name": "created_at",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      },
+      {
+        "data_type": "timestamp with time zone",
+        "table_name": "marketplace_booking_slots",
+        "column_name": "updated_at",
+        "is_nullable": "NO",
+        "column_default": "now()"
+      }
+    ],
+    "policies": [
+      {
+        "cmd": "ALL",
+        "qual": "(EXISTS ( SELECT 1\n   FROM coaches c\n  WHERE ((c.id = coach_availability.coach_id) AND (c.profile_id = ( SELECT auth.uid() AS uid)))))",
+        "roles": [
+          "authenticated"
+        ],
+        "tablename": "coach_availability",
+        "policyname": "coaches can manage own availability",
+        "with_check": "(EXISTS ( SELECT 1\n   FROM coaches c\n  WHERE ((c.id = coach_availability.coach_id) AND (c.profile_id = ( SELECT auth.uid() AS uid)))))"
+      },
+      {
+        "cmd": "DELETE",
+        "qual": "(EXISTS ( SELECT 1\n   FROM coaches c\n  WHERE ((c.id = coach_service_offerings.coach_id) AND (c.profile_id = auth.uid()))))",
+        "roles": [
+          "authenticated"
+        ],
+        "tablename": "coach_service_offerings",
+        "policyname": "coach offerings delete own",
+        "with_check": null
+      },
+      {
+        "cmd": "INSERT",
+        "qual": null,
+        "roles": [
+          "authenticated"
+        ],
+        "tablename": "coach_service_offerings",
+        "policyname": "coach offerings insert own",
+        "with_check": "(EXISTS ( SELECT 1\n   FROM coaches c\n  WHERE ((c.id = coach_service_offerings.coach_id) AND (c.profile_id = auth.uid()))))"
+      },
+      {
+        "cmd": "SELECT",
+        "qual": "((active = true) OR (EXISTS ( SELECT 1\n   FROM (coaches c\n     JOIN profiles p ON ((p.id = c.profile_id)))\n  WHERE ((c.id = coach_service_offerings.coach_id) AND (p.id = ( SELECT auth.uid() AS uid))))))",
+        "roles": [
+          "authenticated"
+        ],
+        "tablename": "coach_service_offerings",
+        "policyname": "coach offerings readable",
+        "with_check": null
+      },
+      {
+        "cmd": "UPDATE",
+        "qual": "(EXISTS ( SELECT 1\n   FROM coaches c\n  WHERE ((c.id = coach_service_offerings.coach_id) AND (c.profile_id = auth.uid()))))",
+        "roles": [
+          "authenticated"
+        ],
+        "tablename": "coach_service_offerings",
+        "policyname": "coach offerings update own",
+        "with_check": "(EXISTS ( SELECT 1\n   FROM coaches c\n  WHERE ((c.id = coach_service_offerings.coach_id) AND (c.profile_id = auth.uid()))))"
+      },
+      {
+        "cmd": "INSERT",
+        "qual": null,
+        "roles": [
+          "authenticated"
+        ],
+        "tablename": "marketplace_booking_events",
+        "policyname": "booking participants can create booking events",
+        "with_check": "(EXISTS ( SELECT 1\n   FROM marketplace_booking_requests b\n  WHERE ((b.id = marketplace_booking_events.booking_id) AND ((EXISTS ( SELECT 1\n           FROM (clients cl\n             JOIN profiles p ON ((p.id = cl.profile_id)))\n          WHERE ((cl.id = b.client_id) AND (p.id = auth.uid()) AND (marketplace_booking_events.actor_type = 'client'::text) AND (marketplace_booking_events.actor_id = auth.uid())))) OR (EXISTS ( SELECT 1\n           FROM (coaches c\n             JOIN profiles p ON ((p.id = c.profile_id)))\n          WHERE ((c.id = b.coach_id) AND (p.id = auth.uid()) AND (marketplace_booking_events.actor_type = 'coach'::text) AND (marketplace_booking_events.actor_id = auth.uid())))) OR (EXISTS ( SELECT 1\n           FROM profiles p\n          WHERE ((p.id = auth.uid()) AND (p.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role])))))))))"
+      },
+      {
+        "cmd": "SELECT",
+        "qual": "(EXISTS ( SELECT 1\n   FROM marketplace_booking_requests b\n  WHERE ((b.id = marketplace_booking_events.booking_id) AND ((EXISTS ( SELECT 1\n           FROM (clients cl\n             JOIN profiles p ON ((p.id = cl.profile_id)))\n          WHERE ((cl.id = b.client_id) AND (p.id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n           FROM (coaches c\n             JOIN profiles p ON ((p.id = c.profile_id)))\n          WHERE ((c.id = b.coach_id) AND (p.id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n           FROM profiles p\n          WHERE ((p.id = ( SELECT auth.uid() AS uid)) AND (p.role = ANY (ARRAY['staff'::user_role, 'admin'::user_role])))))))))",
+        "roles": [
+          "authenticated"
+        ],
+        "tablename": "marketplace_booking_events",
+        "policyname": "marketplace_booking_events_participants",
+        "with_check": null
+      },
+      {
+        "cmd": "UPDATE",
+        "qual": "(EXISTS ( SELECT 1\n   FROM coaches c\n  WHERE ((c.id = marketplace_booking_requests.coach_id) AND (c.profile_id = ( SELECT auth.uid() AS uid)))))",
+        "roles": [
+          "authenticated"
+        ],
+        "tablename": "marketplace_booking_requests",
+        "policyname": "Coaches can update own booking requests",
+        "with_check": "(EXISTS ( SELECT 1\n   FROM coaches c\n  WHERE ((c.id = marketplace_booking_requests.coach_id) AND (c.profile_id = ( SELECT auth.uid() AS uid)))))"
+      },
+      {
+        "cmd": "SELECT",
+        "qual": "((EXISTS ( SELECT 1\n   FROM clients cl\n  WHERE ((cl.id = marketplace_booking_requests.client_id) AND (cl.profile_id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n   FROM coaches c\n  WHERE ((c.id = marketplace_booking_requests.coach_id) AND (c.profile_id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n   FROM profiles p\n  WHERE ((p.id = ( SELECT auth.uid() AS uid)) AND (p.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role]))))))",
+        "roles": [
+          "authenticated"
+        ],
+        "tablename": "marketplace_booking_requests",
+        "policyname": "Users can read own booking requests",
+        "with_check": null
+      },
+      {
+        "cmd": "SELECT",
+        "qual": "((EXISTS ( SELECT 1\n   FROM (clients cl\n     JOIN profiles p ON ((p.id = cl.profile_id)))\n  WHERE ((cl.id = marketplace_booking_requests.client_id) AND (p.id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n   FROM (coaches c\n     JOIN profiles p ON ((p.id = c.profile_id)))\n  WHERE ((c.id = marketplace_booking_requests.coach_id) AND (p.id = ( SELECT auth.uid() AS uid))))) OR (EXISTS ( SELECT 1\n   FROM profiles p\n  WHERE ((p.id = ( SELECT auth.uid() AS uid)) AND (p.role = ANY (ARRAY['admin'::user_role, 'staff'::user_role]))))))",
+        "roles": [
+          "authenticated"
+        ],
+        "tablename": "marketplace_booking_requests",
+        "policyname": "booking participants read",
+        "with_check": null
+      },
+      {
+        "cmd": "INSERT",
+        "qual": null,
+        "roles": [
+          "authenticated"
+        ],
+        "tablename": "marketplace_booking_requests",
+        "policyname": "clients can create own booking requests",
+        "with_check": "(EXISTS ( SELECT 1\n   FROM (clients cl\n     JOIN profiles p ON ((p.id = cl.profile_id)))\n  WHERE ((cl.id = marketplace_booking_requests.client_id) AND (p.id = auth.uid()))))"
+      },
+      {
+        "cmd": "SELECT",
+        "qual": "((status = 'available'::text) OR (EXISTS ( SELECT 1\n   FROM ((marketplace_booking_requests b\n     JOIN clients cl ON ((cl.id = b.client_id)))\n     JOIN profiles p ON ((p.id = cl.profile_id)))\n  WHERE ((b.id = marketplace_booking_slots.booking_id) AND (p.id = ( SELECT auth.uid() AS uid))))))",
+        "roles": [
+          "authenticated"
+        ],
+        "tablename": "marketplace_booking_slots",
+        "policyname": "marketplace_booking_slots_client_view",
+        "with_check": null
+      },
+      {
+        "cmd": "ALL",
+        "qual": "(EXISTS ( SELECT 1\n   FROM (coaches c\n     JOIN profiles p ON ((p.id = c.profile_id)))\n  WHERE ((c.id = marketplace_booking_slots.coach_id) AND (p.id = ( SELECT auth.uid() AS uid)))))",
+        "roles": [
+          "authenticated"
+        ],
+        "tablename": "marketplace_booking_slots",
+        "policyname": "marketplace_booking_slots_coach_manage",
+        "with_check": "(EXISTS ( SELECT 1\n   FROM (coaches c\n     JOIN profiles p ON ((p.id = c.profile_id)))\n  WHERE ((c.id = marketplace_booking_slots.coach_id) AND (p.id = ( SELECT auth.uid() AS uid)))))"
+      },
+      {
+        "cmd": "ALL",
+        "qual": "(EXISTS ( SELECT 1\n   FROM profiles p\n  WHERE ((p.id = ( SELECT auth.uid() AS uid)) AND (p.role = ANY (ARRAY['staff'::user_role, 'admin'::user_role])))))",
+        "roles": [
+          "authenticated"
+        ],
+        "tablename": "marketplace_booking_slots",
+        "policyname": "marketplace_booking_slots_staff",
+        "with_check": "(EXISTS ( SELECT 1\n   FROM profiles p\n  WHERE ((p.id = ( SELECT auth.uid() AS uid)) AND (p.role = ANY (ARRAY['staff'::user_role, 'admin'::user_role])))))"
+      }
+    ],
+    "triggers": [
+      {
+        "relation": "marketplace_booking_requests",
+        "definition": "CREATE TRIGGER trg_marketplace_booking_notification_automation AFTER INSERT OR UPDATE OF booking_status ON public.marketplace_booking_requests FOR EACH ROW EXECUTE FUNCTION marketplace_booking_notification_automation()"
+      },
+      {
+        "relation": "marketplace_booking_requests",
+        "definition": "CREATE TRIGGER trg_marketplace_booking_schedule_reminders AFTER INSERT OR UPDATE OF booking_status, requested_start ON public.marketplace_booking_requests FOR EACH ROW EXECUTE FUNCTION marketplace_schedule_reminders_on_booking()"
+      }
+    ],
+    "constraints": [
+      {
+        "conname": "marketplace_booking_requests_booking_status_check",
+        "relation": "marketplace_booking_requests",
+        "definition": "CHECK ((booking_status = ANY (ARRAY['requested'::text, 'coach_review'::text, 'confirmed'::text, 'awaiting_payment'::text, 'funded'::text, 'scheduled'::text, 'in_progress'::text, 'client_review'::text, 'completed'::text, 'cancelled'::text, 'disputed'::text, 'refunded'::text])))"
+      },
+      {
+        "conname": "marketplace_booking_requests_client_id_fkey",
+        "relation": "marketplace_booking_requests",
+        "definition": "FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE RESTRICT"
+      },
+      {
+        "conname": "marketplace_booking_requests_coach_id_fkey",
+        "relation": "marketplace_booking_requests",
+        "definition": "FOREIGN KEY (coach_id) REFERENCES coaches(id) ON DELETE RESTRICT"
+      },
+      {
+        "conname": "marketplace_booking_requests_coach_service_offering_id_fkey",
+        "relation": "marketplace_booking_requests",
+        "definition": "FOREIGN KEY (coach_service_offering_id) REFERENCES coach_service_offerings(id) ON DELETE SET NULL"
+      },
+      {
+        "conname": "marketplace_booking_requests_pkey",
+        "relation": "marketplace_booking_requests",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "conname": "marketplace_booking_requests_service_id_fkey",
+        "relation": "marketplace_booking_requests",
+        "definition": "FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE RESTRICT"
+      },
+      {
+        "conname": "marketplace_booking_requests_service_request_id_fkey",
+        "relation": "marketplace_booking_requests",
+        "definition": "FOREIGN KEY (service_request_id) REFERENCES service_requests(id) ON DELETE SET NULL"
+      },
+      {
+        "conname": "marketplace_booking_slots_availability_id_fkey",
+        "relation": "marketplace_booking_slots",
+        "definition": "FOREIGN KEY (availability_id) REFERENCES coach_availability(id) ON DELETE SET NULL"
+      },
+      {
+        "conname": "marketplace_booking_slots_booking_id_fkey",
+        "relation": "marketplace_booking_slots",
+        "definition": "FOREIGN KEY (booking_id) REFERENCES marketplace_booking_requests(id) ON DELETE SET NULL"
+      },
+      {
+        "conname": "marketplace_booking_slots_booking_status_ck",
+        "relation": "marketplace_booking_slots",
+        "definition": "CHECK ((((status = 'booked'::text) AND (booking_id IS NOT NULL)) OR (status <> 'booked'::text)))"
+      },
+      {
+        "conname": "marketplace_booking_slots_coach_id_fkey",
+        "relation": "marketplace_booking_slots",
+        "definition": "FOREIGN KEY (coach_id) REFERENCES coaches(id) ON DELETE CASCADE"
+      },
+      {
+        "conname": "marketplace_booking_slots_no_overlap",
+        "relation": "marketplace_booking_slots",
+        "definition": "EXCLUDE USING gist (coach_id WITH =, tstzrange(start_at, end_at, '[)'::text) WITH &&) WHERE ((status = ANY (ARRAY['held'::text, 'booked'::text])))"
+      },
+      {
+        "conname": "marketplace_booking_slots_pkey",
+        "relation": "marketplace_booking_slots",
+        "definition": "PRIMARY KEY (id)"
+      },
+      {
+        "conname": "marketplace_booking_slots_status_check",
+        "relation": "marketplace_booking_slots",
+        "definition": "CHECK ((status = ANY (ARRAY['available'::text, 'held'::text, 'booked'::text, 'blocked'::text, 'cancelled'::text])))"
+      },
+      {
+        "conname": "marketplace_booking_slots_time_ck",
+        "relation": "marketplace_booking_slots",
+        "definition": "CHECK ((end_at > start_at))"
+      },
+      {
+        "conname": "marketplace_booking_events_actor_type_check",
+        "relation": "marketplace_booking_events",
+        "definition": "CHECK ((actor_type = ANY (ARRAY['client'::text, 'coach'::text, 'staff'::text, 'admin'::text, 'system'::text, 'ai'::text])))"
+      },
+      {
+        "conname": "marketplace_booking_events_booking_id_fkey",
+        "relation": "marketplace_booking_events",
+        "definition": "FOREIGN KEY (booking_id) REFERENCES marketplace_booking_requests(id) ON DELETE CASCADE"
+      },
+      {
+        "conname": "marketplace_booking_events_event_type_check",
+        "relation": "marketplace_booking_events",
+        "definition": "CHECK ((event_type = ANY (ARRAY['requested'::text, 'held'::text, 'accepted'::text, 'declined'::text, 'confirmed'::text, 'rescheduled'::text, 'started'::text, 'completed'::text, 'cancelled'::text, 'expired'::text, 'no_show_client'::text, 'no_show_coach'::text, 'disputed'::text])))"
+      },
+      {
+        "conname": "marketplace_booking_events_pkey",
+        "relation": "marketplace_booking_events",
+        "definition": "PRIMARY KEY (id)"
+      }
+    ]
+  },
+  "extraControls": {
+    "summary": {
+      "direct_links": 2,
+      "active_offerings": 2,
+      "booking_requests": 0,
+      "mapped_offerings": 1,
+      "active_connections": 1
+    },
+    "column_grants": [
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "booking_status",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "booking_status",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "booking_status",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "booking_status",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_booking_status",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_booking_status",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_booking_status",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_booking_status",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_event_uri",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_event_uri",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_event_uri",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_event_uri",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_invitee_uri",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_invitee_uri",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_invitee_uri",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_invitee_uri",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_last_error",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_last_error",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_last_error",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_last_error",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "client_id",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "client_id",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "client_id",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "client_id",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "client_notes",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "client_notes",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "client_notes",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "client_notes",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_id",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_id",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_id",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_id",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_notes",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_notes",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_notes",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_notes",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_service_offering_id",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_service_offering_id",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_service_offering_id",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_service_offering_id",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "created_at",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "created_at",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "created_at",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "created_at",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "id",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "id",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "id",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "id",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_join_url",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_join_url",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_join_url",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_join_url",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_location_details",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_location_details",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_location_details",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_location_details",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_platform",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_platform",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_platform",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_platform",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_platform_label",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_platform_label",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_platform_label",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_platform_label",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "requested_end",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "requested_end",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "requested_end",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "requested_end",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "requested_start",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "requested_start",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "requested_start",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "requested_start",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "service_id",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "service_id",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "service_id",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "service_id",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "service_request_id",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "service_request_id",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "service_request_id",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "service_request_id",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "timezone",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "timezone",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "timezone",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "timezone",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "updated_at",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "updated_at",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "updated_at",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "anon",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "updated_at",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "booking_status",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "booking_status",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "booking_status",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "booking_status",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_booking_status",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_booking_status",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_booking_status",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_booking_status",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_event_uri",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_event_uri",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_event_uri",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_event_uri",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_invitee_uri",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_invitee_uri",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_invitee_uri",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_invitee_uri",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_last_error",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_last_error",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_last_error",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "calendly_last_error",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "client_id",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "client_id",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "client_id",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "client_id",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "client_notes",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "client_notes",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "client_notes",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "client_notes",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_id",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_id",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_id",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_id",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_notes",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_notes",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_notes",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_notes",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_service_offering_id",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_service_offering_id",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_service_offering_id",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "coach_service_offering_id",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "created_at",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "created_at",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "created_at",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "created_at",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "id",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "id",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "id",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "id",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_join_url",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_join_url",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_join_url",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_join_url",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_location_details",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_location_details",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_location_details",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_location_details",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_platform",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_platform",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_platform",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_platform",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_platform_label",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_platform_label",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_platform_label",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "meeting_platform_label",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "requested_end",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "requested_end",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "requested_end",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "requested_end",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "requested_start",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "requested_start",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "requested_start",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "requested_start",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "service_id",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "service_id",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "service_id",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "service_id",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "service_request_id",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "service_request_id",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "service_request_id",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "service_request_id",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "timezone",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "timezone",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "timezone",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "timezone",
+        "privilege_type": "UPDATE"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "updated_at",
+        "privilege_type": "INSERT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "updated_at",
+        "privilege_type": "REFERENCES"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "updated_at",
+        "privilege_type": "SELECT"
+      },
+      {
+        "grantee": "authenticated",
+        "table_name": "marketplace_booking_requests",
+        "column_name": "updated_at",
+        "privilege_type": "UPDATE"
+      }
+    ],
+    "relation_controls": [
+      {
+        "relkind": "r",
+        "relname": "calendly_connections",
+        "reloptions": null,
+        "relrowsecurity": true,
+        "relforcerowsecurity": false
+      },
+      {
+        "relkind": "r",
+        "relname": "calendly_oauth_states",
+        "reloptions": null,
+        "relrowsecurity": true,
+        "relforcerowsecurity": false
+      },
+      {
+        "relkind": "v",
+        "relname": "client_marketplace_upcoming_bookings",
+        "reloptions": [
+          "security_invoker=true"
+        ],
+        "relrowsecurity": false,
+        "relforcerowsecurity": false
+      },
+      {
+        "relkind": "v",
+        "relname": "coach_marketplace_upcoming_bookings",
+        "reloptions": [
+          "security_invoker=true"
+        ],
+        "relrowsecurity": false,
+        "relforcerowsecurity": false
+      },
+      {
+        "relkind": "r",
+        "relname": "marketplace_booking_events",
+        "reloptions": null,
+        "relrowsecurity": true,
+        "relforcerowsecurity": false
+      },
+      {
+        "relkind": "r",
+        "relname": "marketplace_booking_requests",
+        "reloptions": null,
+        "relrowsecurity": true,
+        "relforcerowsecurity": false
+      },
+      {
+        "relkind": "r",
+        "relname": "marketplace_booking_slots",
+        "reloptions": null,
+        "relrowsecurity": true,
+        "relforcerowsecurity": false
+      }
+    ]
+  },
+  "bookingDependencies": [
+    {
+      "schema": "public",
+      "proname": "admin_get_platform_analytics",
+      "args": "",
+      "prosecdef": true,
+      "grants": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_get_platform_analytics()\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  caller_role text;\n  result jsonb;\nbegin\n  select role::text into caller_role from public.profiles where id = auth.uid();\n  if caller_role <> 'admin' then\n    raise exception 'Administrator access required';\n  end if;\n\n  select jsonb_build_object(\n    'period_days', 30,\n    'revenue_by_currency', coalesce((\n      select jsonb_agg(jsonb_build_object(\n        'currency', currency,\n        'gross', round(gross::numeric,2),\n        'platform_fee', round(platform_fee::numeric,2),\n        'coach_earnings', round(coach_earnings::numeric,2),\n        'transactions', transactions\n      ) order by currency)\n      from (\n        select\n          currency,\n          sum(gross_amount) gross,\n          sum(platform_fee) platform_fee,\n          sum(coach_earnings) coach_earnings,\n          count(*) transactions\n        from public.marketplace_transactions\n        where created_at >= now() - interval '30 days'\n          and lower(coalesce(payment_status,'')) in ('paid','succeeded','success','completed','settled')\n        group by currency\n      ) r\n    ), '[]'::jsonb),\n    'revenue_12m_by_currency', coalesce((\n      select jsonb_agg(jsonb_build_object(\n        'month', to_char(month_start,'YYYY-MM'),\n        'currency', currency,\n        'gross', round(gross::numeric,2),\n        'platform_fee', round(platform_fee::numeric,2)\n      ) order by month_start, currency)\n      from (\n        select date_trunc('month',created_at) month_start, currency,\n               sum(gross_amount) gross, sum(platform_fee) platform_fee\n        from public.marketplace_transactions\n        where created_at >= date_trunc('month',now()) - interval '11 months'\n          and lower(coalesce(payment_status,'')) in ('paid','succeeded','success','completed','settled')\n        group by 1,2\n      ) m\n    ), '[]'::jsonb),\n    'users_30d', (select count(*) from public.profiles where created_at >= now() - interval '30 days'),\n    'users_by_role', coalesce((\n      select jsonb_object_agg(role, total) from (\n        select role::text role, count(*) total from public.profiles group by role order by role::text\n      ) x\n    ), '{}'::jsonb),\n    'bookings_30d', (select count(*) from public.marketplace_booking_requests where created_at >= now() - interval '30 days'),\n    'sales_30d', (select count(*) from public.marketplace_transactions where created_at >= now() - interval '30 days'\n      and lower(coalesce(payment_status,'')) in ('paid','succeeded','success','completed','settled')),\n    'views_30d', (select count(*) from public.blog_views where viewed_at >= now() - interval '30 days'),\n    'top_blog_posts', coalesce((\n      select jsonb_agg(jsonb_build_object('post_id',post_id,'title',title,'views',views) order by views desc)\n      from (\n        select v.post_id, p.title, count(*) views\n        from public.blog_views v join public.blog_posts p on p.id=v.post_id\n        where v.viewed_at >= now() - interval '30 days'\n        group by v.post_id,p.title\n        order by views desc limit 5\n      ) b\n    ), '[]'::jsonb),\n    'open_tickets', (select count(*) from public.support_tickets where status in ('open','in_progress','waiting_on_customer')),\n    'open_disputes', (select count(*) from public.marketplace_disputes where status not in ('resolved','closed')),\n    'pending_refunds', (select count(*) from public.marketplace_refund_requests where status not in ('approved','rejected','completed','cancelled')),\n    'unread_admin_notifications', (select count(*) from public.marketplace_notifications\n      where profile_id = auth.uid() and read_at is null and status not in ('read','dismissed')),\n    'recent_notifications', coalesce((\n      select jsonb_agg(jsonb_build_object(\n        'id',id,'title',title,'body',body,'priority',priority,'category',category,\n        'status',status,'read_at',read_at,'created_at',created_at,'action_url',action_url\n      ) order by created_at desc)\n      from (\n        select id,title,body,priority,category,status,read_at,created_at,action_url\n        from public.marketplace_notifications\n        where profile_id = auth.uid()\n        order by created_at desc limit 8\n      ) n\n    ), '[]'::jsonb)\n  ) into result;\n\n  return result;\nend;\n$function$\n"
+    },
+    {
+      "schema": "public",
+      "proname": "admin_get_platform_dashboard",
+      "args": "",
+      "prosecdef": true,
+      "grants": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_get_platform_dashboard()\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  result jsonb;\n  caller_role text;\nbegin\n  select role::text into caller_role from public.profiles where id = auth.uid();\n  if caller_role not in ('admin','staff') then raise exception 'Admin or staff access required'; end if;\n  select jsonb_build_object(\n    'profiles', coalesce((select jsonb_agg(jsonb_build_object('id',p.id,'role',p.role::text,'full_name',p.full_name,'email',p.email,'status',p.status,'country',p.country,'created_at',p.created_at) order by p.created_at desc) from public.profiles p), '[]'::jsonb),\n    'counts', jsonb_build_object(\n      'users', (select count(*) from public.profiles),\n      'clients', (select count(*) from public.profiles where role::text='client'),\n      'coaches', (select count(*) from public.profiles where role::text='coach'),\n      'staff', (select count(*) from public.profiles where role::text='staff'),\n      'admins', (select count(*) from public.profiles where role::text='admin'),\n      'active_coaches', (select count(*) from public.coaches where application_status::text='active'),\n      'coach_applications', (select count(*) from public.coach_marketplace_applications),\n      'active_clients', (select count(*) from public.clients where status::text='active'),\n      'active_services', (select count(*) from public.coach_service_offerings where active=true),\n      'bookings', (select count(*) from public.marketplace_booking_requests),\n      'transactions', (select count(*) from public.marketplace_transactions)\n    ),\n    'permissions', jsonb_build_object(\n      'admin', jsonb_build_array(\n        'full_platform_access','view_dashboard','view_analytics','manage_users','assign_roles','manage_staff','manage_coaches','manage_clients',\n        'manage_applications','manage_bookings','manage_services','manage_offerings','manage_content','manage_blog','manage_comments',\n        'manage_ai_agents','manage_ai_governance','manage_finance','manage_payments','manage_payouts','manage_risk_and_disputes',\n        'manage_notifications','manage_support','manage_website_settings','manage_integrations','view_audit'\n      ),\n      'staff', jsonb_build_array('view_dashboard','manage_coaches','manage_clients','manage_bookings','manage_services','view_payments','view_audit'),\n      'coach', jsonb_build_array('manage_own_profile','manage_own_services','manage_own_availability','manage_own_bookings','view_own_earnings'),\n      'client', jsonb_build_array('manage_own_profile','discover_coaches','manage_own_bookings','manage_own_payments','view_own_progress')\n    )\n  ) into result;\n  return result;\nend; $function$\n"
+    },
+    {
+      "schema": "public",
+      "proname": "admin_get_platform_operations",
+      "args": "",
+      "prosecdef": true,
+      "grants": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_get_platform_operations()\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare r text; out jsonb;\nbegin\n select role::text into r from public.profiles where id=auth.uid();\n if r <> 'admin' then raise exception 'Administrator access required'; end if;\n select jsonb_build_object(\n  'profiles',coalesce((select jsonb_agg(x order by x->>'created_at' desc) from (select jsonb_build_object('id',p.id,'role',p.role::text,'full_name',p.full_name,'email',p.email,'status',p.status,'country',p.country,'timezone',p.timezone,'created_at',p.created_at) x from public.profiles p limit 500)s),'[]'::jsonb),\n  'clients',coalesce((select jsonb_agg(x) from (select jsonb_build_object('id',c.id,'profile_id',c.profile_id,'name',p.full_name,'email',p.email,'status',c.status::text,'preferred_coach_id',c.preferred_coach_id,'created_at',c.created_at) x from public.clients c join public.profiles p on p.id=c.profile_id order by c.created_at desc limit 500)s),'[]'::jsonb),\n  'coaches',coalesce((select jsonb_agg(x) from (select jsonb_build_object('id',c.id,'profile_id',c.profile_id,'name',p.full_name,'email',p.email,'professional_title',c.professional_title,'application_status',c.application_status::text,'marketplace_status',cmp.marketplace_status,'verification_status',cmp.verification_status,'active',cmp.marketplace_status='active','created_at',c.created_at) x from public.coaches c join public.profiles p on p.id=c.profile_id left join public.coach_marketplace_profiles cmp on cmp.coach_id=c.id order by c.created_at desc limit 500)s),'[]'::jsonb),\n  'applications',coalesce((select jsonb_agg(x) from (select jsonb_build_object('id',a.id,'applicant_user_id',a.applicant_user_id,'display_name',a.display_name,'professional_title',a.professional_title,'country',a.country,'timezone',a.timezone,'application_status',a.application_status,'agreements',a.required_agreements_accepted,'created_at',a.created_at) x from public.coach_marketplace_applications a where lower(coalesce(a.application_status,'')) in ('submitted','pending','under_review') order by a.created_at desc limit 500)s),'[]'::jsonb),\n  'services',coalesce((select jsonb_agg(x) from (select jsonb_build_object('id',s.id,'name',s.name,'slug',s.slug,'category',s.category,'description',s.description,'price',s.price,'currency',s.currency,'active',s.active,'created_at',s.created_at) x from public.services s order by s.created_at desc limit 500)s),'[]'::jsonb),\n  'offerings',coalesce((select jsonb_agg(x) from (select jsonb_build_object('id',o.id,'coach_id',o.coach_id,'coach_name',p.full_name,'service_id',o.service_id,'title',o.title,'price',o.price,'currency',o.currency,'duration_minutes',o.duration_minutes,'delivery_mode',o.delivery_mode,'active',o.active) x from public.coach_service_offerings o join public.coaches c on c.id=o.coach_id join public.profiles p on p.id=c.profile_id order by o.created_at desc limit 500)s),'[]'::jsonb),\n  'bookings',coalesce((select jsonb_agg(x) from (select jsonb_build_object('id',b.id,'client_id',b.client_id,'client_name',cp.full_name,'coach_id',b.coach_id,'coach_name',kp.full_name,'service_id',b.service_id,'offering_id',b.coach_service_offering_id,'start_at',b.requested_start,'end_at',b.requested_end,'timezone',b.timezone,'status',b.booking_status,'created_at',b.created_at) x from public.marketplace_booking_requests b left join public.clients cl on cl.id=b.client_id left join public.profiles cp on cp.id=cl.profile_id left join public.coaches co on co.id=b.coach_id left join public.profiles kp on kp.id=co.profile_id order by b.created_at desc limit 500)s),'[]'::jsonb),\n  'transactions',coalesce((select jsonb_agg(x) from (select jsonb_build_object('id',t.id,'booking_id',t.booking_id,'client_id',t.client_id,'coach_id',t.coach_id,'gross_amount',t.gross_amount,'currency',t.currency,'payment_status',t.payment_status,'fulfillment_status',t.fulfillment_status,'release_eligibility',t.release_eligibility,'provider_key',t.provider_key,'provider_reference',t.provider_transaction_reference,'created_at',t.created_at) x from public.marketplace_transactions t order by t.created_at desc limit 500)s),'[]'::jsonb),\n  'payments',coalesce((select jsonb_agg(x) from (select jsonb_build_object('id',pt.id,'transaction_id',pt.transaction_id,'provider_key',pt.provider_key,'reference',pt.provider_transaction_reference,'type',pt.transaction_type,'amount',pt.amount,'currency',pt.currency,'status',pt.status,'processed_at',pt.processed_at,'created_at',pt.created_at) x from public.marketplace_payment_transactions pt order by pt.created_at desc limit 500)s),'[]'::jsonb),\n  'payouts',coalesce((select jsonb_agg(x) from (select jsonb_build_object('id',po.id,'transaction_id',po.transaction_id,'coach_id',po.coach_id,'coach_name',cp.full_name,'amount',po.payout_amount,'currency',po.currency,'status',po.status,'release_check_status',po.release_check_status,'release_check_reason',po.release_check_reason,'payout_account_id',po.payout_account_id,'account_last4',pa.account_number_last4,'bank_name',pa.bank_name,'recipient_ready',pa.recipient_code is not null and pa.verification_status='verified','approved_at',po.approved_at,'created_at',po.created_at) x from public.marketplace_payouts po join public.coaches co on co.id=po.coach_id join public.profiles cp on cp.id=co.profile_id left join public.coach_payout_accounts pa on pa.id=po.payout_account_id order by po.created_at desc limit 500)s),'[]'::jsonb),\n  'disputes',coalesce((select jsonb_agg(x) from (select jsonb_build_object('id',d.id,'transaction_id',d.transaction_id,'opened_by',d.opened_by,'category',d.category,'reason',d.reason,'status',d.status,'amount_at_risk',d.amount_at_risk,'currency',d.currency,'created_at',d.created_at) x from public.marketplace_disputes d order by d.created_at desc limit 500)s),'[]'::jsonb),\n  'refunds',coalesce((select jsonb_agg(x) from (select jsonb_build_object('id',f.id,'transaction_id',f.transaction_id,'requested_by',f.requested_by,'amount',f.amount,'reason',f.reason,'status',f.status,'created_at',f.created_at) x from public.marketplace_refund_requests f order by f.created_at desc limit 500)s),'[]'::jsonb),\n  'providers',coalesce((select jsonb_agg(jsonb_build_object('id',pc.id,'provider_key',pc.provider_key,'display_name',pc.display_name,'active',pc.active,'supported_currencies',pc.supported_currencies,'supported_countries',pc.supported_countries,'capabilities',pc.capabilities) order by pc.created_at desc) from public.marketplace_payment_provider_configs pc),'[]'::jsonb)\n ) into out;\n return out;\nend;\n$function$\n"
+    },
+    {
+      "schema": "public",
+      "proname": "admin_update_booking_status",
+      "args": "p_booking_id uuid, p_status text, p_notes text",
+      "prosecdef": true,
+      "grants": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_update_booking_status(p_booking_id uuid, p_status text, p_notes text DEFAULT NULL::text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare r text; begin select role::text into r from profiles where id=auth.uid(); if r<>'admin' then raise exception 'Administrator access required'; end if; if p_status not in ('requested','confirmed','declined','cancelled','completed') then raise exception 'Invalid booking status'; end if; update marketplace_booking_requests set booking_status=p_status,coach_notes=coalesce(p_notes,coach_notes),updated_at=now() where id=p_booking_id; if not found then raise exception 'Booking not found'; end if; return jsonb_build_object('updated',true,'booking_id',p_booking_id,'status',p_status); end; $function$\n"
+    },
+    {
+      "schema": "public",
+      "proname": "cancel_marketplace_booking",
+      "args": "p_booking_id uuid, p_reason text",
+      "prosecdef": false,
+      "grants": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.cancel_marketplace_booking(p_booking_id uuid, p_reason text DEFAULT NULL::text)\n RETURNS boolean\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\ndeclare v_client uuid; v_coach uuid;\nbegin\n select client_id,coach_id into v_client,v_coach from marketplace_booking_requests where id=p_booking_id;\n if not (exists(select 1 from clients cl join profiles p on p.id=cl.profile_id where cl.id=v_client and p.id=(select auth.uid())) or exists(select 1 from coaches c join profiles p on p.id=c.profile_id where c.id=v_coach and p.id=(select auth.uid())) or exists(select 1 from profiles p where p.id=(select auth.uid()) and p.role in ('staff','admin'))) then raise exception 'Unauthorized'; end if;\n update marketplace_booking_requests set booking_status='cancelled',coach_notes=case when p_reason is not null then coalesce(coach_notes,'') || case when coach_notes is null or coach_notes='' then '' else E'\\n' end || p_reason else coach_notes end,updated_at=now() where id=p_booking_id and booking_status not in ('completed','cancelled');\n update marketplace_booking_slots set status='cancelled',updated_at=now() where booking_id=p_booking_id and status in ('held','booked');\n insert into marketplace_booking_events(booking_id,event_type,actor_type,actor_id,event_data) values(p_booking_id,'cancelled',case when exists(select 1 from profiles p where p.id=(select auth.uid()) and p.role in ('staff','admin')) then 'staff' when exists(select 1 from clients cl join profiles p on p.id=cl.profile_id where cl.id=v_client and p.id=(select auth.uid())) then 'client' else 'coach' end,(select auth.uid()),jsonb_build_object('reason',p_reason));\n return true;\nend $function$\n"
+    },
+    {
+      "schema": "public",
+      "proname": "coach_confirm_marketplace_booking",
+      "args": "p_booking_id uuid, p_coach_notes text",
+      "prosecdef": false,
+      "grants": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.coach_confirm_marketplace_booking(p_booking_id uuid, p_coach_notes text DEFAULT NULL::text)\n RETURNS boolean\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\ndeclare\n  v_coach uuid; v_start timestamptz; v_end timestamptz; v_timezone text;\nbegin\n  if auth.uid() is null then raise exception 'Authentication required'; end if;\n  select coach_id,requested_start,requested_end,timezone into v_coach,v_start,v_end,v_timezone\n  from marketplace_booking_requests where id=p_booking_id for update;\n  if v_coach is null then raise exception 'Booking not found'; end if;\n  if not exists (select 1 from coaches c join profiles p on p.id=c.profile_id where c.id=v_coach and p.id=auth.uid()) then raise exception 'Unauthorized coach'; end if;\n  if not exists (select 1 from marketplace_booking_requests where id=p_booking_id and booking_status='requested') then raise exception 'Booking is not awaiting confirmation'; end if;\n\n  insert into marketplace_booking_slots(coach_id,start_at,end_at,timezone,status,booking_id)\n  values(v_coach,v_start,v_end,v_timezone,'booked',p_booking_id);\n\n  update marketplace_booking_requests set booking_status='confirmed',coach_notes=coalesce(p_coach_notes,coach_notes),updated_at=now() where id=p_booking_id;\n  insert into marketplace_booking_events(booking_id,event_type,actor_type,actor_id,event_data)\n  values(p_booking_id,'confirmed','coach',auth.uid(),'{}'::jsonb);\n  return true;\nexception when exclusion_violation then\n  raise exception 'Time slot already unavailable';\nend;\n$function$\n"
+    },
+    {
+      "schema": "public",
+      "proname": "create_marketplace_booking_request",
+      "args": "p_client_id uuid, p_coach_id uuid, p_coach_service_offering_id uuid, p_service_request_id uuid, p_start_at timestamp with time zone, p_end_at timestamp with time zone, p_timezone text, p_client_notes text",
+      "prosecdef": true,
+      "grants": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.create_marketplace_booking_request(p_client_id uuid, p_coach_id uuid, p_coach_service_offering_id uuid, p_service_request_id uuid, p_start_at timestamp with time zone, p_end_at timestamp with time zone, p_timezone text, p_client_notes text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'pg_temp'\nAS $function$\ndeclare v_client public.clients%rowtype; v_offering public.coach_service_offerings%rowtype; v_coach public.coaches%rowtype; v_booking public.marketplace_booking_requests%rowtype;\nbegin\n if auth.uid() is null then raise exception 'Authentication required'; end if;\n select * into v_client from public.ensure_my_client_account();\n if v_client.id<>p_client_id then raise exception 'Client account does not match the signed-in user'; end if;\n select * into v_offering from public.coach_service_offerings where id=p_coach_service_offering_id and active=true;\n if not found then raise exception 'Selected coaching service is unavailable'; end if;\n select * into v_coach from public.coaches where id=p_coach_id and application_status in ('approved','active');\n if not found then raise exception 'Coach is not currently available for booking'; end if;\n if v_offering.coach_id<>p_coach_id then raise exception 'Selected service does not belong to this coach'; end if;\n if p_end_at<=p_start_at then raise exception 'Invalid booking time'; end if;\n if extract(epoch from (p_end_at-p_start_at))/60<>v_offering.duration_minutes then raise exception 'Booking duration does not match the selected service'; end if;\n if exists(select 1 from public.marketplace_booking_slots s where s.coach_id=p_coach_id and s.status in ('held','booked') and p_start_at<s.end_at and p_end_at>s.start_at) then raise exception 'That time is no longer available. Please choose another slot.'; end if;\n insert into public.marketplace_booking_requests(client_id,coach_id,service_id,coach_service_offering_id,service_request_id,requested_start,requested_end,timezone,booking_status,client_notes)\n values(v_client.id,p_coach_id,v_offering.service_id,p_coach_service_offering_id,p_service_request_id,p_start_at,p_end_at,p_timezone,'requested',p_client_notes) returning * into v_booking;\n insert into public.marketplace_booking_events(booking_id,event_type,actor_profile_id,metadata) values(v_booking.id,'booking_requested',auth.uid(),jsonb_build_object('source','coach_profile'));\n return jsonb_build_object('id',v_booking.id,'booking_status',v_booking.booking_status);\nend; $function$\n"
+    },
+    {
+      "schema": "public",
+      "proname": "create_marketplace_transaction",
+      "args": "p_booking_id uuid",
+      "prosecdef": false,
+      "grants": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.create_marketplace_transaction(p_booking_id uuid)\n RETURNS uuid\n LANGUAGE plpgsql\n SET search_path TO 'public', 'pg_temp'\nAS $function$\nDECLARE\n  v_tx uuid;\n  v_client uuid;\n  v_coach uuid;\n  v_service uuid;\n  v_amount numeric;\n  v_currency text;\n  v_platform numeric;\n  v_coach_share numeric;\n  v_platform_fee numeric;\n  v_coach_earnings numeric;\nBEGIN\n  SELECT b.client_id,b.coach_id,b.service_id,o.price,o.currency\n    INTO v_client,v_coach,v_service,v_amount,v_currency\n  FROM public.marketplace_booking_requests b\n  JOIN public.coach_service_offerings o ON o.id=b.coach_service_offering_id AND o.active=true\n  WHERE b.id=p_booking_id AND b.booking_status='confirmed';\n\n  IF v_client IS NULL THEN\n    RAISE EXCEPTION 'Confirmed booking/service offering not found';\n  END IF;\n\n  IF NOT EXISTS (\n    SELECT 1 FROM public.clients cl JOIN public.profiles p ON p.id=cl.profile_id\n    WHERE cl.id=v_client AND p.id=auth.uid()\n  ) THEN\n    RAISE EXCEPTION 'Unauthorized';\n  END IF;\n\n  SELECT id INTO v_tx FROM public.marketplace_transactions WHERE booking_id=p_booking_id;\n  IF v_tx IS NOT NULL THEN\n    RAISE EXCEPTION 'Transaction already exists for booking';\n  END IF;\n\n  SELECT platform_share_pct,coach_share_pct\n    INTO v_platform,v_coach_share\n  FROM public.platform_revenue_split_config\n  WHERE active=true AND effective_from<=now()\n    AND (effective_to IS NULL OR effective_to>now())\n  ORDER BY effective_from DESC LIMIT 1;\n\n  IF v_platform IS NULL OR v_coach_share IS NULL THEN\n    RAISE EXCEPTION 'No active revenue split configuration';\n  END IF;\n  IF round(v_platform+v_coach_share,2) <> 100 THEN\n    RAISE EXCEPTION 'Invalid revenue split configuration';\n  END IF;\n  IF v_amount IS NULL OR v_amount < 0 OR v_currency IS NULL OR length(trim(v_currency))=0 THEN\n    RAISE EXCEPTION 'Invalid service price or currency';\n  END IF;\n\n  v_platform_fee=round(v_amount*v_platform/100,2);\n  v_coach_earnings=round(v_amount-v_platform_fee,2);\n\n  INSERT INTO public.marketplace_transactions(\n    booking_id,client_id,coach_id,service_id,currency,gross_amount,\n    platform_share_pct,coach_share_pct,platform_fee,coach_earnings\n  ) VALUES (\n    p_booking_id,v_client,v_coach,v_service,v_currency,v_amount,\n    v_platform,v_coach_share,v_platform_fee,v_coach_earnings\n  ) RETURNING id INTO v_tx;\n\n  INSERT INTO public.marketplace_transaction_events(\n    transaction_id,event_type,actor_type,actor_id,event_data\n  ) VALUES (\n    v_tx,'created','client',auth.uid(),\n    jsonb_build_object('gross_amount',v_amount,'currency',v_currency,\n      'platform_fee',v_platform_fee,'coach_earnings',v_coach_earnings)\n  );\n  RETURN v_tx;\nEND;\n$function$\n"
+    },
+    {
+      "schema": "public",
+      "proname": "marketplace_booking_notification_automation",
+      "args": "",
+      "prosecdef": true,
+      "grants": "{postgres=X/postgres,service_role=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.marketplace_booking_notification_automation()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\ndeclare\n  coach_profile uuid;\n  client_profile uuid;\n  service_title text;\n  coach_name text;\n  client_name text;\n  when_text text;\nbegin\n  select c.profile_id into coach_profile from public.coaches c where c.id = new.coach_id;\n  select c.profile_id into client_profile from public.clients c where c.id = new.client_id;\n  select coalesce(o.title, s.name, 'Coaching session') into service_title\n    from public.marketplace_booking_requests b\n    left join public.coach_service_offerings o on o.id = b.coach_service_offering_id\n    left join public.services s on s.id = b.service_id\n   where b.id = new.id;\n  select coalesce(p.full_name, 'Your coach') into coach_name from public.profiles p where p.id = coach_profile;\n  select coalesce(p.full_name, 'Your client') into client_name from public.profiles p where p.id = client_profile;\n  when_text := coalesce(to_char(new.requested_start at time zone coalesce(new.timezone,'UTC'),'Mon DD, YYYY HH24:MI'), 'the requested time');\n\n  if tg_op = 'INSERT' and new.booking_status = 'requested' and coach_profile is not null then\n    insert into public.marketplace_notifications(profile_id,client_id,coach_id,booking_id,notification_type,category,priority,title,body,action_url,metadata)\n    values (coach_profile,new.client_id,new.coach_id,new.id,'booking_request','booking','high','New coaching session request',client_name||' requested '||service_title||' for '||when_text||'.','/coach-dashboard',jsonb_build_object('booking_id',new.id));\n  elsif tg_op = 'UPDATE' and new.booking_status is distinct from old.booking_status then\n    if new.booking_status = 'confirmed' and client_profile is not null then\n      insert into public.marketplace_notifications(profile_id,client_id,coach_id,booking_id,notification_type,category,priority,title,body,action_url,metadata)\n      values (client_profile,new.client_id,new.coach_id,new.id,'booking_confirmed','booking','high','Your coaching session is confirmed',coach_name||' confirmed your '||service_title||' for '||when_text||'.','/client-dashboard',jsonb_build_object('booking_id',new.id));\n    elsif new.booking_status = 'cancelled' and client_profile is not null then\n      insert into public.marketplace_notifications(profile_id,client_id,coach_id,booking_id,notification_type,category,priority,title,body,action_url,metadata)\n      values (client_profile,new.client_id,new.coach_id,new.id,'booking_cancelled','booking','high','Your coaching session was cancelled','The coaching session for '||when_text||' has been cancelled.','/client-dashboard',jsonb_build_object('booking_id',new.id));\n    end if;\n  end if;\n  return new;\nend;\n$function$\n"
+    },
+    {
+      "schema": "public",
+      "proname": "process_due_marketplace_reminders",
+      "args": "p_limit integer",
+      "prosecdef": false,
+      "grants": "{postgres=X/postgres,service_role=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.process_due_marketplace_reminders(p_limit integer DEFAULT 100)\n RETURNS integer\n LANGUAGE plpgsql\n SET search_path TO 'public'\nAS $function$\ndeclare r record; run_id uuid; n integer:=0; v_profile uuid; v_notification uuid;\nbegin\n insert into public.marketplace_reminder_runs default values returning id into run_id;\n for r in select s.*,coalesce(o.title,'coaching session') as service_name\n   from public.marketplace_notification_schedules s\n   join public.marketplace_booking_requests b on b.id=s.booking_id\n   left join public.coach_service_offerings o on o.id=b.coach_service_offering_id\n   where s.status='scheduled' and s.scheduled_for<=now() and b.booking_status='confirmed'\n   order by s.scheduled_for for update of s skip locked limit greatest(coalesce(p_limit,100),1)\n loop\n   update public.marketplace_notification_schedules set status='queued',updated_at=now() where id=r.id and status='scheduled';\n   select profile_id into v_profile from public.clients where id=r.client_id;\n   if v_profile is not null then\n     v_notification:=public.create_marketplace_event_notification(v_profile,r.client_id,r.coach_id,r.booking_id,null,'session_reminder','booking','high',case when r.reminder_type='session_24h' then 'Session reminder: 24 hours' when r.reminder_type='session_1h' then 'Session reminder: 1 hour' else 'Your coaching session starts now' end,case when r.reminder_type='session_24h' then 'Your '||r.service_name||' session is scheduled for tomorrow.' when r.reminder_type='session_1h' then 'Your '||r.service_name||' session starts in about one hour.' else 'Your '||r.service_name||' session is scheduled to start now.' end,'/client/bookings',now(),jsonb_build_object('reminder_type',r.reminder_type,'scheduled_for',r.scheduled_for),'session_reminders');\n   end if;\n   select profile_id into v_profile from public.coaches where id=r.coach_id;\n   if v_profile is not null then\n     v_notification:=public.create_marketplace_event_notification(v_profile,r.client_id,r.coach_id,r.booking_id,null,'session_reminder','booking','high',case when r.reminder_type='session_24h' then 'Session reminder: 24 hours' when r.reminder_type='session_1h' then 'Session reminder: 1 hour' else 'Your coaching session starts now' end,case when r.reminder_type='session_24h' then 'Your '||r.service_name||' session is scheduled for tomorrow.' when r.reminder_type='session_1h' then 'Your '||r.service_name||' session starts in about one hour.' else 'Your '||r.service_name||' session is scheduled to start now.' end,'/coach/bookings',now(),jsonb_build_object('reminder_type',r.reminder_type,'scheduled_for',r.scheduled_for),'session_reminders');\n   end if;\n   update public.marketplace_notification_schedules set notification_id=coalesce(v_notification,notification_id),status='sent',updated_at=now() where id=r.id;\n   n:=n+1;\n end loop;\n update public.marketplace_reminder_runs set run_finished_at=now(),scanned_count=n,queued_count=n,status='completed' where id=run_id;\n return n;\nexception when others then\n update public.marketplace_reminder_runs set run_finished_at=now(),status='failed',error_message=sqlerrm where id=run_id; raise;\nend; $function$\n"
+    },
+    {
+      "schema": "public",
+      "proname": "schedule_marketplace_booking_reminders",
+      "args": "p_booking_id uuid",
+      "prosecdef": true,
+      "grants": "{postgres=X/postgres,service_role=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.schedule_marketplace_booking_reminders(p_booking_id uuid)\n RETURNS integer\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'pg_temp'\nAS $function$\ndeclare\n  b record;\n  v_count integer := 0;\n  v_start timestamptz;\n  v_key text;\nbegin\n  select * into b from public.marketplace_booking_requests where id = p_booking_id;\n  if not found then raise exception 'booking not found'; end if;\n  if b.booking_status not in ('requested','confirmed') then return 0; end if;\n  v_start := b.requested_start;\n  if v_start is null then return 0; end if;\n\n  if v_start > now() + interval '24 hours' then\n    v_key := p_booking_id::text || ':session_24h';\n    insert into public.marketplace_notification_schedules(booking_id,client_id,coach_id,reminder_type,scheduled_for,dedupe_key,metadata)\n    values(p_booking_id,b.client_id,b.coach_id,'session_24h',v_start-interval '24 hours',v_key,jsonb_build_object('timezone',b.timezone))\n    on conflict(dedupe_key) do nothing;\n    v_count := v_count + 1;\n  end if;\n\n  if v_start > now() + interval '1 hour' then\n    v_key := p_booking_id::text || ':session_1h';\n    insert into public.marketplace_notification_schedules(booking_id,client_id,coach_id,reminder_type,scheduled_for,dedupe_key,metadata)\n    values(p_booking_id,b.client_id,b.coach_id,'session_1h',v_start-interval '1 hour',v_key,jsonb_build_object('timezone',b.timezone))\n    on conflict(dedupe_key) do nothing;\n    v_count := v_count + 1;\n  end if;\n\n  v_key := p_booking_id::text || ':session_start';\n  insert into public.marketplace_notification_schedules(booking_id,client_id,coach_id,reminder_type,scheduled_for,dedupe_key,metadata)\n  values(p_booking_id,b.client_id,b.coach_id,'session_start',v_start,v_key,jsonb_build_object('timezone',b.timezone))\n  on conflict(dedupe_key) do nothing;\n  v_count := v_count + 1;\n  return v_count;\nend;\n$function$\n"
+    },
+    {
+      "schema": "public",
+      "proname": "send_marketplace_communication",
+      "args": "p_booking_id uuid, p_body text, p_message_type text",
+      "prosecdef": false,
+      "grants": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.send_marketplace_communication(p_booking_id uuid, p_body text, p_message_type text DEFAULT 'text'::text)\n RETURNS uuid\n LANGUAGE plpgsql\n SET search_path TO 'public', 'pg_temp'\nAS $function$ declare b public.marketplace_booking_requests%rowtype; c public.marketplace_communications%rowtype; r jsonb; sender text; uid uuid := auth.uid(); begin if uid is null then raise exception 'Authentication required'; end if; select * into b from public.marketplace_booking_requests where id=p_booking_id; if not found then raise exception 'Booking not found'; end if; if exists(select 1 from public.clients x where x.id=b.client_id and x.profile_id=uid) then sender := 'client'; elsif exists(select 1 from public.coaches x where x.id=b.coach_id and x.profile_id=uid) then sender := 'coach'; else raise exception 'Not a participant in this booking'; end if; r := public.marketplace_communication_risk_classify(p_body); insert into public.marketplace_communications(booking_id,client_id,coach_id,sender_role,message_type,body,moderation_status,external_contact_detected,external_business_intent_detected,risk_score,policy_action,moderation_reason) values(p_booking_id,b.client_id,b.coach_id,sender,p_message_type,p_body,case when (r->>'policy_action')='block' then 'blocked' when (r->>'policy_action') in ('review','flag') then 'flagged' else 'allowed' end,(r->>'external_contact_detected')::boolean,(r->>'external_business_intent_detected')::boolean,(r->>'risk_score')::numeric,(r->>'policy_action'),array_to_string(array(select jsonb_array_elements_text(r->'reasons')) ,', ')) returning * into c; insert into public.marketplace_communication_events(communication_id,event_type,actor_type,actor_id,event_data) values(c.id,case when c.moderation_status='blocked' then 'blocked' when c.moderation_status='flagged' then 'flagged' when c.policy_action='warn' then 'warning_issued' else 'sent' end,sender,uid,r); if c.moderation_status in ('blocked','flagged') then insert into public.marketplace_communication_risk_flags(communication_id,risk_type,risk_score,detected_by,evidence) values(c.id,case when (r->>'external_business_intent_detected')::boolean then 'off_platform_business' when (r->>'external_contact_detected')::boolean then 'external_contact' else 'other' end,(r->>'risk_score')::numeric,'rule',r); end if; return c.id; end $function$\n"
+    }
+  ],
+  "supportingRoutines": [
+    {
+      "proname": "ensure_my_client_account",
+      "prosecdef": true,
+      "grants": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.ensure_my_client_account()\n RETURNS clients\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'pg_temp'\nAS $function$\ndeclare\n  v_user_id uuid := auth.uid(); v_profile public.profiles%rowtype; v_client public.clients%rowtype;\nbegin\n  if v_user_id is null then raise exception 'Authentication required'; end if;\n  select * into v_profile from public.profiles where id=v_user_id;\n  if not found then raise exception 'Client profile not found. Please complete your account profile first.'; end if;\n  if v_profile.role::text <> 'client' then raise exception 'This account is not registered as a client.'; end if;\n  if nullif(trim(coalesce(v_profile.full_name,'')),'') is null then raise exception 'Please enter your full name before booking.'; end if;\n  select * into v_client from public.clients where profile_id=v_user_id limit 1;\n  if found then return v_client; end if;\n  insert into public.clients(profile_id,status,onboarding_completed_at) values(v_user_id,'active',now()) returning * into v_client;\n  return v_client;\nend; $function$\n"
+    },
+    {
+      "proname": "get_public_calendly_booking_links",
+      "prosecdef": true,
+      "grants": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.get_public_calendly_booking_links(p_coach_id uuid DEFAULT NULL::uuid)\n RETURNS TABLE(offering_id uuid, coach_id uuid, calendly_booking_url text)\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO 'public', 'pg_temp'\nAS $function$\n  SELECT o.id, o.coach_id, o.calendly_booking_url\n  FROM public.coach_service_offerings AS o\n  JOIN public.services AS s ON s.id = o.service_id AND s.active = true\n  JOIN public.coaches AS c ON c.id = o.coach_id\n  JOIN public.coach_marketplace_profiles AS p ON p.coach_id = c.id\n  WHERE o.active = true\n    AND o.calendly_booking_url IS NOT NULL\n    AND p.verification_status = 'verified'\n    AND p.marketplace_status = 'active'\n    AND c.application_status::text IN ('approved', 'active')\n    AND (p_coach_id IS NULL OR c.id = p_coach_id)\n  ORDER BY o.id;\n$function$\n"
+    },
+    {
+      "proname": "get_public_coach_directory",
+      "prosecdef": true,
+      "grants": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.get_public_coach_directory()\n RETURNS TABLE(coach_id uuid, display_name text, headline text, bio text, avatar_url text, country text, timezone text, years_coaching integer, specializations text[], coaching_formats text[], offering_count integer)\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public', 'pg_temp'\nAS $function$\n  select p.coach_id,\n         p.display_name,\n         p.headline,\n         p.bio,\n         pr.avatar_url,\n         p.country,\n         p.timezone,\n         p.years_coaching,\n         p.specializations,\n         p.coaching_formats,\n         count(o.id)::integer as offering_count\n  from public.coach_marketplace_profiles p\n  join public.coaches c on c.id=p.coach_id\n  left join public.profiles pr on pr.id=c.profile_id\n  left join public.coach_service_offerings o on o.coach_id=c.id and o.active=true\n  where p.verification_status='verified'\n    and p.marketplace_status='active'\n    and c.application_status::text in ('approved','active')\n  group by p.coach_id,p.display_name,p.headline,p.bio,pr.avatar_url,p.country,p.timezone,p.years_coaching,p.specializations,p.coaching_formats\n  order by lower(coalesce(p.display_name,''));\n$function$\n"
+    },
+    {
+      "proname": "get_public_coach_profile",
+      "prosecdef": true,
+      "grants": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.get_public_coach_profile(p_coach_id uuid)\n RETURNS jsonb\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nselect coalesce(jsonb_build_object(\n 'coach_id',p.coach_id,'display_name',p.display_name,'headline',p.headline,'bio',p.bio,\n 'specializations',to_jsonb(p.specializations),'coaching_formats',to_jsonb(p.coaching_formats),'languages',to_jsonb(p.languages),\n 'timezone',p.timezone,'country',p.country,'years_coaching',p.years_coaching,'verification_status',p.verification_status,\n 'profile_completion_pct',p.profile_completion_pct,'avatar_url',pr.avatar_url,\n 'availability',coalesce((select jsonb_agg(jsonb_build_object('id',a.id,'day_of_week',a.day_of_week,'start_time',a.start_time,'end_time',a.end_time,'timezone',a.timezone) order by a.day_of_week,a.start_time) from coach_availability a where a.coach_id=p.coach_id and a.active=true),'[]'::jsonb),\n 'offerings',coalesce((select jsonb_agg(jsonb_build_object('id',o.id,'service_id',o.service_id,'title',coalesce(o.title,s.name),'description',coalesce(o.description,s.description),'price',o.price,'currency',o.currency,'duration_minutes',o.duration_minutes,'delivery_mode',o.delivery_mode) order by o.created_at) from coach_service_offerings o left join services s on s.id=o.service_id where o.coach_id=p.coach_id and o.active=true),'[]'::jsonb),\n 'credentials',to_jsonb(coalesce(c.credentials,array[]::text[])),'linkedin_url',c.linkedin_url,'website_url',c.website_url,'professional_title',c.professional_title,'professional_bio',c.professional_bio\n),'{}'::jsonb)\nfrom public.coach_marketplace_profiles p left join public.coaches c on c.id=p.coach_id left join public.profiles pr on pr.id=c.profile_id\nwhere p.coach_id=p_coach_id and p.verification_status='verified' and p.marketplace_status='active' and c.application_status='approved';\n$function$\n"
+    },
+    {
+      "proname": "get_public_service_directory",
+      "prosecdef": true,
+      "grants": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.get_public_service_directory()\n RETURNS TABLE(offering_id uuid, service_id uuid, coach_id uuid, coach_name text, coach_avatar_url text, service_name text, category text, title text, description text, price numeric, currency text, duration_minutes integer, delivery_mode text)\n LANGUAGE sql\n SECURITY DEFINER\n SET search_path TO 'public', 'pg_temp'\nAS $function$\n  select o.id,\n         s.id,\n         c.id,\n         p.display_name,\n         pr.avatar_url,\n         s.name,\n         s.category,\n         o.title,\n         o.description,\n         o.price,\n         o.currency,\n         o.duration_minutes,\n         o.delivery_mode\n  from public.coach_service_offerings o\n  join public.services s on s.id=o.service_id and s.active=true\n  join public.coaches c on c.id=o.coach_id\n  join public.coach_marketplace_profiles p on p.coach_id=c.id\n  left join public.profiles pr on pr.id=c.profile_id\n  where o.active=true\n    and p.verification_status='verified'\n    and p.marketplace_status='active'\n    and c.application_status::text in ('approved','active')\n  order by lower(coalesce(s.name,'')), lower(coalesce(p.display_name,'')), lower(coalesce(o.title,''));\n$function$\n"
+    },
+    {
+      "proname": "marketplace_schedule_reminders_on_booking",
+      "prosecdef": true,
+      "grants": "{postgres=X/postgres,service_role=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.marketplace_schedule_reminders_on_booking()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'pg_temp'\nAS $function$\nbegin\n  perform public.schedule_marketplace_booking_reminders(new.id);\n  return new;\nend;\n$function$\n"
+    }
+  ],
+  "bookingSourceComparison": {
+    "method": "UTF-8 text with CRLF normalized and trailing whitespace at EOF removed",
+    "main_sha256": "300afa9cb6da8024e408ef66ea1c414369c669659e47031c6fb2c5c1e89a4e23",
+    "deployed_sha256": "300afa9cb6da8024e408ef66ea1c414369c669659e47031c6fb2c5c1e89a4e23",
+    "equal": true
+  },
+  "publicReaderPrivileges": [
+    {
+      "routine": "get_public_coach_directory",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "routine": "get_public_service_directory",
+      "anon_execute": false,
+      "authenticated_execute": true
+    },
+    {
+      "routine": "get_public_coach_profile",
+      "anon_execute": false,
+      "authenticated_execute": true
+    }
+  ]
+}

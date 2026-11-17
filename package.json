@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:scheduling": "node --test tests/scheduling.test.mjs tests/calendly-operation.test.mjs tests/calendly-reschedule-http.test.mjs tests/source-audit-fixture.test.mjs tests/public-directory.test.mjs tests/coach-matching-boundary.test.mjs tests/calendly-oauth.test.mjs tests/calendly-durable-http.test.mjs tests/calendly-lifecycle.test.mjs",
     "dev": "next dev",
     "build": "npm run check:build-inputs && tar -xzf public/careerdev-global-assets.tgz -C public && next build",
     "start": "next start",

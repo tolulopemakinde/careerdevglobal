@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { join, relative, sep } from "node:path";
 
 const root = process.cwd();
 const ignored = new Set([".git", "node_modules", ".next", "public/careerdev-global-assets.tgz"]);
@@ -18,7 +18,7 @@ function walk(dir) {
 
 function inspect(path) {
   const text = readFileSync(path, "utf8");
-  const rel = relative(root, path);
+  const rel = relative(root, path).split(sep).join("/");
   if (rel === "scripts/audit-source-config.mjs") return;
   const checks = [
     { label: "Supabase service-role secret", pattern: /SUPABASE_SERVICE_ROLE|service_role_secret|service_role_key/i },
@@ -30,7 +30,12 @@ function inspect(path) {
     const sanitizedText = check.label === "Supabase service-role secret" && rel.startsWith("supabase/functions/")
       ? text.replace(/Deno\.env\.get\(["'`](?:SUPABASE_SERVICE_ROLE_KEY|CAREERDEV_SERVICE_ROLE_KEY)["'`]\)/g, "")
       : text;
-    if (check.pattern.test(sanitizedText)) findings.push(`${rel}: ${check.label}`);
+    // This server-only runner consumes a CLI-generated local fixture credential.
+    // Allow only the environment lookup, never literal assignments or client code.
+    const checkedText = check.label === "Supabase service-role secret" && rel === "tests/calendly-local-supabase.mjs"
+      ? sanitizedText.replace(/process\.env\.SERVICE_ROLE_KEY\b/g, "")
+      : sanitizedText;
+    if (check.pattern.test(checkedText)) findings.push(`${rel}: ${check.label}`);
   }
 }
 
