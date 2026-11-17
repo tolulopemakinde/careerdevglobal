@@ -1,5 +1,6 @@
 'use client';
 import DashboardShell from '../components/dashboard-shell';
+import { calendlyOperationMode, runAcceptanceBooking } from '../../lib/calendly-acceptance-target.mjs';
 import {useEffect,useRef,useState} from 'react';import "./styles.css";import {createSupabaseBrowserClient} from '../../lib/supabase-browser';import CoachEarningsPanel from './earnings-panel';import CoachProfilePanel from './profile-panel';import CalendlyPanel from './calendly-panel';
 import TimezoneSelect from '../components/timezone-select';
 import {createSubmissionGate, formatBookingTime, runCalendlyAction, safeMeetingUrl} from '../../lib/scheduling';
@@ -8,12 +9,14 @@ const CAREER_INSIGHTS_PLACEHOLDER='https://images.unsplash.com/photo-14997503101
 const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 export default function CoachDashboard(){const supabase=createSupabaseBrowserClient();const[userId,setUserId]=useState<string|null>(null),[coach,setCoach]=useState<any>(null),[availability,setAvailability]=useState<any[]>([]),[bookings,setBookings]=useState<any[]>([]),[offerings,setOfferings]=useState<any[]>([]),[services,setServices]=useState<any[]>([]),[day,setDay]=useState(1),[start,setStart]=useState('17:00'),[end,setEnd]=useState('21:00'),[timezone,setTimezone]=useState('Africa/Lagos'),[serviceId,setServiceId]=useState(''),[title,setTitle]=useState(''),[description,setDescription]=useState(''),[price,setPrice]=useState(''),[currency,setCurrency]=useState('USD'),[duration,setDuration]=useState('60'),[delivery,setDelivery]=useState('online'),[message,setMessage]=useState(''),[savingOffering,setSavingOffering]=useState(false),[insightTitle,setInsightTitle]=useState(''),[insightSlug,setInsightSlug]=useState(''),[insightExcerpt,setInsightExcerpt]=useState(''),[insightContent,setInsightContent]=useState(''),[insightCategory,setInsightCategory]=useState('Career Development'),[insightTags,setInsightTags]=useState(''),[insightImage,setInsightImage]=useState<File|null>(null),[insightImagePreview,setInsightImagePreview]=useState(''),[publishingInsight,setPublishingInsight]=useState(false);
  const bookingGate=useRef(createSubmissionGate());
+ const operationMode=calendlyOperationMode(process.env.NEXT_PUBLIC_CALENDLY_OPERATIONS_REHEARSAL_PROJECT_REF,process.env.NEXT_PUBLIC_SUPABASE_URL);
  const [bookingBusy,setBookingBusy]=useState(false);
  const [reviewIds,setReviewIds]=useState<string[]>([]);
  useEffect(()=>{try{setReviewIds(bookings.filter(b=>window.sessionStorage.getItem(`careerdev_calendly_review:${b.id}`)).map(b=>b.id))}catch{/* Mutating actions check storage before sending. */}},[bookings]);
  async function bookingAction(id:string,action:'confirm'|'cancel'){
   await bookingGate.current.run(async()=>{
    const key=`careerdev_calendly_review:${id}`;
+   if(operationMode==='blocked'){setMessage('The isolated scheduling target is not configured correctly.');return}
    try{if(window.sessionStorage.getItem(key)){setMessage('This booking needs reconciliation. Contact support before repeating the action.');return}}catch{setMessage('Your browser could not preserve this booking action safely. Refresh before trying again.');return}
    const notes=window.prompt(action==='confirm'?'Optional note to the client:':'Reason for cancelling this confirmed session (optional):');
    if(notes===null)return;
@@ -21,7 +24,7 @@ export default function CoachDashboard(){const supabase=createSupabaseBrowserCli
    try{
     window.sessionStorage.setItem(key,action);
     setReviewIds(ids=>[...ids,id]);
-    const result=await runCalendlyAction(action,
+    const result=operationMode==='acceptance'?await runAcceptanceBooking(supabase,id,action):await runCalendlyAction(action,
      async()=>await supabase.functions.invoke('careerdev-calendly-booking',{body:{action:action==='confirm'?'book':'cancel',booking_id:id,reason:notes||null}}),
      async()=>{
       const saved=action==='confirm'?await supabase.rpc('coach_confirm_marketplace_booking',{p_booking_id:id,p_coach_notes:notes||null}):await supabase.rpc('cancel_marketplace_booking',{p_booking_id:id,p_reason:notes||null});

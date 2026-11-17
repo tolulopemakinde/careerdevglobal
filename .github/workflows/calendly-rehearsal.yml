@@ -7,6 +7,10 @@ on:
       - 'docs/scheduling/rehearsal/**'
       - 'tests/calendly-rehearsal*'
       - 'tests/calendly-local-supabase.mjs'
+      - 'tests/calendly-acceptance-adapter*'
+      - 'supabase/functions/careerdev-calendly-oauth/**'
+      - 'supabase/functions/careerdev-calendly-operations/**'
+      - 'supabase/functions/_shared/calendly-acceptance.mjs'
       - 'supabase/functions/careerdev-calendly-reschedule/**'
       - '.github/workflows/calendly-rehearsal.yml'
 
@@ -68,5 +72,6 @@ jobs:
             -f tests/calendly-rehearsal-fixtures.sql \
             -f docs/scheduling/rehearsal/calendly-operations.sql \
             -f docs/scheduling/rehearsal/calendly-reschedule.sql \
-            -f docs/scheduling/rehearsal/marketplace-transaction.sql
+            -f docs/scheduling/rehearsal/marketplace-transaction.sql \
+            -f tests/calendly-acceptance-adapter-fixtures.sql
           node tests/calendly-local-supabase.mjs

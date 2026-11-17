@@ -1,3 +1,4 @@
+import { runAcceptanceAdapterChecks } from './calendly-acceptance-adapter.mjs';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
@@ -120,3 +121,5 @@ assert.deepEqual([Date.parse(slot.start_at), Date.parse(slot.end_at)], nextTime.
 assert.equal(await check(owner.client.rpc('create_marketplace_transaction', { p_booking_id: bookingId }),
   'Read existing transaction after reschedule'), transaction);
 console.log('Local Supabase Auth, booking ownership, reschedule and transaction checks passed.');
+
+await runAcceptanceAdapterChecks({admin,owner,signIn,check});
