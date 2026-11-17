@@ -1,5 +1,7 @@
 # Calendly backend rehearsal
 
+> Current implementation and setup evidence: [17 November route readiness](../acceptance-setup-and-route-readiness-2026-11-17.md). The guarded OAuth and durable operation adapters now exist; live acceptance remains pending an isolated public backend and owner designation. Historical unbound-route statements below describe the earlier candidate stage.
+
 > Configuration review (17 November 2026): [owner settings, scope/plan rules, test evidence and blockers](../acceptance-config-review-2026-11-17.md). The four supplied settings are placeholders; keep live acceptance pending. Current Calendly rules make scheduled-event write include read and permit Free-plan booking/webhooks subject to limits. Do not infer a designated host, granted scopes or a matching callback from these rules.
 
 These candidates are executable against an empty Postgres fixture. The files
