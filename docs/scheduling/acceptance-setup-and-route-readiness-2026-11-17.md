@@ -1,5 +1,7 @@
 # Calendly acceptance setup and route readiness — 17 November 2026
 
+> Latest lifecycle implementation, final scopes, hosting/cost assessment and acceptance limits: [November 17 continuation](lifecycle-acceptance-evidence-2026-11-17.md). Earlier missing-lifecycle statements below are historical.
+
 **Live acceptance remains pending; PR #48 remains draft.** Implementation reviewed: `9fdee62eed571373e13fda78be6927c60a3f64d9`. No hosted functions, production settings, payments or Calendly appointments were changed. All provider responses in the executed tests were synthetic.
 
 ## Source and deployment evidence
