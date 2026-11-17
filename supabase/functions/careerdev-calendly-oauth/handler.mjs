@@ -1,7 +1,10 @@
 // Adapted from recovered source b3cae921d47fc33dd37e699f150df8d353a4f73a.
 // Acceptance-only: no production defaults, token logging or generic callback target.
+import { createWebhookWorker } from '../careerdev-calendly-webhook/handler.mjs';
+import { createCalendlyLifecycle } from '../_shared/calendly-lifecycle.mjs';
 import { b64url, sha256, encryptCalendlyValue, decryptCalendlyValue, grantedScopesCover } from '../_shared/calendly-acceptance.mjs';
 export function createOAuthHandler({ config, db, send = fetch, now = Date.now }) {
+  const lifecycle = config && db ? createCalendlyLifecycle({ config, db, send, now }) : null;
   return async request => {
     const headers = new Headers({ 'Content-Type': 'application/json', 'Cache-Control': 'no-store', Vary: 'Origin' });
     const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers });
@@ -72,10 +75,7 @@ export function createOAuthHandler({ config, db, send = fetch, now = Date.now })
         return json({ authorization_url: authorize.toString() });
       }
       if (body.action === 'event_types') {
-        const { data: connection, error } = await db.from('calendly_connections').select('access_token_ciphertext,token_expires_at')
-          .eq('coach_id', coach.id).eq('calendly_user_uri', config.hostUri).eq('active', true).maybeSingle();
-        if (error || !connection || !(Date.parse(connection.token_expires_at) > now())) return json({ error: 'Reconnect the designated acceptance host.' }, 409);
-        const token = await decryptCalendlyValue(connection.access_token_ciphertext, config.encryptionKey);
+        const token = await lifecycle.accessToken(coach.id);
         const params = new URLSearchParams({ user: config.hostUri, active: 'true' });
         const response = await send('https://api.calendly.com/event_types?' + params, { redirect: 'error', signal: AbortSignal.timeout(10000), headers: { Authorization: 'Bearer ' + token } });
         if (!response.ok) return json({ error: 'Event types unavailable.' }, 503);
@@ -94,11 +94,19 @@ export function createOAuthHandler({ config, db, send = fetch, now = Date.now })
         } : null;
         return json({ connected: Boolean(connection?.active), connection, redirect_uri: config.redirectUri, requested_scopes: config.scopes });
       }
+      if (body.action === 'webhook_recover') {
+        const { data: receipts, error } = await db.from('calendly_acceptance_webhooks').select('digest').in('state', ['pending', 'processing']).limit(100);
+        if (error) return json({ error: 'Recovery unavailable.' }, 503);
+        const worker = createWebhookWorker({ config, db, send });
+        let recovered = 0;
+        for (const row of receipts ?? []) { try { await worker(row.digest); recovered++; } catch { /* durable pending receipt */ } }
+        return json({ examined: receipts?.length ?? 0, recovered });
+      }
+      if (['subscription_ensure', 'subscription_list', 'subscription_delete', 'subscription_reconcile'].includes(body.action)) {
+        return json(await lifecycle.subscription(coach.id, body.action.slice(13)));
+      }
       if (body.action === 'disconnect') {
-        // Local connection deactivation only. Provider grant revocation and
-        // webhook subscription cleanup require their separate lifecycle work.
-        const { error } = await db.from('calendly_connections').update({ active: false, updated_at: new Date(now()).toISOString() }).eq('coach_id', coach.id).eq('calendly_user_uri', config.hostUri);
-        return json(error ? { error: 'Disconnect unavailable.' } : { ok: true }, error ? 503 : 200);
+        return json(await lifecycle.disconnect(coach.id));
       }
       return json({ error: 'Unknown action.' }, 400);
     } catch { return request.method === 'GET' ? redirect('error') : json({ error: 'Calendly connection could not be verified.' }, 503); }

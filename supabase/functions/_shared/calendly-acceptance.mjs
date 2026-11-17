@@ -1,5 +1,5 @@
 const protectedProjects = new Set(['ufmhrmzumqkjvaezrmxf', 'yyevuwvtrktrzwuzeddo']);
-export const calendlyScopes = ['users:read', 'event_types:read', 'scheduled_events:write'];
+export const calendlyScopes = ['users:read', 'event_types:read', 'scheduled_events:write', 'webhooks:write'];
 export function acceptanceTarget({ enabled, projectRef, backendUrl, appOrigin, hostUri }) {
   if (enabled !== 'true' || !/^[a-z0-9]{20}$/.test(projectRef ?? '') || protectedProjects.has(projectRef) ||
       backendUrl !== `https://${projectRef}.supabase.co` ||

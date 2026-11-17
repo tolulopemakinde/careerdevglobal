@@ -11,7 +11,7 @@ const config = acceptanceTarget({
 });
 const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const db = config && serviceKey ? createClient(config.backendUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } }) : null;
-Deno.serve(createOperationHandler({ config, db,
+Deno.serve(createOperationHandler({ config: config ? { ...config, clientId: Deno.env.get("CALENDLY_CLIENT_ID"), clientSecret: Deno.env.get("CALENDLY_CLIENT_SECRET"), scopes: ["users:read", "event_types:read", "scheduled_events:write", "webhooks:write"] } : null, db,
   encryptionKey: Deno.env.get("CALENDLY_TOKEN_ENCRYPTION_KEY"),
   participantEmails: (Deno.env.get("CALENDLY_ACCEPTANCE_PARTICIPANT_EMAILS") ?? "").split(",").map(value => value.trim()).filter(Boolean),
 }));

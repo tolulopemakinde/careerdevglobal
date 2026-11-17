@@ -1,6 +1,8 @@
 import { createCalendlyTransport, runCalendlyOperation, reconcileCalendlyOperation } from '../_shared/calendly-operation.mjs';
+import { createCalendlyLifecycle } from '../_shared/calendly-lifecycle.mjs';
 import { decryptCalendlyValue } from '../_shared/calendly-acceptance.mjs';
 export function createOperationHandler({ config, db, encryptionKey, participantEmails, send = fetch }) {
+  const lifecycle = config && db ? createCalendlyLifecycle({ config: { ...config, encryptionKey }, db, send }) : null;
   const permitted = new Set((participantEmails ?? []).map(email => email.toLowerCase()));
   return async request => {
     const headers = new Headers({ 'Content-Type': 'application/json', 'Cache-Control': 'no-store', Vary: 'Origin' });
@@ -49,14 +51,14 @@ export function createOperationHandler({ config, db, encryptionKey, participantE
       const { data: offering } = await db.from('coach_service_offerings').select('calendly_event_type_uri').eq('id', booking.coach_service_offering_id).eq('coach_id', booking.coach_id).maybeSingle();
       const { data: connection, error: connectionError } = await db.from('calendly_connections')
         .select('calendly_user_uri,access_token_ciphertext,token_expires_at').eq('coach_id', booking.coach_id).eq('calendly_user_uri', config.hostUri).eq('active', true).maybeSingle();
-      if (connectionError || !connection || connection.calendly_user_uri !== config.hostUri || !(Date.parse(connection.token_expires_at) > Date.now())) return json({ error: 'Reconnect the designated acceptance host before scheduling.' }, 409);
+      if (connectionError || !connection || connection.calendly_user_uri !== config.hostUri || (!config.clientId && !(Date.parse(connection.token_expires_at) > Date.now()))) return json({ error: 'Reconnect the designated acceptance host before scheduling.' }, 409);
       const context = {
         snapshot: { provider_user_uri: config.hostUri, provider_type_uri: offering?.calendly_event_type_uri,
           provider_event_uri: booking.calendly_event_uri, provider_invitee_uri: booking.calendly_invitee_uri,
           starts_at: booking.requested_start, ends_at: booking.requested_end },
         client: { email: profile.email, name: profile.full_name, timezone: profile.timezone },
       };
-      const provider = createCalendlyTransport(await decryptCalendlyValue(connection.access_token_ciphertext, encryptionKey), send);
+      const provider = createCalendlyTransport(config.clientId ? await lifecycle.accessToken(booking.coach_id) : await decryptCalendlyValue(connection.access_token_ciphertext, encryptionKey), send);
       const input = { bookingId, actorId: user.id, kind, store, provider };
       const result = action === 'reconcile'
         ? await reconcileCalendlyOperation({ ...input, eventUri: body.event_uri, inviteeUri: body.invitee_uri })

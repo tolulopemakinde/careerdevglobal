@@ -42,7 +42,7 @@ test('OAuth config rejects absent enablement, protected backend, production app 
  for(const override of [{enabled:undefined},{projectRef:'ufmhrmzumqkjvaezrmxf'},{projectRef:'yyevuwvtrktrzwuzeddo'},{appOrigin:'https://careerdevglobal-nine.vercel.app'},{hostUri:''},{redirectUri:'https://elsewhere.example.test/callback'},{appName:''}])assert.equal(oauthAcceptanceConfig({...input(),...override}),null);
 });
 test('scopes preserve least privilege and write includes corresponding read',()=>{
- const cfg=oauthAcceptanceConfig(input());assert.deepEqual(cfg.scopes,['users:read','event_types:read','scheduled_events:write']);
+ const cfg=oauthAcceptanceConfig(input());assert.deepEqual(cfg.scopes,['users:read','event_types:read','scheduled_events:write','webhooks:write']);
  assert.ok(grantedScopesCover(cfg.scopes,['scheduled_events:read']));assert.equal(grantedScopesCover(['scheduled_events:read'],['scheduled_events:write']),false);
 });
 test('authorize sends exact callback and S256, storing hash rather than raw state',async()=>{
