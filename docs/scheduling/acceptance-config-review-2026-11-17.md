@@ -1,6 +1,6 @@
 # Calendly acceptance configuration review — 17 November 2026
 
-**Decision: live acceptance PENDING. Keep #48 draft.** Reviewed implementation head: `8a776246f2a7eeb9b9db5b86b0c21e5dc4623c3a`. All four purported owner settings are literal `[fill in]` placeholders; none is a confirmed value. No connected Calendly account was used as an acceptance host. No production app/callback/settings were queried or changed; no OAuth connection, appointment, subscription, payment, deployment or merge was performed.
+**Decision: live acceptance PENDING. Keep #48 draft.** Reviewed implementation head: `8a776246f2a7eeb9b9db5b86b0c21e5dc4623c3a`. All four purported owner settings are literal `[fill in]` placeholders; none is a confirmed value. No connected Calendly account was used as an acceptance host. No production app/callback/settings were queried or changed; no OAuth connection, appointment, subscription, payment, production deployment or merge was performed.
 
 ## Owner settings and deployment comparison
 
