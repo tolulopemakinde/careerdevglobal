@@ -8,7 +8,7 @@ function fixture(options={}){
  const config=oauthAcceptanceConfig(input());const states=new Map();const calls=[];let connection;let exchanges=0;
  const db={auth:{async getUser(jwt){return {data:{user:jwt==='session'?{id:'actor',is_anonymous:options.anonymous??false}:null},error:null};}},from(table){
   const filters={};let op='select',greater={};const q={select(){return q;},eq(k,v){filters[k]=v;return q;},gt(k,v){greater[k]=v;return q;},delete(){op='delete';return q;},
-   async insert(row){states.set(row.state_hash,row);return {error:options.stateWriteError?new Error('fixture'):null};},
+   async insert(row){if(table==='calendly_acceptance_locks')return {error:options.busyConnection?new Error('fixture'):null};states.set(row.state_hash,row);return {error:options.stateWriteError?new Error('fixture'):null};},
    async upsert(row){connection=row;return {error:options.persistError?new Error('fixture'):null};},
    update(){op='update';return q;},
    async maybeSingle(){calls.push([table,op]);if(table==='profiles')return {data:{role:'coach',status:options.inactive?'inactive':'active'}};
@@ -61,7 +61,7 @@ test('expired, missing and forged callback state never reach provider',async()=>
  assert.equal(f.exchanges(),0);
 });
 test('designated host mismatch and incomplete scopes cannot save a connection',async()=>{
- for(const options of [{wrongHost:true},{missingScope:true}]){const f=fixture(options),url=await f.begin();assert.ok((await f.callback(url.searchParams.get('state'))).headers.get('Location').endsWith('=error'));assert.equal(f.connection(),undefined);}
+ for(const options of [{wrongHost:true},{missingScope:true},{busyConnection:true}]){const f=fixture(options),url=await f.begin();assert.ok((await f.callback(url.searchParams.get('state'))).headers.get('Location').endsWith('=error'));assert.equal(f.connection(),undefined);}
 });
 test('pending or inactive coach and anonymous sessions cannot start OAuth',async()=>{
  for(const options of [{pending:true},{inactive:true},{anonymous:true}]){const f=fixture(options);assert.ok([401,403].includes((await f.authorize()).status));assert.equal(f.states.size,0);}

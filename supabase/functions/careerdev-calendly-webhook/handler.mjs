@@ -24,7 +24,7 @@ export function createWebhookWorker({ config, db, send = fetch }) {
     try {
       const operation = await data(db.rpc('lookup_calendly_webhook_operation', { p_operation_id: receipt.operation_id, p_event_uri: receipt.event_uri, p_invitee_uri: receipt.invitee_uri }));
       if (!operation || operation.provider_user_uri !== config.hostUri) {
-        await data(db.from('calendly_acceptance_webhooks').update({ state: 'ignored', lease_until: null }).eq('digest', digest)); return;
+        await data(db.from('calendly_acceptance_webhooks').update({ state: 'ignored', lease_until: null }).eq('digest', digest).eq('state', 'processing').eq('lease_id', receipt.lease_id)); return;
       }
       const booking = await data(db.from('marketplace_booking_requests').select('coach_id,client_id,booking_status,calendly_event_uri,calendly_invitee_uri').eq('id', operation.booking_id).single());
       const client = await data(db.from('clients').select('profile_id').eq('id', booking.client_id).single());
@@ -58,11 +58,11 @@ export function createWebhookWorker({ config, db, send = fetch }) {
           if (result.state !== 'succeeded') throw new Error('Cancellation requires recovery');
         }
       }
-      await data(db.from('calendly_acceptance_webhooks').update({ state: 'done', lease_until: null, processed_at: new Date().toISOString() }).eq('digest', digest));
+      await data(db.from('calendly_acceptance_webhooks').update({ state: 'done', lease_until: null, processed_at: new Date().toISOString() }).eq('digest', digest).eq('state', 'processing').eq('lease_id', receipt.lease_id));
     } catch {
       // A crash lease can be reclaimed; processing repeats GETs and idempotent
       // database completion, never invitee/cancellation POSTs.
-      await data(db.from('calendly_acceptance_webhooks').update({ state: 'pending', lease_until: null }).eq('digest', digest));
+      await data(db.from('calendly_acceptance_webhooks').update({ state: 'pending', lease_until: null }).eq('digest', digest).eq('state', 'processing').eq('lease_id', receipt.lease_id));
       throw new Error('Webhook requires recovery');
     }
   };

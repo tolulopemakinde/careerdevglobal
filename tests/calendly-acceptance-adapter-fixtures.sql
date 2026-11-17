@@ -12,4 +12,5 @@ grant select, insert, delete on public.calendly_oauth_states to service_role;
 alter table public.calendly_connections add column calendly_user_email text, add column calendly_user_name text,
   add column calendly_scheduling_url text, add column refresh_token_ciphertext text,
   add column scopes text[], add column connected_at timestamptz default now(), add column updated_at timestamptz;
+grant delete on public.calendly_connections to service_role;
 notify pgrst, 'reload schema';

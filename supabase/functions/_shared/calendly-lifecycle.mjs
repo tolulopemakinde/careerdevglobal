@@ -71,6 +71,20 @@ export function createCalendlyLifecycle({ config, db, send = fetch, now = Date.n
     if (!/^https:\/\/api[.]calendly[.]com\/organizations\/[A-Za-z0-9-]+$/.test(config.organizationUri ?? '') || config.webhookUri !== config.backendUrl + '/functions/v1/careerdev-calendly-webhook' || !config.webhookSigningKey) throw new Error('Configure webhook settings');
     const token = await accessToken(coachId);
     if (action === 'list') return (await list(token)).map(s => ({ uri: s.uri, state: s.state }));
+    if (action === 'reconcile') {
+      // A crashed create worker may retain its lock. Recovery performs only
+      // provider GETs and never authorizes a second create from absence.
+      const lock = await result(db.from('calendly_acceptance_locks').select('*').eq('coach_id', coachId).maybeSingle());
+      if (lock && lock.kind !== 'subscription') throw new Error('Other lifecycle operation pending');
+      const existing = await list(token);
+      if (existing.length > 1) throw new Error('Duplicate subscriptions require owner review');
+      if (existing.length === 1) {
+        await result(db.from('calendly_acceptance_subscriptions').upsert({ coach_id: coachId, uri: existing[0].uri, state: existing[0].state === 'active' ? 'active' : 'uncertain' }));
+        if (lock) await unlock(coachId, lock.id);
+        return { state: existing[0].state === 'active' ? 'active' : 'uncertain', uri: existing[0].uri };
+      }
+      return { state: 'uncertain', uri: null };
+    }
     const id = await claim(coachId, 'subscription');
     try {
       let row = await result(db.from('calendly_acceptance_subscriptions').select('*').eq('coach_id', coachId).maybeSingle());

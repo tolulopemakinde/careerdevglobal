@@ -199,6 +199,8 @@ begin
     raise exception 'Booking timing changed while provider operation was pending';
   end if;
 
+  perform set_config('careerdev.scheduling_operation', operation.id::text, true);
+
   if operation.kind = 'confirm' then
     if booking.booking_status <> 'requested' or booking.calendly_event_uri is not null
       or booking.calendly_invitee_uri is not null

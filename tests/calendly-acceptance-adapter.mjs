@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { createWebhookHandler, createWebhookWorker } from '../supabase/functions/careerdev-calendly-webhook/handler.mjs';
+import { createCalendlyLifecycle } from '../supabase/functions/_shared/calendly-lifecycle.mjs';
 import { calendlyScopes } from '../supabase/functions/_shared/calendly-acceptance.mjs';
 import { createOAuthHandler } from '../supabase/functions/careerdev-calendly-oauth/handler.mjs';
 import { createOperationHandler } from '../supabase/functions/careerdev-calendly-operations/handler.mjs';
@@ -62,5 +63,25 @@ export async function runAcceptanceAdapterChecks({ admin, owner, signIn, check }
   const after=await check(admin.from('marketplace_booking_requests').select('id,booking_status,calendly_event_uri').eq('id',bookingId).single(),'Read durable cancellation');
   assert.equal(after.id,bookingId);assert.equal(after.booking_status,'cancelled');assert.equal(after.calendly_event_uri,eventUri);
   const retained=await check(admin.from('marketplace_transactions').select('id').eq('booking_id',bookingId).single(),'Read retained synthetic transaction');assert.equal(retained.id,transaction);
-  console.log('Acceptance adapter checks passed: real local Auth; atomic OAuth claim; lost confirmation response recovered by signed webhook; duplicate receipt applied once; one provider confirmation/cancellation; booking and synthetic transaction preserved. Provider responses were synthetic.');
+  // Exercise rotating credentials and provider cleanup through real local
+  // PostgREST grants/constraints, with entirely synthetic provider responses.
+  const lifecycleConfig={...config,backendUrl:'http://127.0.0.1:54321',organizationUri:'https://api.calendly.com/organizations/synthetic',webhookUri:'http://127.0.0.1:54321/functions/v1/careerdev-calendly-webhook'};
+  let refreshes=0,revokes=0,sub=null,subscriptionCreates=0;
+  const lifecycle=createCalendlyLifecycle({config:lifecycleConfig,db:admin,async send(url,request){
+    if(url.endsWith('/oauth/token')){refreshes++;assert.ok(request.body.get('grant_type')==='refresh_token');return Response.json({access_token:randomUUID(),refresh_token:randomUUID(),expires_in:3600,scope:calendlyScopes.join(' ')});}
+    if(url.endsWith('/users/me'))return Response.json({resource:{uri:hostUri}});
+    if(url.endsWith('/oauth/revoke')){revokes++;return Response.json({});}
+    if(url.includes('/webhook_subscriptions?'))return Response.json({collection:sub?[sub]:[]});
+    if(request.method==='POST'&&url.endsWith('/webhook_subscriptions')){subscriptionCreates++;const body=JSON.parse(request.body);sub={uri:'https://api.calendly.com/webhook_subscriptions/synthetic',callback_url:body.url,organization:body.organization,user:body.user,scope:body.scope,events:body.events,state:'active'};return Response.json({resource:sub});}
+    if(request.method==='DELETE'){sub=null;return new Response(null,{status:204});}
+    throw new Error('Unexpected synthetic lifecycle request');
+  }});
+  await check(admin.from('calendly_connections').update({token_expires_at:'2000-01-01T00:00:00Z'}).eq('coach_id',coachId),'Expire synthetic connection');
+  const refreshed=await Promise.allSettled([lifecycle.accessToken(coachId),lifecycle.accessToken(coachId)]);
+  assert.ok(refreshed.some(r=>r.status==='fulfilled'));assert.equal(refreshes,1);
+  assert.equal((await lifecycle.subscription(coachId,'ensure')).state,'active');
+  assert.equal((await lifecycle.subscription(coachId,'ensure')).state,'active');assert.equal(subscriptionCreates,1);
+  await lifecycle.disconnect(coachId);assert.equal(revokes,2);
+  const disconnected=await check(admin.from('calendly_connections').select('coach_id').eq('coach_id',coachId),'Verify revoked credential deletion');assert.equal(disconnected.length,0);
+  console.log('Acceptance adapter checks passed: real local Auth; atomic OAuth claim; lost confirmation response recovered by signed webhook; duplicate receipt applied once; one provider confirmation/cancellation; booking and synthetic transaction preserved. Serialized refresh, subscription replay and credential revocation/deletion passed. Provider responses were synthetic.');
 }

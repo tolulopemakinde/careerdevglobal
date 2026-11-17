@@ -15,6 +15,18 @@ begin
  op=public.begin_calendly_operation(b,actor,'confirm',snap);
  if not (op->>'dispatch')::boolean then raise exception 'claim missing'; end if;
  perform public.flag_calendly_operation((op->>'id')::uuid);
+ begin
+   update public.marketplace_booking_requests set booking_status='cancelled' where id=b;
+   raise exception 'legacy write bypassed pending claim';
+ exception when raise_exception then
+   if sqlerrm<>'Scheduling operation requires reconciliation' then raise; end if;
+ end;
+ begin
+   update public.marketplace_booking_slots set status='cancelled' where booking_id=b;
+   raise exception 'legacy hold release bypassed pending claim';
+ exception when raise_exception then
+   if sqlerrm<>'Scheduling operation requires reconciliation' then raise; end if;
+ end;
  if (public.begin_calendly_operation(b,actor,'confirm',snap)->>'dispatch')::boolean then raise exception 'uncertain redispatched'; end if;
  perform public.record_calendly_receipt((op->>'id')::uuid,event,invitee);
  perform public.finish_calendly_operation(b,(op->>'id')::uuid,event,invitee);

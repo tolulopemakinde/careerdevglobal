@@ -38,7 +38,12 @@ export function createOAuthHandler({ config, db, send = fetch, now = Date.now })
         const meResponse = await send('https://api.calendly.com/users/me', { redirect: 'error', signal: AbortSignal.timeout(10000), headers: { Authorization: 'Bearer ' + token.access_token } });
         if (!meResponse.ok) return redirect('error');
         const me = (await meResponse.json()).resource;
-        if (me?.uri !== config.hostUri) return redirect('error');
+        if (me?.uri !== config.hostUri || (config.organizationUri && me.current_organization !== config.organizationUri)) return redirect('error');
+        // Do not overwrite a connection while refresh/revocation is in flight.
+        const lockId = crypto.randomUUID();
+        const { error: lockError } = await db.from('calendly_acceptance_locks').insert({ coach_id: claim.coach_id, id: lockId, kind: 'connect' });
+        if (lockError) return redirect('error');
+        try {
         const { error: savedError } = await db.from('calendly_connections').upsert({
           coach_id: claim.coach_id, calendly_user_uri: me.uri,
           calendly_user_email: me.email, calendly_user_name: me.name, calendly_scheduling_url: me.scheduling_url,
@@ -47,6 +52,9 @@ export function createOAuthHandler({ config, db, send = fetch, now = Date.now })
           token_expires_at: new Date(now() + Number(token.expires_in) * 1000).toISOString(), scopes, active: true, updated_at: new Date(now()).toISOString(),
         }, { onConflict: 'coach_id' });
         return redirect(savedError ? 'error' : 'connected');
+        } finally {
+          await db.from('calendly_acceptance_locks').delete().eq('coach_id', claim.coach_id).eq('id', lockId);
+        }
       }
       if (request.headers.get('Origin') !== config.appOrigin) return json({ error: 'Calendly acceptance is unavailable.' }, 404);
       headers.set('Access-Control-Allow-Origin', config.appOrigin);
