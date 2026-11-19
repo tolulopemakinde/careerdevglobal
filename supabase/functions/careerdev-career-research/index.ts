@@ -294,11 +294,15 @@ Deno.serve(async (req: Request) => {
     return json({ error: "Add at least one follow-up answer to refine the existing report." }, 400);
   }
   if (JSON.stringify(input.previous_report || {}).length > 18000) return json({ error: "The previous report is too large to refine. Start a new research session." }, 413);
-  if (body.external_ai_consent !== true) return json({ error: "Consent is required before saved career context is shared with Groq for research." }, 400);
+  if (body.external_ai_consent !== true) return json({ error: "Consent is required before this research request is shared with Groq." }, 400);
+  const idempotencyKey = boundedText(body.idempotency_key, 100);
+  if (!/^[A-Za-z0-9:_-]{12,100}$/.test(idempotencyKey)) return json({ error: "A unique request key is required." }, 400);
 
   try {
     assertFreeProvider();
-    const profileContext = await loadProfileContext(caller, user.id);
+    const profileContext = body.use_saved_profile === true
+      ? await loadProfileContext(caller, user.id)
+      : { profile: null, goals: [] };
     const featureInput = { feature: "career_research_standalone", phase: action, input, profile_context: profileContext };
     const { data: requestId, error: requestError } = await caller.rpc("request_ai_agent_execution", {
       p_agent_key: "career_research_agent", p_workflow_key: null, p_trigger_source: "manual", p_input_payload: featureInput,
@@ -313,8 +317,6 @@ Deno.serve(async (req: Request) => {
       throw fail("Career Research could not prepare a governed execution.", "GOVERNANCE_DENIED");
     }
 
-    const idempotencyKey = boundedText(body.idempotency_key, 100);
-    if (!/^[A-Za-z0-9:_-]{12,100}$/.test(idempotencyKey)) throw fail("A unique request key is required.", "INVALID_REQUEST");
     const { data: reservations, error: reserveError } = await caller.rpc("reserve_ai_credits", {
       p_operation_key: "career_research_agent",
       p_execution_id: executionId,
