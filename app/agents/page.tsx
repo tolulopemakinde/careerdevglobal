@@ -70,8 +70,8 @@ export default function AgentsPage() {
       .eq('id', user.id)
       .single();
 
-    if (profileError || !me || me.status !== 'active' || !['client', 'coach'].includes(me.role)) {
-      setMessage('This AI Agent workspace is available to active Clients and Coaches.');
+    if (profileError || !me || me.status !== 'active' || !['client', 'coach', 'admin', 'staff'].includes(me.role)) {
+      setMessage('This AI Agent workspace is available to active Clients, Coaches, Staff, and Admins.');
       setLoading(false);
       return;
     }
@@ -93,14 +93,16 @@ export default function AgentsPage() {
 
     setAgents((agentRows || []) as Agent[]);
 
-    const [{ data: sub }, { data: credits }] = await Promise.all([
-      supabase.rpc('get_my_ai_subscription'),
-      supabase.rpc('get_my_ai_credit_status'),
-    ]);
-    const row = Array.isArray(sub) ? sub[0] : sub;
-    if (row?.plan_key) setSubscription(row as Subscription);
-    const creditRow = Array.isArray(credits) ? credits[0] : credits;
-    if (creditRow?.plan_key) setCreditStatus(creditRow as CreditStatus);
+    if (!['admin', 'staff'].includes(me.role)) {
+      const [{ data: sub }, { data: credits }] = await Promise.all([
+        supabase.rpc('get_my_ai_subscription'),
+        supabase.rpc('get_my_ai_credit_status'),
+      ]);
+      const row = Array.isArray(sub) ? sub[0] : sub;
+      if (row?.plan_key) setSubscription(row as Subscription);
+      const creditRow = Array.isArray(credits) ? credits[0] : credits;
+      if (creditRow?.plan_key) setCreditStatus(creditRow as CreditStatus);
+    }
 
     setLoading(false);
   }
@@ -115,6 +117,7 @@ export default function AgentsPage() {
   }, {} as Record<string, Agent[]>);
 
   const included = new Set(subscription?.included_agents || []);
+  const staffTestingAccess = role === 'admin' || role === 'staff';
 
   return (
     <main style={{ minHeight: '100vh', background: 'linear-gradient(180deg,#f7fbff,#eef6fb)', color: '#09233f', padding: '32px 16px 70px' }}>
@@ -156,7 +159,11 @@ export default function AgentsPage() {
               <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '.08em', fontWeight: 900, color: '#1671b9' }}>Shared intelligence layer</div>
               <h2 style={{ margin: '6px 0' }}>Career Intelligence Profile™</h2>
               <p style={{ margin: 0, color: '#527085' }}>All {agents.length} agents use the same evolving profile context. Each AI capability is designed to support structured career decision-making.</p>
-              {subscription ? (
+              {staffTestingAccess ? (
+                <p role="status" style={{ margin: '10px 0 0', color: '#256341', fontWeight: 800 }}>
+                  Staff/Admin test access is enabled for all {agents.length} active Client/Coach agents. Subscription access is bypassed; actual AI runs still follow configured provider, credit, and governance controls.
+                </p>
+              ) : subscription ? (
                 <>
                   <p style={{ margin: '10px 0 0', fontWeight: 800 }}>Current plan: {subscription.plan_name} · {subscription.monthly_credits.toLocaleString()} AI credits/month allowance</p>
                   {creditStatus && (
@@ -189,17 +196,29 @@ export default function AgentsPage() {
                 <h2 style={{ fontSize: 22 }}>{groups[category] || category}</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 14 }}>
                   {list.map(agent => {
-                    const allowed = included.has(agent.agent_key);
+                    const allowed = staffTestingAccess || included.has(agent.agent_key);
+                    const destination = agent.agent_key === 'interview_coach_agent' ? '/interview-coach' : '/career-intelligence';
+                    const actionLabel = agent.agent_key === 'interview_coach_agent' ? 'Start mock interview →' : 'Start in Career Intelligence →';
                     return (
-                      <article key={agent.id} data-cdg-motion="agent-card" style={{ background: '#fff', border: '1px solid ' + (allowed ? '#d8e6f1' : '#e3e8ed'), borderRadius: 16, padding: 18, boxShadow: '0 8px 25px rgba(0,60,100,.05)', opacity: allowed ? 1 : .86 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'start' }}>
-                          <h3 style={{ margin: 0 }}>{agent.name}</h3>
-                          <span style={{ fontSize: 11, fontWeight: 900, padding: '4px 7px', borderRadius: 999, background: allowed ? '#eaf6ef' : '#f1f3f5', whiteSpace: 'nowrap' }}>{allowed ? 'Included' : 'Locked'}</span>
-                        </div>
-                        <p style={{ color: '#527085', lineHeight: 1.55, minHeight: 66 }}>{agent.description}</p>
-                        <button onClick={agent.agent_key === 'interview_coach_agent' ? () => window.location.assign('/interview-coach') : agent.agent_key === 'career_discovery_agent' ? () => window.location.assign('/career-discovery') : agent.agent_key === 'career_assessment_agent' ? () => window.location.assign('/career-assessment') : startFromCareerIntelligence} disabled={!allowed} style={{ width: '100%', padding: '11px 14px', border: 0, borderRadius: 9, background: allowed ? '#0b5d9b' : '#dfe6ec', color: allowed ? '#fff' : '#527085', fontWeight: 900, cursor: allowed ? 'pointer' : 'default' }}>{allowed ? (agent.agent_key === 'interview_coach_agent' ? 'Start mock interview →' : agent.agent_key === 'career_discovery_agent' ? 'Explore career directions →' : agent.agent_key === 'career_assessment_agent' ? 'Start career assessment →' : 'Start in Career Intelligence →') : 'Upgrade to Access'}</button>
-                        {!allowed && <a href="/pricing" style={{ display: 'block', textAlign: 'center', marginTop: 9, color: '#0b5d9b', fontWeight: 800, fontSize: 12 }}>View plans</a>}
-                        <small style={{ display: 'block', marginTop: 9, color: '#718394' }}>AI output: decision-support · Coach validation recommended for clients</small>
+                      <article key={agent.id} data-cdg-motion="agent-card" style={{ background: '#fff', border: '1px solid ' + (allowed ? '#d8e6f1' : '#e3e8ed'), borderRadius: 16, boxShadow: '0 8px 25px rgba(0,60,100,.05)', opacity: allowed ? 1 : .86 }}>
+                        <a
+                          href={allowed ? destination : '/pricing'}
+                          aria-label={allowed ? `Open ${agent.name} in ${agent.agent_key === 'interview_coach_agent' ? 'Interview Coach' : 'Career Intelligence'}` : `View plans for ${agent.name}`}
+                          style={{ display: 'block', height: '100%', padding: 18, borderRadius: 16, color: 'inherit', textDecoration: 'none', cursor: 'pointer', outlineOffset: 4 }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'start' }}>
+                            <h3 style={{ margin: 0 }}>{agent.name}</h3>
+                            <span style={{ fontSize: 11, fontWeight: 900, padding: '4px 7px', borderRadius: 999, background: staffTestingAccess ? '#e9f5ef' : allowed ? '#eaf6ef' : '#f1f3f5', whiteSpace: 'nowrap' }}>
+                              {staffTestingAccess ? 'Staff/Admin Test Access' : allowed ? 'Included' : 'Locked'}
+                            </span>
+                          </div>
+                          <p style={{ color: '#527085', lineHeight: 1.55, minHeight: 66 }}>{agent.description}</p>
+                          <span style={{ display: 'block', width: '100%', boxSizing: 'border-box', padding: '11px 14px', borderRadius: 9, background: allowed ? '#0b5d9b' : '#dfe6ec', color: allowed ? '#fff' : '#527085', fontWeight: 900, textAlign: 'center' }}>
+                            {allowed ? actionLabel : 'Upgrade to Access'}
+                          </span>
+                          {!allowed && <span style={{ display: 'block', textAlign: 'center', marginTop: 9, color: '#0b5d9b', fontWeight: 800, fontSize: 12 }}>View plans</span>}
+                          <small style={{ display: 'block', marginTop: 9, color: '#718394' }}>AI output: decision-support · Coach validation recommended for clients</small>
+                        </a>
                       </article>
                     );
                   })}
