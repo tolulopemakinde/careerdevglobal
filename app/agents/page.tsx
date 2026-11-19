@@ -197,8 +197,8 @@ export default function AgentsPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 14 }}>
                   {list.map(agent => {
                     const allowed = staffTestingAccess || included.has(agent.agent_key);
-                    const destination = agent.agent_key === 'interview_coach_agent' ? '/interview-coach' : agent.agent_key === 'career_coach_agent' ? '/career-intelligence#career-coach' : '/career-intelligence';
-                    const actionLabel = agent.agent_key === 'interview_coach_agent' ? 'Start mock interview →' : 'Start in Career Intelligence →';
+                    const destination = agent.agent_key === 'interview_coach_agent' ? '/interview-coach' : agent.agent_key === 'career_coach_agent' ? '/career-coach' : '/career-intelligence';
+                    const actionLabel = agent.agent_key === 'interview_coach_agent' ? 'Start mock interview →' : agent.agent_key === 'career_coach_agent' ? 'Open Career Coach →' : 'Start in Career Intelligence →';
                     return (
                       <article key={agent.id} data-cdg-motion="agent-card" style={{ background: '#fff', border: '1px solid ' + (allowed ? '#d8e6f1' : '#e3e8ed'), borderRadius: 16, boxShadow: '0 8px 25px rgba(0,60,100,.05)', opacity: allowed ? 1 : .86 }}>
                         <a
