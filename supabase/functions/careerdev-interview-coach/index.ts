@@ -196,7 +196,7 @@ async function governedGroqTurn(
     if (ledgerId) {
       const { error: settleError } = await admin.rpc("settle_ai_credit_charge", {
         p_ledger_id: ledgerId, p_user_id: userId, p_outcome: "consumed",
-        p_metadata: { provider: "groq_free", model: MODEL, token_usage: generated.usage, job_criteria: first.job_criteria },
+        p_metadata: { provider: "groq_free", model: MODEL, token_usage: generated.usage, job_criteria: generated.result.job_criteria },
       });
       if (settleError) throw settleError;
     }
