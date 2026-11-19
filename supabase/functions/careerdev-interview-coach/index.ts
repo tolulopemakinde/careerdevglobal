@@ -35,6 +35,13 @@ const responseSchema = {
   required: ["question", "competency", "follow_up", "answer_feedback", "finished", "final_feedback"],
 };
 
+function assertFreeProvider() {
+  if (!Deno.env.get("GROQ_API_KEY") || Deno.env.get("GROQ_FREE_TIER_CONFIRMED") !== "true") {
+    const err = new Error("Add a Groq API key from a confirmed Free-tier account. No paid provider fallback is enabled.");
+    (err as Error & { code?: string }).code = "FREE_PROVIDER_NOT_CONFIGURED";
+    throw err;
+  }
+}
 function boundedText(value: unknown, max: number): string {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
@@ -140,7 +147,9 @@ Deno.serve(async (req) => {
       const candidateContext = boundedText(body.candidate_context, 8000);
       const companyContext = boundedText(body.company_context, 8000);
       const sourceUrls = validHttpUrl(body.source_urls);
-      const questionLimit = Math.max(3, Math.min(MAX_QUESTION_LIMIT, Number(body.question_limit) || 6));
+      const questionLimit = Math.trunc(Math.max(3, Math.min(MAX_QUESTION_LIMIT, Number(body.question_limit) || 6)));
+      if (body.external_ai_consent !== true) return json({ error: "Consent is required before interview context is sent to Groq." }, 400);
+      assertFreeProvider();
       if (!jobRole || !industry || !companyName) {
         return json({ error: "Job role, industry, and company are required." }, 400);
       }
@@ -152,6 +161,7 @@ Deno.serve(async (req) => {
         user_id: user.id, job_role: jobRole, industry, company_name: companyName,
         job_description: jobDescription, candidate_context: candidateContext,
         company_context: companyContext, source_urls: sourceUrls, question_limit: questionLimit,
+        external_ai_consent_at: new Date().toISOString(),
         provider: "groq_free", model: MODEL,
       }).select("id").single();
       if (insertError || !session) return json({ error: "Could not create the interview session." }, 500);
@@ -176,6 +186,7 @@ Deno.serve(async (req) => {
       const sessionId = boundedText(body.session_id, 80);
       const answer = boundedText(body.answer, 8000);
       if (!sessionId || !answer) return json({ error: "session_id and answer are required." }, 400);
+      assertFreeProvider();
       const { data: session } = await admin.from("interview_coach_sessions").select("*").eq("id", sessionId).eq("user_id", user.id).maybeSingle();
       if (!session) return json({ error: "Interview session not found." }, 404);
       if (session.status !== "in_progress") return json({ error: "This interview session is not active." }, 409);
