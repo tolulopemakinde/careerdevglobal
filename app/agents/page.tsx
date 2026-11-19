@@ -197,7 +197,7 @@ export default function AgentsPage() {
                           <span style={{ fontSize: 11, fontWeight: 900, padding: '4px 7px', borderRadius: 999, background: allowed ? '#eaf6ef' : '#f1f3f5', whiteSpace: 'nowrap' }}>{allowed ? 'Included' : 'Locked'}</span>
                         </div>
                         <p style={{ color: '#527085', lineHeight: 1.55, minHeight: 66 }}>{agent.description}</p>
-                        <button onClick={startFromCareerIntelligence} disabled={!allowed} style={{ width: '100%', padding: '11px 14px', border: 0, borderRadius: 9, background: allowed ? '#0b5d9b' : '#dfe6ec', color: allowed ? '#fff' : '#527085', fontWeight: 900, cursor: allowed ? 'pointer' : 'default' }}>{allowed ? 'Start in Career Intelligence →' : 'Upgrade to Access'}</button>
+                        <button onClick={agent.agent_key === 'interview_coach_agent' ? () => window.location.assign('/interview-coach') : startFromCareerIntelligence} disabled={!allowed} style={{ width: '100%', padding: '11px 14px', border: 0, borderRadius: 9, background: allowed ? '#0b5d9b' : '#dfe6ec', color: allowed ? '#fff' : '#527085', fontWeight: 900, cursor: allowed ? 'pointer' : 'default' }}>{allowed ? (agent.agent_key === 'interview_coach_agent' ? 'Start mock interview →' : 'Start in Career Intelligence →') : 'Upgrade to Access'}</button>
                         {!allowed && <a href="/pricing" style={{ display: 'block', textAlign: 'center', marginTop: 9, color: '#0b5d9b', fontWeight: 800, fontSize: 12 }}>View plans</a>}
                         <small style={{ display: 'block', marginTop: 9, color: '#718394' }}>AI output: decision-support · Coach validation recommended for clients</small>
                       </article>
