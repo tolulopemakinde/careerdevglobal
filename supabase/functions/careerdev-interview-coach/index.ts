@@ -194,10 +194,6 @@ Deno.serve(async (req) => {
       const { data: priorTurns, error: turnsError } = await admin.from("interview_coach_turns").select("*").eq("session_id", sessionId).order("sequence");
       if (turnsError) return json({ error: "Could not load interview turns." }, 500);
       const sequence = (priorTurns || []).length + 1;
-      const { error: answerError } = await admin.from("interview_coach_turns").insert({
-        session_id: sessionId, sequence, speaker: "candidate", content: answer,
-      });
-      if (answerError) return json({ error: "Could not save your answer." }, 500);
       const priorWithAnswer = [...(priorTurns || []), { speaker: "candidate", content: answer }];
       const context = {
         job_role: session.job_role, industry: session.industry, company_name: session.company_name,
@@ -206,6 +202,11 @@ Deno.serve(async (req) => {
       };
       const generated = await groqTurn(context, priorWithAnswer, Number(session.question_limit));
       const output = generated.result;
+      if (Number(session.questions_asked) >= Number(session.question_limit)) output.finished = true;
+      const { error: answerError } = await admin.from("interview_coach_turns").insert({
+        session_id: sessionId, sequence, speaker: "candidate", content: answer,
+      });
+      if (answerError) return json({ error: "Could not save your answer." }, 500);
       const nextSequence = sequence + 1;
       const turnRecord: Record<string, unknown> = {
         session_id: sessionId, sequence: nextSequence, speaker: "interviewer",
