@@ -20,6 +20,7 @@ const responseSchema = {
     follow_up: { type: "boolean" },
     answer_feedback: { type: "string" },
     finished: { type: "boolean" },
+    job_criteria: { type: "array", items: { type: "string" } },
     final_feedback: {
       type: "object",
       additionalProperties: false,
@@ -28,11 +29,26 @@ const responseSchema = {
         strengths: { type: "array", items: { type: "string" } },
         improvements: { type: "array", items: { type: "string" } },
         practice_plan: { type: "array", items: { type: "string" } },
+        criteria_assessments: {
+          type: "array",
+          items: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              criterion: { type: "string" },
+              assessment: { type: "string", enum: ["strong_evidence", "partial_evidence", "not_demonstrated"] },
+              evidence: { type: "string" },
+              gap: { type: "string" },
+              next_step: { type: "string" },
+            },
+            required: ["criterion", "assessment", "evidence", "gap", "next_step"],
+          },
+        },
       },
-      required: ["overall", "strengths", "improvements", "practice_plan"],
+      required: ["overall", "strengths", "improvements", "practice_plan", "criteria_assessments"],
     },
   },
-  required: ["question", "competency", "follow_up", "answer_feedback", "finished", "final_feedback"],
+  required: ["question", "competency", "follow_up", "answer_feedback", "finished", "job_criteria", "final_feedback"],
 };
 
 function assertFreeProvider() {
@@ -45,19 +61,6 @@ function assertFreeProvider() {
 function boundedText(value: unknown, max: number): string {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
-function validHttpUrl(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  return value.slice(0, 5).flatMap((item) => {
-    if (typeof item !== "string" || item.length > 500) return [];
-    try {
-      const url = new URL(item);
-      return ["http:", "https:"].includes(url.protocol) ? [url.toString()] : [];
-    } catch {
-      return [];
-    }
-  });
-}
-
 async function groqTurn(context: Record<string, unknown>, turns: Array<Record<string, unknown>>, limit: number) {
   const key = Deno.env.get("GROQ_API_KEY");
   const freeTierConfirmed = Deno.env.get("GROQ_FREE_TIER_CONFIRMED") === "true";
@@ -70,12 +73,14 @@ async function groqTurn(context: Record<string, unknown>, turns: Array<Record<st
   const system = [
     "You are CareerDev Global's interactive Interview Coach.",
     "Run a realistic, supportive mock interview one question at a time.",
-    "Tailor questions only to the supplied job role, industry, company name, job description, company notes, and candidate context.",
-    "The company notes and source URLs are user-supplied context. Do not claim that you visited or verified a company website.",
+    "Use only the supplied role, industry, company name, job description, company notes, candidate context, and interview answers. Never claim that you opened links or researched the company.",
+    "Derive a stable list of 4 to 8 explicit job criteria from the job description and company notes. Include named operating models, evidence requirements, and responsibilities. Return them in job_criteria and reuse the same criteria throughout the session.",
+    "Ask questions that collectively cover these criteria. Each follow-up should probe a specific evidence gap such as the candidate's actions, dates, measures, stakeholders, or outcomes.",
+    "Tie answer feedback to the candidate's actual answer and the criterion tested. Do not infer experience from profile links or invent candidate experience, achievements, metrics, company facts, or hiring criteria.",
     "Never invent candidate experience, achievements, qualifications, metrics, company facts, or hiring criteria.",
     "Ask a concise follow-up when the candidate's answer needs evidence or clarification; otherwise advance to a different relevant competency.",
-    "Do not reveal private reasoning. Give brief actionable answer feedback after each candidate answer.",
-    "Finish when the question limit is reached or the candidate asks to finish. At completion, provide an evidence-grounded summary, strengths, improvements, and a short practice plan.",
+    "Do not reveal private reasoning. Give brief, specific and actionable answer feedback after each candidate answer.",
+    "Finish when the question limit is reached or the candidate asks to finish. At completion, provide an evidence-grounded summary, strengths, improvements, and a short practice plan. Include one criteria_assessments entry per job criterion with status, answer evidence, gap, and next step. If a criterion was not demonstrated, state that plainly rather than inventing evidence.",
     "Do not promise that practice will secure employment. Keep feedback respectful, job-related, and non-discriminatory.",
     "Return only JSON that conforms to the supplied schema.",
   ].join(" ");
@@ -99,16 +104,32 @@ async function groqTurn(context: Record<string, unknown>, turns: Array<Record<st
     }),
   });
   if (res.status === 429) {
-    const err = new Error("Groq free-tier rate limit reached. Your session is saved; please try again later.");
+    const err = new Error("Groq Free-tier rate limit reached. Your previous answers are saved and your latest answer is still in the form; please try again later.");
     (err as Error & { code?: string }).code = "FREE_PROVIDER_RATE_LIMIT";
     throw err;
   }
-  if (!res.ok) throw new Error("Free inference provider returned HTTP " + res.status);
+  if (!res.ok) {
+    const responseText = await res.text();
+    let providerError: Record<string, unknown> = {};
+    try {
+      const parsed = JSON.parse(responseText);
+      providerError = parsed?.error && typeof parsed.error === "object" ? parsed.error : {};
+    } catch { /* Never log provider body or candidate-submitted text. */ }
+    const safeField = (value: unknown) => typeof value === "string" ? value.replace(/[^A-Za-z0-9_.-]/g, "").slice(0, 80) : "";
+    const providerCode = safeField(providerError.code);
+    const providerType = safeField(providerError.type);
+    const providerParam = safeField(providerError.param);
+    console.error("Interview Coach Groq request rejected", { status: res.status, model: MODEL, code: providerCode, type: providerType, param: providerParam });
+    const details = [providerCode && `code=${providerCode}`, providerType && `type=${providerType}`, providerParam && `param=${providerParam}`].filter(Boolean).join(", ");
+    const err = new Error(`Groq Free rejected this turn (HTTP ${res.status}${details ? `; ${details}` : ""}). Your answer is kept in the form; retry once, or shorten it if the error repeats.`);
+    (err as Error & { code?: string }).code = "PROVIDER_REQUEST_REJECTED";
+    throw err;
+  }
   const payload = await res.json();
   const content = payload?.choices?.[0]?.message?.content;
   if (typeof content !== "string") throw new Error("Free inference provider returned no structured answer.");
   const result = JSON.parse(content);
-  if (typeof result.question !== "string" || typeof result.finished !== "boolean") {
+  if (typeof result.question !== "string" || typeof result.finished !== "boolean" || !Array.isArray(result.job_criteria) || !Array.isArray(result.final_feedback?.criteria_assessments)) {
     throw new Error("Interview response did not match the expected contract.");
   }
   return { result, usage: payload.usage || {} };
@@ -175,7 +196,7 @@ async function governedGroqTurn(
     if (ledgerId) {
       const { error: settleError } = await admin.rpc("settle_ai_credit_charge", {
         p_ledger_id: ledgerId, p_user_id: userId, p_outcome: "consumed",
-        p_metadata: { provider: "groq_free", model: MODEL, token_usage: generated.usage },
+        p_metadata: { provider: "groq_free", model: MODEL, token_usage: generated.usage, job_criteria: first.job_criteria },
       });
       if (settleError) throw settleError;
     }
@@ -232,7 +253,6 @@ Deno.serve(async (req) => {
       const jobDescription = boundedText(body.job_description, 16000);
       const candidateContext = boundedText(body.candidate_context, 8000);
       const companyContext = boundedText(body.company_context, 8000);
-      const sourceUrls = validHttpUrl(body.source_urls);
       const questionLimit = Math.trunc(Math.max(3, Math.min(MAX_QUESTION_LIMIT, Number(body.question_limit) || 6)));
       if (body.external_ai_consent !== true) return json({ error: "Consent is required before interview context is sent to Groq." }, 400);
       assertFreeProvider();
@@ -246,14 +266,14 @@ Deno.serve(async (req) => {
       const { data: session, error: insertError } = await admin.from("interview_coach_sessions").insert({
         user_id: user.id, job_role: jobRole, industry, company_name: companyName,
         job_description: jobDescription, candidate_context: candidateContext,
-        company_context: companyContext, source_urls: sourceUrls, question_limit: questionLimit,
+        company_context: companyContext, question_limit: questionLimit,
         external_ai_consent_at: new Date().toISOString(),
         provider: "groq_free", model: MODEL,
       }).select("id").single();
       if (insertError || !session) return json({ error: "Could not create the interview session." }, 500);
       const context = {
         job_role: jobRole, industry, company_name: companyName, job_description: jobDescription,
-        candidate_context: candidateContext, company_context: companyContext, source_urls: sourceUrls,
+        candidate_context: candidateContext, company_context: companyContext,
       };
       let generated;
       try {
@@ -271,7 +291,7 @@ Deno.serve(async (req) => {
       });
       if (turnError) throw turnError;
       await admin.from("interview_coach_sessions").update({ questions_asked: 1, updated_at: new Date().toISOString() }).eq("id", session.id);
-      return json({ session_id: session.id, status: "in_progress", question: first.question, competency: first.competency });
+      return json({ session_id: session.id, status: "in_progress", question: first.question, competency: first.competency, job_criteria: first.job_criteria });
     }
 
     if (action === "respond") {
@@ -290,7 +310,8 @@ Deno.serve(async (req) => {
       const context = {
         job_role: session.job_role, industry: session.industry, company_name: session.company_name,
         job_description: session.job_description, candidate_context: session.candidate_context,
-        company_context: session.company_context, source_urls: session.source_urls,
+        company_context: session.company_context,
+         job_criteria: Array.isArray(priorTurns?.[0]?.metadata?.job_criteria) ? priorTurns[0].metadata.job_criteria : [],
       };
       const generated = await governedGroqTurn(caller, admin, user.id, context, priorWithAnswer, Number(session.question_limit), `interview:${sessionId}:turn:${sequence}`);
       const output = generated.result;
@@ -329,6 +350,7 @@ Deno.serve(async (req) => {
     if (code === "FREE_PROVIDER_NOT_CONFIGURED") return json({ error: (error as Error).message, code }, 503);
     if (code === "GOVERNANCE_DENIED") return json({ error: (error as Error).message, code }, 403);
     if (code === "FREE_PROVIDER_RATE_LIMIT") return json({ error: (error as Error).message, code }, 429);
+    if (code === "PROVIDER_REQUEST_REJECTED") return json({ error: (error as Error).message, code }, 502);
     return json({ error: error instanceof Error ? error.message : "Interview Coach failed." }, 502);
   }
 });
