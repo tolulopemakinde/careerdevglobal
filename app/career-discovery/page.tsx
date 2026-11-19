@@ -62,6 +62,7 @@ export default function CareerDiscoveryPage() {
   const [userEmail, setUserEmail] = useState("");
   const [clientId, setClientId] = useState("");
   const [profile, setProfile] = useState<CareerProfile>({});
+  const [savedGoals, setSavedGoals] = useState<string[]>([]);
   const [hasProfile, setHasProfile] = useState(false);
   const [accessMessage, setAccessMessage] = useState("");
   const [exploration, setExploration] = useState("");
@@ -113,7 +114,7 @@ export default function CareerDiscoveryPage() {
         .maybeSingle();
       if (client?.id) {
         if (mounted) setClientId(client.id);
-        const [{ data: savedProfile }, { data: intelligenceProfile }] = await Promise.all([
+        const [{ data: savedProfile }, { data: careerGoalRows }] = await Promise.all([
           supabase
             .from("career_profiles")
             .select("professional_summary,current_job_title,current_industry,career_stage,target_role,target_roles,target_industry,target_industries,target_location,target_locations,career_interests,interests,strengths_summary,development_gaps_summary,development_gaps,achievements,certifications,leadership_experience,portfolio_evidence")
@@ -121,20 +122,18 @@ export default function CareerDiscoveryPage() {
             .eq("is_current", true)
             .maybeSingle(),
           supabase
-            .from("career_intelligence_profiles")
-            .select("profile_data")
-            .eq("profile_id", user.id)
-            .order("version", { ascending: false })
-            .limit(1)
-            .maybeSingle(),
+            .from("career_goals")
+            .select("goal")
+            .eq("client_id", client.id)
+            .order("priority", { ascending: true })
+            .limit(10),
         ]);
-        const merged = {
-          ...(savedProfile || {}),
-          ...(intelligenceProfile?.profile_data || {}),
-        } as CareerProfile;
+        const merged = { ...(savedProfile || {}) } as CareerProfile;
+        const goals = (careerGoalRows || []).map((row) => row.goal).filter(Boolean) as string[];
         if (mounted) {
           setProfile(merged);
-          setHasProfile(Object.values(merged).some((value) =>
+          setSavedGoals(goals);
+          setHasProfile(goals.length > 0 || Object.values(merged).some((value) =>
             Array.isArray(value) ? value.length > 0 : Boolean(value),
           ));
         }
@@ -159,6 +158,7 @@ export default function CareerDiscoveryPage() {
     if (profile.current_job_title) signals.push(`Current role on your profile: ${profile.current_job_title}`);
     if (profile.current_industry) signals.push(`Current industry on your profile: ${profile.current_industry}`);
     if (profile.career_stage) signals.push(`Career stage on your profile: ${profile.career_stage}`);
+    if (savedGoals.length) signals.push(`Saved career goals: ${savedGoals.join("; ")}`);
     if (profile.target_roles?.length) signals.push(`Saved target roles: ${profile.target_roles.join(", ")}`);
     else if (profile.target_role) signals.push(`Saved target role: ${profile.target_role}`);
     if (profile.target_industries?.length) signals.push(`Saved target industries: ${profile.target_industries.join(", ")}`);
@@ -246,6 +246,7 @@ export default function CareerDiscoveryPage() {
                 <div><strong>Target roles</strong><p style={{ color: "#527085", marginTop: 5 }}>{profile.target_roles?.join(", ") || profile.target_role || "Not saved"}</p></div>
                 <div><strong>Industries</strong><p style={{ color: "#527085", marginTop: 5 }}>{profile.target_industries?.join(", ") || profile.target_industry || "Not saved"}</p></div>
                 <div><strong>Interests</strong><p style={{ color: "#527085", marginTop: 5 }}>{profile.career_interests?.join(", ") || profile.interests || "Not saved"}</p></div>
+                <div><strong>Career goals</strong><p style={{ color: "#527085", marginTop: 5 }}>{savedGoals.join(", ") || "Not saved"}</p></div>
               </div>
             </section>
 
