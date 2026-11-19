@@ -114,6 +114,92 @@ async function groqTurn(context: Record<string, unknown>, turns: Array<Record<st
   return { result, usage: payload.usage || {} };
 }
 
+async function governedGroqTurn(
+  caller: ReturnType<typeof createClient>,
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  context: Record<string, unknown>,
+  turns: Array<Record<string, unknown>>,
+  limit: number,
+  idempotencyKey: string,
+) {
+  const input = { context, question_limit: limit, turns };
+  const { data: requestId, error: requestError } = await caller.rpc("request_ai_agent_execution", {
+    p_agent_key: "interview_coach_agent",
+    p_workflow_key: "interview_coach_agent_session",
+    p_trigger_source: "manual",
+    p_input_payload: { input, feature: "interactive_interview_practice" },
+  });
+  if (requestError || !requestId) {
+    const err = new Error(requestError?.message || "This account or plan cannot use Interview Coach.");
+    (err as Error & { code?: string }).code = "GOVERNANCE_DENIED";
+    throw err;
+  }
+  const { data: prepared, error: prepareError } = await caller.rpc("prepare_ai_agent_execution", { p_request_id: requestId });
+  const executionId = prepared?.execution_id;
+  if (prepareError || !executionId) {
+    const reason = prepareError?.message || "Execution preparation failed";
+    await admin.from("ai_agent_execution_requests").update({ status: "blocked", denial_reason: reason, completed_at: new Date().toISOString() }).eq("id", requestId);
+    const err = new Error(reason);
+    (err as Error & { code?: string }).code = "GOVERNANCE_DENIED";
+    throw err;
+  }
+  const { data: reservationRows, error: reserveError } = await caller.rpc("reserve_ai_credits", {
+    p_operation_key: "interview_coach_agent", p_execution_id: executionId, p_request_id: requestId,
+    p_idempotency_key: idempotencyKey, p_metadata: { feature: "interactive_interview_practice" },
+  });
+  const reservation = Array.isArray(reservationRows) ? reservationRows[0] : reservationRows;
+  if (reserveError || !reservation?.allowed) {
+    const reason = reserveError?.message || reservation?.reason || "AI credits are unavailable for this request.";
+    const finishedAt = new Date().toISOString();
+    await admin.from("ai_agent_execution_requests").update({ status: "blocked", denial_reason: reason, completed_at: finishedAt }).eq("id", requestId);
+    await admin.from("ai_agent_executions").update({ status: "blocked", error_message: reason, completed_at: finishedAt, updated_at: finishedAt }).eq("id", executionId);
+    await admin.from("ai_agent_execution_events").insert({ request_id: requestId, execution_id: executionId, event_type: "blocked", event_data: { reason }, actor_id: userId });
+    const err = new Error(reason);
+    (err as Error & { code?: string }).code = "GOVERNANCE_DENIED";
+    throw err;
+  }
+  let claimed = false;
+  const ledgerId = reservation.ledger_id || null;
+  try {
+    if (ledgerId) {
+      const { data: claim, error: claimError } = await admin.rpc("claim_ai_runtime_credit", { p_ledger_id: ledgerId, p_user_id: userId });
+      if (claimError || claim !== true) throw new Error(claimError?.message || "Could not claim reserved AI credit.");
+      claimed = true;
+    }
+    const startedAt = new Date().toISOString();
+    await admin.from("ai_agent_execution_requests").update({ status: "running" }).eq("id", requestId);
+    await admin.from("ai_agent_executions").update({ status: "running", started_at: startedAt, updated_at: startedAt }).eq("id", executionId);
+    await admin.from("ai_agent_execution_events").insert({ request_id: requestId, execution_id: executionId, event_type: "started", event_data: { provider: "groq_free", model: MODEL }, actor_id: userId });
+    const generated = await groqTurn(context, turns, limit);
+    if (ledgerId) {
+      const { error: settleError } = await admin.rpc("settle_ai_credit_charge", {
+        p_ledger_id: ledgerId, p_user_id: userId, p_outcome: "consumed",
+        p_metadata: { provider: "groq_free", model: MODEL, token_usage: generated.usage },
+      });
+      if (settleError) throw settleError;
+    }
+    const finishedAt = new Date().toISOString();
+    await admin.from("ai_agent_executions").update({ status: "completed", output_snapshot: generated.result, completed_at: finishedAt, updated_at: finishedAt }).eq("id", executionId);
+    await admin.from("ai_agent_execution_requests").update({ status: "completed", completed_at: finishedAt }).eq("id", requestId);
+    await admin.from("ai_agent_execution_events").insert({ request_id: requestId, execution_id: executionId, event_type: "completed", event_data: { provider: "groq_free", model: MODEL, token_usage: generated.usage }, actor_id: userId });
+    return generated;
+  } catch (error) {
+    if (ledgerId && claimed) {
+      await admin.rpc("settle_ai_credit_charge", {
+        p_ledger_id: ledgerId, p_user_id: userId, p_outcome: "released",
+        p_metadata: { provider: "groq_free", model: MODEL, failure: error instanceof Error ? error.message : "generation_failed" },
+      });
+    }
+    const failedAt = new Date().toISOString();
+    const message = error instanceof Error ? error.message : "Interview generation failed.";
+    await admin.from("ai_agent_executions").update({ status: "failed", error_message: message.slice(0, 1000), completed_at: failedAt, updated_at: failedAt }).eq("id", executionId);
+    await admin.from("ai_agent_execution_requests").update({ status: "failed", denial_reason: message.slice(0, 1000), completed_at: failedAt }).eq("id", requestId);
+    await admin.from("ai_agent_execution_events").insert({ request_id: requestId, execution_id: executionId, event_type: "failed", event_data: { error: message.slice(0, 1000) }, actor_id: userId });
+    throw error;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -169,7 +255,7 @@ Deno.serve(async (req) => {
         job_role: jobRole, industry, company_name: companyName, job_description: jobDescription,
         candidate_context: candidateContext, company_context: companyContext, source_urls: sourceUrls,
       };
-      const generated = await groqTurn(context, [], questionLimit);
+      const generated = await governedGroqTurn(caller, admin, user.id, context, [], questionLimit, `interview:${session.id}:start`);
       const first = generated.result;
       if (!first.question.trim()) throw new Error("Interview Coach did not generate a question.");
       const { error: turnError } = await admin.from("interview_coach_turns").insert({
@@ -200,7 +286,7 @@ Deno.serve(async (req) => {
         job_description: session.job_description, candidate_context: session.candidate_context,
         company_context: session.company_context, source_urls: session.source_urls,
       };
-      const generated = await groqTurn(context, priorWithAnswer, Number(session.question_limit));
+      const generated = await governedGroqTurn(caller, admin, user.id, context, priorWithAnswer, Number(session.question_limit), `interview:${sessionId}:turn:${sequence}`);
       const output = generated.result;
       if (Number(session.questions_asked) >= Number(session.question_limit)) output.finished = true;
       const { error: answerError } = await admin.from("interview_coach_turns").insert({
@@ -235,6 +321,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     const code = (error as Error & { code?: string }).code;
     if (code === "FREE_PROVIDER_NOT_CONFIGURED") return json({ error: (error as Error).message, code }, 503);
+    if (code === "GOVERNANCE_DENIED") return json({ error: (error as Error).message, code }, 403);
     if (code === "FREE_PROVIDER_RATE_LIMIT") return json({ error: (error as Error).message, code }, 429);
     return json({ error: error instanceof Error ? error.message : "Interview Coach failed." }, 502);
   }
