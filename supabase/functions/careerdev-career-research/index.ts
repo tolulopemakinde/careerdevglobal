@@ -241,11 +241,24 @@ async function loadProfileContext(caller: DbClient, userId: string) {
   ]);
   return { profile: profile || null, goals: goals || [] };
 }
-async function settleFailure(admin: DbClient, ledgerId: string | null, userId: string, detail: string) {
-  if (!ledgerId) return;
-  await admin.rpc("settle_ai_credit_charge", {
-    p_ledger_id: ledgerId, p_user_id: userId, p_outcome: "released",
-    p_metadata: { provider: "groq_free", model: MODEL, failure: detail.slice(0, 120) },
+type CreditSettlementMode = "test_claim_settle" | "production_finalize";
+async function settleCredit(
+  caller: DbClient,
+  admin: DbClient,
+  mode: CreditSettlementMode,
+  ledgerId: string | null,
+  userId: string,
+  outcome: "consumed" | "released",
+  metadata: Record<string, unknown>,
+) {
+  if (!ledgerId) return { error: null };
+  if (mode === "test_claim_settle") {
+    return await admin.rpc("settle_ai_credit_charge", {
+      p_ledger_id: ledgerId, p_user_id: userId, p_outcome: outcome, p_metadata: metadata,
+    });
+  }
+  return await caller.rpc("finalize_ai_credit_charge", {
+    p_ledger_id: ledgerId, p_outcome: outcome, p_metadata: metadata,
   });
 }
 
@@ -332,11 +345,18 @@ Deno.serve(async (req: Request) => {
       throw fail("Career Research is not available under the current agent access or credit allowance.", "GOVERNANCE_DENIED");
     }
     const ledgerId = reservation.ledger_id || null;
+    let settlementMode: CreditSettlementMode = "production_finalize";
     if (ledgerId) {
       const { data: claimed, error: claimError } = await admin.rpc("claim_ai_runtime_credit", { p_ledger_id: ledgerId, p_user_id: user.id });
-      if (claimError || claimed !== true) {
-        await settleFailure(admin, ledgerId, user.id, "credit_claim_failed");
+      if (claimError?.code === "PGRST202") {
+        settlementMode = "production_finalize";
+      } else if (claimError || claimed !== true) {
+        const blockedAt = new Date().toISOString();
+        await admin.from("ai_agent_execution_requests").update({ status: "blocked", denial_reason: "credit_claim_failed", completed_at: blockedAt }).eq("id", requestId);
+        await admin.from("ai_agent_executions").update({ status: "blocked", error_message: "credit_claim_failed", completed_at: blockedAt, updated_at: blockedAt }).eq("id", executionId);
         throw fail("Career Research could not safely claim the reserved credit. Please retry.", "GOVERNANCE_DENIED");
+      } else {
+        settlementMode = "test_claim_settle";
       }
     }
 
@@ -360,9 +380,8 @@ Deno.serve(async (req: Request) => {
       };
       const { result, sourceCount } = report;
       if (ledgerId) {
-        const { error: settleError } = await admin.rpc("settle_ai_credit_charge", {
-          p_ledger_id: ledgerId, p_user_id: user.id, p_outcome: "consumed",
-          p_metadata: { provider: "groq_free", model: MODEL, usage, source_count: sourceCount, phase: action, round: input.round },
+        const { error: settleError } = await settleCredit(caller, admin, settlementMode, ledgerId, user.id, "consumed", {
+          provider: "groq_free", model: MODEL, usage, source_count: sourceCount, phase: action, round: input.round,
         });
         if (settleError) throw fail("Report was created but credit settlement needs review. Please contact support before retrying.", "CREDIT_SETTLEMENT_ERROR");
       }
@@ -379,7 +398,9 @@ Deno.serve(async (req: Request) => {
       });
       return json({ status: "completed", execution_id: executionId, report: result, credits_used: Number(reservation.credits_required || 0), research_round: input.round });
     } catch (error) {
-      if (ledgerId) await settleFailure(admin, ledgerId, user.id, error instanceof Error ? error.message : "generation_failed");
+      if (ledgerId) await settleCredit(caller, admin, settlementMode, ledgerId, user.id, "released", {
+        provider: "groq_free", model: MODEL, failure: (error instanceof Error ? error.message : "generation_failed").slice(0, 120),
+      });
       const failedAt = new Date().toISOString();
       const message = error instanceof Error ? error.message : "Career Research failed.";
       await admin.from("ai_agent_executions").update({ status: "failed", error_message: message.slice(0, 500), completed_at: failedAt, updated_at: failedAt }).eq("id", executionId);
