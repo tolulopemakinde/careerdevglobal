@@ -155,6 +155,7 @@ export default function InterviewCoachPage() {
         </section>
       )}
       {message && <p role="alert" style={{ marginTop: 16, color: "#9b2c2c" }}>{message}</p>}
+      </section>
     </main>
   );
 }
