@@ -10,6 +10,7 @@ create table if not exists public.interview_coach_sessions (
   candidate_context text not null default '',
   company_context text not null default '',
   source_urls text[] not null default '{}',
+  external_ai_consent_at timestamptz not null,
   question_limit smallint not null default 6 check (question_limit between 3 and 10),
   questions_asked smallint not null default 0 check (questions_asked between 0 and 10),
   final_feedback jsonb,
