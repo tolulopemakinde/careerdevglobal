@@ -40,7 +40,7 @@ type ResearchReport = {
   research_round?: number;
   provider?: string;
 };
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ufmhrmzumqkjvaezrmxf.supabase.co";
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";
 
 function List({ title, items }: { title: string; items: string[] }) {
@@ -122,7 +122,8 @@ export default function CareerResearchWorkspace() {
   async function runResearch(action: "start" | "refine", event?: FormEvent) {
     event?.preventDefault();
     setMessage("");
-    if (!externalConsent) { setMessage("Please consent before sending your research request to Groq Free."); return; }
+    if (!externalConsent) { setMessage("Please consent before sending your research request and selected career context to Groq Free."); return; }
+    if (!SUPABASE_URL || !SUPABASE_KEY) { setMessage("Career Research is not configured for this deployment."); return; }
     if (![jobRole.trim(), industry.trim(), company.trim()].some(Boolean) || !focusQuestion.trim()) {
       setMessage("Enter at least one of role, industry, or company, and describe what you want to learn.");
       return;
