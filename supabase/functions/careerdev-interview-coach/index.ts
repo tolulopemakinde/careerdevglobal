@@ -255,7 +255,13 @@ Deno.serve(async (req) => {
         job_role: jobRole, industry, company_name: companyName, job_description: jobDescription,
         candidate_context: candidateContext, company_context: companyContext, source_urls: sourceUrls,
       };
-      const generated = await governedGroqTurn(caller, admin, user.id, context, [], questionLimit, `interview:${session.id}:start`);
+      let generated;
+      try {
+        generated = await governedGroqTurn(caller, admin, user.id, context, [], questionLimit, `interview:${session.id}:start`);
+      } catch (error) {
+        await admin.from("interview_coach_sessions").delete().eq("id", session.id).eq("user_id", user.id);
+        throw error;
+      }
       const first = generated.result;
       if (!first.question.trim()) throw new Error("Interview Coach did not generate a question.");
       const { error: turnError } = await admin.from("interview_coach_turns").insert({
