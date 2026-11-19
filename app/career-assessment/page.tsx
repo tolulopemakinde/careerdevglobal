@@ -20,6 +20,10 @@ type Profile = {
   development_gaps_summary?: string | null;
   development_gaps?: string[] | null;
   professional_summary?: string | null;
+  achievements?: string | null;
+  certifications?: string | null;
+  leadership_experience?: string | null;
+  portfolio_evidence?: string | null;
 };
 type Answer = { option_key: string; label: string; category: string; source: "self_report" };
 
@@ -114,7 +118,7 @@ export default function CareerAssessmentPage() {
 
       const [{ data: assessmentRows }, { data: profileRow }, { data: goalRows }] = await Promise.all([
         supabase.from("assessments").select("id,name,description").eq("assessment_type", "career_direction").eq("active", true).order("version", { ascending: false }).limit(1),
-        supabase.from("career_profiles").select("current_job_title,current_industry,target_role,target_roles,target_industry,target_industries,career_interests,interests,strengths_summary,development_gaps_summary,development_gaps,professional_summary").eq("client_id", client.id).eq("is_current", true).maybeSingle(),
+        supabase.from("career_profiles").select("current_job_title,current_industry,target_role,target_roles,target_industry,target_industries,career_interests,interests,strengths_summary,development_gaps_summary,development_gaps,professional_summary,achievements,certifications,leadership_experience,portfolio_evidence").eq("client_id", client.id).eq("is_current", true).maybeSingle(),
         supabase.from("career_goals").select("goal").eq("client_id", client.id).order("priority", { ascending: true }).limit(10),
       ]);
       const currentAssessment = assessmentRows?.[0] as Assessment | undefined;
@@ -189,6 +193,11 @@ export default function CareerAssessmentPage() {
     (profile.target_roles?.length || profile.target_role) && `Target roles: ${profile.target_roles?.join(", ") || profile.target_role}`,
     (profile.target_industries?.length || profile.target_industry) && `Target industries: ${profile.target_industries?.join(", ") || profile.target_industry}`,
     (profile.career_interests?.length || profile.interests) && `Saved interests: ${profile.career_interests?.join(", ") || profile.interests}`,
+    profile.professional_summary && `Professional summary: ${profile.professional_summary}`,
+    profile.achievements && `Saved achievements: ${profile.achievements}`,
+    profile.certifications && `Saved certifications: ${profile.certifications}`,
+    profile.leadership_experience && `Saved leadership experience: ${profile.leadership_experience}`,
+    profile.portfolio_evidence && `Saved portfolio evidence: ${profile.portfolio_evidence}`,
     profile.strengths_summary && `Saved strengths: ${profile.strengths_summary}`,
     (profile.development_gaps?.length || profile.development_gaps_summary) && `Saved development priorities: ${profile.development_gaps?.join(", ") || profile.development_gaps_summary}`,
   ].filter(Boolean) as string[];
