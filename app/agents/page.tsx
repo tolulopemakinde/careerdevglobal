@@ -197,13 +197,13 @@ export default function AgentsPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 14 }}>
                   {list.map(agent => {
                     const allowed = staffTestingAccess || included.has(agent.agent_key);
-                    const destination = agent.agent_key === 'interview_coach_agent' ? '/interview-coach' : agent.agent_key === 'career_coach_agent' ? '/career-coach' : '/career-intelligence';
-                    const actionLabel = agent.agent_key === 'interview_coach_agent' ? 'Start mock interview →' : agent.agent_key === 'career_coach_agent' ? 'Open Career Coach →' : 'Start in Career Intelligence →';
+                    const destination = agent.agent_key === 'interview_coach_agent' ? '/interview-coach' : agent.agent_key === 'career_coach_agent' ? '/career-coach' : agent.agent_key === 'career_research_agent' ? '/career-research' : '/career-intelligence';
+                    const actionLabel = agent.agent_key === 'interview_coach_agent' ? 'Start mock interview →' : agent.agent_key === 'career_coach_agent' ? 'Open Career Coach →' : agent.agent_key === 'career_research_agent' ? 'Research roles and companies →' : 'Start in Career Intelligence →';
                     return (
                       <article key={agent.id} data-cdg-motion="agent-card" style={{ background: '#fff', border: '1px solid ' + (allowed ? '#d8e6f1' : '#e3e8ed'), borderRadius: 16, boxShadow: '0 8px 25px rgba(0,60,100,.05)', opacity: allowed ? 1 : .86 }}>
                         <a
                           href={allowed ? destination : '/pricing'}
-                          aria-label={allowed ? `Open ${agent.name} in ${agent.agent_key === 'interview_coach_agent' ? 'Interview Coach' : 'Career Intelligence'}` : `View plans for ${agent.name}`}
+                          aria-label={allowed ? `Open ${agent.name} in ${agent.agent_key === 'interview_coach_agent' ? 'Interview Coach' : agent.agent_key === 'career_coach_agent' ? 'Career Coach' : agent.agent_key === 'career_research_agent' ? 'Career Research' : 'Career Intelligence'}` : `View plans for ${agent.name}`}
                           style={{ display: 'block', height: '100%', padding: 18, borderRadius: 16, color: 'inherit', textDecoration: 'none', cursor: 'pointer', outlineOffset: 4 }}
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'start' }}>
