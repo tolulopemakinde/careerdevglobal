@@ -83,13 +83,36 @@ export default function InterviewCoachPage() {
   }
 
   return (
-    <main style={{ maxWidth: 900, margin: "0 auto", padding: "32px 18px 70px", color: "#09233f" }}>
-      <a href="/agents" style={{ color: "#0b5d9b", fontWeight: 800 }}>← AI Agents</a>
-      <h1>Interview Coach</h1>
-      <p>Practice for a specific opportunity. Questions and feedback are mapped to the role requirements and experience details you provide.</p>
-      <aside style={{ padding: 14, border: "1px solid #ecd9a8", borderRadius: 10, background: "#fff9e9", lineHeight: 1.5 }}>
-        Zero-cost pilot: this flow uses Groq only when its Free-tier account is explicitly confirmed. No paid-model fallback or live company search is used. Links are not opened; paste relevant job and experience text. Do not include sensitive personal information.
-      </aside>
+    <main>
+      <section className="hero" aria-labelledby="interview-coach-title">
+        <div className="container hero-grid">
+          <div className="hero-copy">
+            <p className="eyebrow">CAREER DEVELOPMENT • INTERVIEW PRACTICE</p>
+            <h1 id="interview-coach-title">Interview Coach</h1>
+            <p className="lead">Prepare for a specific opportunity with role-targeted questions, evidence-focused follow-ups, and practical feedback based on the information you provide.</p>
+            <div className="actions">
+              <a className="button primary" href="#practice-form">Start practice</a>
+              <a className="button secondary" href="/agents">Explore AI Agents</a>
+            </div>
+            <div className="trust-row"><span>Role-targeted questions</span><span>Interactive practice</span><span>Actionable feedback</span></div>
+          </div>
+          <div className="hero-card" aria-label="Interview practice steps">
+            <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: ".14em", color: "#1764df" }}>YOUR PRACTICE FLOW</div>
+            <div className="journey">
+              <span>Role</span><b aria-hidden="true">→</b><span>Criteria</span><b aria-hidden="true">→</b><span>Practice</span><b aria-hidden="true">→</b><span>Feedback</span>
+            </div>
+            <p>Questions are tailored to the job description and company notes you share. Your final review highlights evidence, gaps, and next steps.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="practice-form" className="container" style={{ maxWidth: 900, padding: "40px 0 70px", color: "#09233f" }}>
+        <a href="/agents" style={{ color: "#0b5d9b", fontWeight: 800 }}>← AI Agents</a>
+        <h2 style={{ marginTop: 12 }}>Build your mock interview</h2>
+        <p>Share the role details and experience you want to practice with. Links are not opened, so paste the relevant text directly.</p>
+        <aside style={{ padding: 14, border: "1px solid #ecd9a8", borderRadius: 10, background: "#fff9e9", lineHeight: 1.5 }}>
+          Zero-cost pilot: this flow uses Groq only when its Free-tier account is explicitly confirmed. No paid-model fallback or live company search is used. Links are not opened; paste relevant job and experience text. Do not include sensitive personal information.
+        </aside>
 
       {!sessionId ? (
         <form onSubmit={start} style={{ display: "grid", gap: 14, marginTop: 22 }}>
