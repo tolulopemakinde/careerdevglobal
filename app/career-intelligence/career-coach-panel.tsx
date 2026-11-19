@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createSupabaseBrowserClient } from "../../lib/supabase-browser";
 
 type Goal = { id: string; goal: string; priority: number; target_date: string | null; created_at: string };
+type CareerContext = { professional_summary: string | null; career_stage: string | null; current_job_title: string | null; current_industry: string | null; target_role: string | null; target_industry: string | null; strengths_summary: string | null; development_gaps_summary: string | null; achievements: string | null };
 
 const prompts = [
   { title: "Choose the outcome", label: "What career outcome do you want to move toward?", hint: "Make it concrete: a role, transition, promotion, or milestone." },
@@ -19,6 +20,7 @@ export default function CareerCoachPanel() {
   const [allowed, setAllowed] = useState(false);
   const [canSave, setCanSave] = useState(false);
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [careerContext, setCareerContext] = useState<CareerContext | null>(null);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState(["", "", "", ""]);
   const [message, setMessage] = useState("");
@@ -54,10 +56,15 @@ export default function CareerCoachPanel() {
       const { data: client } = await supabase.from("clients").select("id").eq("profile_id", user.id).maybeSingle();
       if (client?.id) {
         setCanSave(true);
-        const { data: savedGoals } = await supabase.from("career_goals").select("id,goal,priority,target_date,created_at").eq("client_id", client.id).eq("status", "active").order("priority", { ascending: true }).order("created_at", { ascending: false }).limit(10);
+        const [{ data: savedGoals }, { data: savedProfile }] = await Promise.all([
+          supabase.from("career_goals").select("id,goal,priority,target_date,created_at").eq("client_id", client.id).eq("status", "active").order("priority", { ascending: true }).order("created_at", { ascending: false }).limit(10),
+          supabase.from("career_profiles").select("professional_summary,career_stage,current_job_title,current_industry,target_role,target_industry,strengths_summary,development_gaps_summary,achievements").eq("client_id", client.id).eq("is_current", true).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+        ]);
+        if (live && savedProfile) setCareerContext(savedProfile as CareerContext);
         if (live && savedGoals) {
           setGoals(savedGoals as Goal[]);
-          if (savedGoals[0]?.goal) setAnswers(current => [current[0] || savedGoals[0].goal, current[1], current[2], current[3]]);
+          const savedOutcome = savedGoals[0]?.goal || savedProfile?.target_role || "";
+          if (savedOutcome) setAnswers(current => [current[0] || savedOutcome, current[1], current[2], current[3]]);
         }
       }
       if (live) setLoading(false);
@@ -105,16 +112,36 @@ export default function CareerCoachPanel() {
   }
 
   function startAgain() {
-    setAnswers(["", "", "", ""]);
+    setAnswers([goals[0]?.goal || careerContext?.target_role || "", "", "", ""]);
     setStep(0);
     setComplete(false);
     setMessage("");
   }
 
+  const savedContextItems: { label: string; value: string }[] = [
+    { label: "Current role", value: careerContext?.current_job_title || "" },
+    { label: "Career stage", value: careerContext?.career_stage || "" },
+    { label: "Current industry", value: careerContext?.current_industry || "" },
+    { label: "Target role", value: careerContext?.target_role || "" },
+    { label: "Target industry", value: careerContext?.target_industry || "" },
+    { label: "Strengths", value: careerContext?.strengths_summary || "" },
+    { label: "Development focus", value: careerContext?.development_gaps_summary || "" },
+  ].filter(item => item.value.trim());
+
   return (
     <section className="ci-section" id="career-coach">
       <div className="ci-container">
         <div className="ci-section-heading"><span>COACH</span><div><div className="ci-overline">CAREER COACH</div><h2>Turn a career goal into one clear next step.</h2><p>A short guided session uses your saved career goals when available, then helps you identify a barrier, a realistic action, and evidence of progress.</p></div></div>
+        <div style={{ maxWidth: 820, margin: "0 auto 18px", padding: "clamp(16px,3vw,24px)", borderRadius: 16, background: "#f2f8fc", border: "1px solid #d8e6f1" }}>
+          <h3 style={{ marginTop: 0 }}>Career Intelligence context</h3>
+          {savedContextItems.length > 0 ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
+            {careerContext?.professional_summary && <p style={{ gridColumn: "1 / -1", margin: 0, color: "#38566c" }}>{careerContext.professional_summary}</p>}
+            {savedContextItems.map(item => <div key={item.label}><strong>{item.label}</strong><p style={{ margin: "4px 0 0", color: "#527085" }}>{item.value}</p></div>)}
+            {careerContext?.achievements && <div style={{ gridColumn: "1 / -1" }}><strong>Saved achievements</strong><p style={{ margin: "4px 0 0", color: "#527085" }}>{careerContext.achievements}</p></div>}
+          </div> : <p style={{ margin: 0, color: "#527085" }}>No saved career profile details were found yet. You can still complete a guided session; saved career goals will appear here when available.</p>}
+          {goals.length > 0 && <p style={{ marginBottom: 0, color: "#527085" }}><strong>Saved goals:</strong> {goals.length} active goal{goals.length === 1 ? "" : "s"} available to this session.</p>}
+          <a href="/career-intelligence#profile" style={{ display: "inline-block", marginTop: 10, color: "#0b5d9b", fontWeight: 800 }}>Review Career Intelligence Profile →</a>
+        </div>
         <div style={{ maxWidth: 820, margin: "0 auto", padding: "clamp(20px,4vw,34px)", borderRadius: 18, background: "#fff", border: "1px solid #d8e6f1", boxShadow: "0 12px 36px rgba(0,45,90,.08)" }}>
           {loading ? <p role="status">Loading your Career Coach workspace…</p> : !allowed ? (
             <div><h3>Career Coach access</h3><p>{message || "Career Coach is included with eligible AI Agent access. Staff and Admin can use this workspace for testing."}</p><a className="ci-primary" href={message.includes("Sign in") ? "/account" : "/pricing"}>{message.includes("Sign in") ? "Sign in →" : "View access options →"}</a></div>
