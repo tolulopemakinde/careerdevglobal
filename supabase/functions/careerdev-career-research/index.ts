@@ -122,11 +122,18 @@ function sanitizeSources(report: any, searchText: string) {
   if (!report.sources.length) report.uncertainty_flags = [...(Array.isArray(report.uncertainty_flags) ? report.uncertainty_flags : []), "The search response did not expose machine-checkable source URLs; verify the cited findings before relying on them."];
   return report;
 }
-function safeProviderError(payload: any) {
-  const value = payload?.error?.code || payload?.error?.type || "provider_request_failed";
-  return String(value).replace(/[^A-Za-z0-9_.-]/g, "").slice(0, 80) || "provider_request_failed";
+function safeProviderValue(value: unknown) {
+  return typeof value === "string" ? value.replace(/[^A-Za-z0-9_.-]/g, "").slice(0, 80) : "";
 }
-async function groqChat(body: Record<string, unknown>) {
+function safeProviderError(payload: any) {
+  const error = payload?.error && typeof payload.error === "object" ? payload.error : {};
+  return {
+    code: safeProviderValue(error.code),
+    type: safeProviderValue(error.type),
+    param: safeProviderValue(error.param),
+  };
+}
+async function groqChat(body: Record<string, unknown>, stage: "web_search" | "report_synthesis") {
   const key = Deno.env.get("GROQ_API_KEY");
   if (!key) throw fail("Groq Free-tier provider is not configured.", "FREE_PROVIDER_NOT_CONFIGURED");
   const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -140,14 +147,18 @@ async function groqChat(body: Record<string, unknown>) {
   try { payload = JSON.parse(raw); } catch {}
   if (response.status === 429) throw fail("Groq Free-tier limits were reached. Your answers are kept on this page; try again later.", "FREE_PROVIDER_RATE_LIMIT");
   if (!response.ok) {
-    console.error("Career Research Groq request rejected", { status: response.status, model: MODEL, code: safeProviderError(payload) });
-    throw fail("Groq could not complete Career Research right now. Please retry later.", "PROVIDER_REQUEST_REJECTED");
+    const providerError = safeProviderError(payload);
+    console.error("Career Research Groq request rejected", { stage, status: response.status, model: MODEL, ...providerError });
+    const field = providerError.param ? `; rejected field: ${providerError.param}` : "";
+    const requestStage = stage === "web_search" ? "web search" : "report generation";
+    throw fail(`Groq rejected the Career Research ${requestStage} request (HTTP ${response.status}${field}). Please retry later.`, "PROVIDER_REQUEST_REJECTED");
   }
   return payload;
 }
 async function searchWeb(input: ResearchInput, profileContext: Record<string, unknown>) {
   const date = new Date().toISOString().slice(0, 10);
   const userMessage = [
+    "You are CareerDev Global's careful career-market researcher. Search the live web now for current information, preserve citations, prefer authoritative sources, and label uncertainty. Do not provide hiring guarantees or discriminatory recommendations.",
     "Search the live web now. This is current career research, not a memory question.",
     `Date: ${date}`,
     `Job role: ${input.job_role || "not specified"}`,
@@ -164,18 +175,14 @@ async function searchWeb(input: ResearchInput, profileContext: Record<string, un
   ].join("\n");
   const payload = await groqChat({
     model: MODEL,
-    messages: [
-      { role: "system", content: "You are a careful career-market researcher. You must use browser search for current facts, preserve citations, prefer authoritative sources, and label uncertainty. Do not provide hiring guarantees or discriminatory recommendations." },
-      { role: "user", content: userMessage },
-    ],
+    messages: [{ role: "user", content: userMessage }],
     tools: [{ type: "browser_search" }],
     tool_choice: "required",
-    citation_options: "enabled",
     reasoning_effort: "low",
-    temperature: 0.2,
-    max_completion_tokens: 1800,
+    temperature: 1,
+    max_completion_tokens: 2048,
     stream: false,
-  });
+  }, "web_search");
   const text = payload?.choices?.[0]?.message?.content;
   if (typeof text !== "string" || !text.trim()) throw fail("Groq web search returned no research results. Please retry with a more specific role, industry, or company.", "NO_SEARCH_RESULTS");
   return { text: text.slice(0, 18000), usage: payload?.usage || {} };
@@ -215,7 +222,7 @@ async function synthesizeReport(input: ResearchInput, profileContext: Record<str
     temperature: 0.2,
     max_completion_tokens: 2500,
     stream: false,
-  });
+  }, "report_synthesis");
   const text = payload?.choices?.[0]?.message?.content;
   if (typeof text !== "string") throw fail("Groq returned no structured Career Research report.", "INVALID_MODEL_OUTPUT");
   const result = sanitizeSources(parseJsonObject(text), searchText);
