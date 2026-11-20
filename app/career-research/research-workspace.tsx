@@ -122,7 +122,7 @@ export default function CareerResearchWorkspace() {
   async function runResearch(action: "start" | "refine", event?: FormEvent) {
     event?.preventDefault();
     setMessage("");
-    if (!externalConsent) { setMessage("Please consent before sending your research request and selected career context to Groq Free."); return; }
+    if (!externalConsent) { setMessage("Please consent before sharing your research request with CareerDev Global's AI provider."); return; }
     if (!SUPABASE_URL || !SUPABASE_KEY) { setMessage("Career Research is not configured for this deployment."); return; }
     if (![jobRole.trim(), industry.trim(), company.trim()].some(Boolean) || !focusQuestion.trim()) {
       setMessage("Enter at least one of role, industry, or company, and describe what you want to learn.");
@@ -233,10 +233,10 @@ export default function CareerResearchWorkspace() {
             <div className="cr-field"><label htmlFor="research-question">What do you want the research to answer?</label><textarea className="cr-textarea cr-question" id="research-question" value={focusQuestion} onChange={e => setFocusQuestion(e.target.value)} maxLength={1200} rows={3} placeholder="e.g. What skills and evidence are commonly expected, and what should I know about this employer?" required /></div>
             <div className="cr-field"><label htmlFor="research-context">Job description or additional context <span>(optional)</span></label><textarea className="cr-textarea cr-context" id="research-context" value={jobContext} onChange={e => setJobContext(e.target.value)} maxLength={8000} rows={5} placeholder="Paste relevant job duties, company notes, or a specific question. Do not paste passwords, identity numbers, or other sensitive information." /></div>
             <div className="cr-consent">
-              <label><input type="checkbox" checked={externalConsent} onChange={e => setExternalConsent(e.target.checked)} /><span><strong>Share this research request with Groq Free.</strong> The role, industry, company, question, optional notes, and selected Career Intelligence profile context will be sent to Groq to search and prepare a report. Use only information you are comfortable sharing with the AI provider.</span></label>
+              <label><input type="checkbox" checked={externalConsent} onChange={e => setExternalConsent(e.target.checked)} /><span><strong>Share this research request with CareerDev Global.</strong> To search and prepare your report, CareerDev Global sends the role, industry, company, question, optional notes, and any selected Career Intelligence profile context to Groq, its AI provider. Use only information you are comfortable sharing with the AI provider.</span></label>
             </div>
             <button className="ci-primary cr-submit" type="submit" disabled={busy || !externalConsent}>{busy ? <><span className="cr-spinner" aria-hidden="true" />Searching current sources and preparing your report…</> : <>Research this career direction <span aria-hidden="true">→</span></>}</button>
-            <p className="ci-helper">Groq Free web search and model inference are rate-limited. Each research or refinement uses 2 CareerDev AI credits for eligible client plans; Staff/Admin test runs do not use customer credits. No paid provider fallback is enabled.</p>
+            <p className="ci-helper">CareerDev Global's research service uses free-tier web search and AI inference through Groq, which are subject to provider rate limits. Each research or refinement uses 2 CareerDev AI credits for eligible client plans; Staff/Admin test runs do not use customer credits. No paid provider fallback is enabled.</p>
             {message && <p className="ci-message" role="status">{message}</p>}
           </form>
         </div>
