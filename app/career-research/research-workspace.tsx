@@ -40,8 +40,19 @@ type ResearchReport = {
   research_round?: number;
   provider?: string;
 };
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";
+
+async function getFunctionErrorMessage(error: unknown, data: unknown, fallback: string): Promise<string> {
+  const result = data as { error?: unknown } | null;
+  if (typeof result?.error === "string") return result.error;
+  const context = (error as { context?: unknown } | null)?.context;
+  if (context && typeof (context as { clone?: unknown }).clone === "function") {
+    try {
+      const body = await (context as Response).clone().json() as { error?: unknown };
+      if (typeof body?.error === "string") return body.error;
+    } catch { /* Keep the SDK fallback if there is no JSON response. */ }
+  }
+  return error instanceof Error ? error.message : fallback;
+}
 
 function List({ title, items }: { title: string; items: string[] }) {
   if (!items?.length) return null;
@@ -123,7 +134,6 @@ export default function CareerResearchWorkspace() {
     event?.preventDefault();
     setMessage("");
     if (!externalConsent) { setMessage("Please consent before sharing your research request with CareerDev Global's AI provider."); return; }
-    if (!SUPABASE_URL || !SUPABASE_KEY) { setMessage("Career Research is not configured for this deployment."); return; }
     if (![jobRole.trim(), industry.trim(), company.trim()].some(Boolean) || !focusQuestion.trim()) {
       setMessage("Enter at least one of role, industry, or company, and describe what you want to learn.");
       return;
@@ -139,14 +149,8 @@ export default function CareerResearchWorkspace() {
       const { data: auth } = await supabase.auth.getSession();
       const session = auth.session;
       if (!session) throw new Error("Your session expired. Sign in again to run Career Research.");
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/careerdev-career-research`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-          ...(SUPABASE_KEY ? { apikey: SUPABASE_KEY } : {}),
-        },
-        body: JSON.stringify({
+      const { data: body, error } = await supabase.functions.invoke("careerdev-career-research", {
+        body: {
           action,
           job_role: jobRole,
           industry,
@@ -160,10 +164,11 @@ export default function CareerResearchWorkspace() {
           previous_report: report,
           round: nextRound,
           idempotency_key: crypto.randomUUID(),
-        }),
+        },
       });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body?.error || "Career Research could not be completed.");
+      if (error || body?.error) {
+        throw new Error(await getFunctionErrorMessage(error, body, "Career Research could not be completed."));
+      }
       setReport(body.report as ResearchReport);
       setRound(nextRound);
       setExecutionId(body.execution_id || null);
