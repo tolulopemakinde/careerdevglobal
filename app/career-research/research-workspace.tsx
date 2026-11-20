@@ -236,7 +236,7 @@ export default function CareerResearchWorkspace() {
               <label><input type="checkbox" checked={externalConsent} onChange={e => setExternalConsent(e.target.checked)} /><span><strong>Share this research request with CareerDev Global.</strong> To search and prepare your report, CareerDev Global sends the role, industry, company, question, optional notes, and any selected Career Intelligence profile context to Groq, its AI provider. Use only information you are comfortable sharing with the AI provider.</span></label>
             </div>
             <button className="ci-primary cr-submit" type="submit" disabled={busy || !externalConsent}>{busy ? <><span className="cr-spinner" aria-hidden="true" />Searching current sources and preparing your report…</> : <>Research this career direction <span aria-hidden="true">→</span></>}</button>
-            <p className="ci-helper">CareerDev Global's research service uses free-tier web search and AI inference through Groq, which are subject to provider rate limits. Each research or refinement uses 2 CareerDev AI credits for eligible client plans; Staff/Admin test runs do not use customer credits. No paid provider fallback is enabled.</p>
+            
             {message && <p className="ci-message" role="status">{message}</p>}
           </form>
         </div>
