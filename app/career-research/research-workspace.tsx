@@ -197,12 +197,12 @@ export default function CareerResearchWorkspace() {
     { label: "Development focus", value: profile?.development_gaps_summary || "" },
   ].filter(item => item.value.trim());
 
-  if (loading) return <main className="ci-page"><section className="ci-section"><div className="ci-container"><p role="status">Loading your Career Research workspace…</p></div></section></main>;
-  if (!role) return <main className="ci-page"><section className="ci-section"><div className="ci-container"><h1>Career Research</h1><p role="status">{message || "Sign in to continue."}</p><a className="ci-primary" href="/account">Sign in →</a></div></section></main>;
-  if (!allowed) return <main className="ci-page"><nav className="ci-subnav"><div className="ci-container ci-subnav-inner"><a href="/career-intelligence">← Career Intelligence</a><a href="/agents">All AI Agents</a></div></nav><section className="ci-section"><div className="ci-container"><h1>Career Research access</h1><p>{message || "Career Research requires an active plan that includes this AI Agent. Staff and Admin can use it for testing."}</p><a className="ci-primary" href="/pricing">Review available plans →</a></div></section></main>;
+  if (loading) return <main className="ci-page cr-page"><section className="ci-section"><div className="ci-container"><p role="status">Loading your Career Research workspace…</p></div></section></main>;
+  if (!role) return <main className="ci-page cr-page"><section className="ci-section"><div className="ci-container"><h1>Career Research</h1><p role="status">{message || "Sign in to continue."}</p><a className="ci-primary" href="/account">Sign in →</a></div></section></main>;
+  if (!allowed) return <main className="ci-page cr-page"><nav className="ci-subnav"><div className="ci-container ci-subnav-inner"><a href="/career-intelligence">← Career Intelligence</a><a href="/agents">All AI Agents</a></div></nav><section className="ci-section"><div className="ci-container"><h1>Career Research access</h1><p>{message || "Career Research requires an active plan that includes this AI Agent. Staff and Admin can use it for testing."}</p><a className="ci-primary" href="/pricing">Review available plans →</a></div></section></main>;
 
   return (
-    <main className="ci-page">
+    <main className="ci-page cr-page">
       <nav className="ci-subnav" aria-label="Career Research navigation">
         <div className="ci-container ci-subnav-inner"><a href="/career-intelligence">← Career Intelligence Platform</a><div><a href="/career-intelligence#profile">Your Profile</a><a href="/agents">All AI Agents</a></div></div>
       </nav>
@@ -213,31 +213,29 @@ export default function CareerResearchWorkspace() {
         </div>
       </header>
 
-      <section className="ci-section soft"><div className="ci-container">
+      <section className="ci-section soft cr-input-section"><div className="ci-container">
         <div className="ci-section-heading"><span>01</span><div><div className="ci-overline">SET YOUR RESEARCH FOCUS</div><h2>What do you want to understand?</h2><p>Use saved career context or adjust the search for a role, industry, company, or location.</p></div></div>
-        <div className="ci-card" style={{ maxWidth: 900, margin: "0 auto" }}>
-          {profile && <section style={{ marginBottom: 22, padding: 18, borderRadius: 14, background: "#f2f8fc", border: "1px solid #d8e6f1" }}>
+        <div className="ci-card cr-research-card">
+          {profile && <section className="cr-profile-card">
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}><strong>Saved Career Intelligence Profile</strong><a href="/career-intelligence#profile">Review or update →</a></div>
             {profile.professional_summary && <p>{profile.professional_summary}</p>}
-            {savedContextItems.length > 0 && <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(200px,1fr))", gap: 10 }}>{savedContextItems.map(item => <div key={item.label}><b>{item.label}</b><div>{item.value}</div></div>)}</div>}
+            {savedContextItems.length > 0 && <div className="cr-profile-grid">{savedContextItems.map(item => <div className="cr-profile-item" key={item.label}><b>{item.label}</b><div>{item.value}</div></div>)}</div>}
             {goals.length > 0 && <div style={{ marginTop: 10 }}><b>Saved goals</b><ul>{goals.slice(0, 4).map((goal, i) => <li key={i}>{goal.goal}</li>)}</ul></div>}
-            <label style={{ display: "flex", alignItems: "start", gap: 8, marginTop: 14 }}><input type="checkbox" checked={useSavedProfile} onChange={e => setUseSavedProfile(e.target.checked)} /><span>Include my saved Career Intelligence profile and goals for personalized analysis.</span></label>
+            <label className="cr-profile-consent"><input type="checkbox" checked={useSavedProfile} onChange={e => setUseSavedProfile(e.target.checked)} /><span>Include my saved Career Intelligence profile and goals for personalized analysis.</span></label>
           </section>}
-          <form onSubmit={e => void runResearch("start", e)}>
-            <div className="ci-grid" style={{ gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))" }}>
-              <div><label htmlFor="research-role">Job role or career path</label><input id="research-role" value={jobRole} onChange={e => setJobRole(e.target.value)} maxLength={180} placeholder="e.g. Project Manager" /></div>
-              <div><label htmlFor="research-industry">Industry</label><input id="research-industry" value={industry} onChange={e => setIndustry(e.target.value)} maxLength={180} placeholder="e.g. Development / NGO" /></div>
-              <div><label htmlFor="research-company">Company or organization</label><input id="research-company" value={company} onChange={e => setCompany(e.target.value)} maxLength={180} placeholder="e.g. employer name" /></div>
-              <div><label htmlFor="research-location">Country or location (optional)</label><input id="research-location" value={location} onChange={e => setLocation(e.target.value)} maxLength={180} placeholder="e.g. Nigeria, remote, UK" /></div>
+          <form className="cr-form" onSubmit={e => void runResearch("start", e)}>
+            <div className="cr-field-grid">
+              <div className="cr-field"><label htmlFor="research-role">Job role or career path</label><input className="cr-input" id="research-role" value={jobRole} onChange={e => setJobRole(e.target.value)} maxLength={180} placeholder="e.g. Project Manager" /></div>
+              <div className="cr-field"><label htmlFor="research-industry">Industry</label><input className="cr-input" id="research-industry" value={industry} onChange={e => setIndustry(e.target.value)} maxLength={180} placeholder="e.g. Development / NGO" /></div>
+              <div className="cr-field"><label htmlFor="research-company">Company or organization</label><input className="cr-input" id="research-company" value={company} onChange={e => setCompany(e.target.value)} maxLength={180} placeholder="e.g. employer name" /></div>
+              <div className="cr-field"><label htmlFor="research-location">Country or location <span>(optional)</span></label><input className="cr-input" id="research-location" value={location} onChange={e => setLocation(e.target.value)} maxLength={180} placeholder="e.g. Nigeria, remote, UK" /></div>
             </div>
-            <label htmlFor="research-question">What do you want the research to answer?</label>
-            <textarea id="research-question" value={focusQuestion} onChange={e => setFocusQuestion(e.target.value)} maxLength={1200} rows={3} placeholder="e.g. What skills and evidence are commonly expected, and what should I know about this employer?" required />
-            <label htmlFor="research-context">Job description or additional context (optional)</label>
-            <textarea id="research-context" value={jobContext} onChange={e => setJobContext(e.target.value)} maxLength={8000} rows={5} placeholder="Paste relevant job duties, company notes, or a specific question. Do not paste passwords, identity numbers, or other sensitive information." />
-            <div style={{ padding: 14, margin: "16px 0", borderRadius: 12, background: "#fff8e8", border: "1px solid #ead9a7" }}>
-              <label style={{ display: "flex", alignItems: "start", gap: 9 }}><input type="checkbox" checked={externalConsent} onChange={e => setExternalConsent(e.target.checked)} /><span><strong>Share this research request with Groq Free.</strong> The role, industry, company, question, optional notes, and selected Career Intelligence profile context will be sent to Groq to search and prepare a report. Use only information you are comfortable sharing with the AI provider.</span></label>
+            <div className="cr-field"><label htmlFor="research-question">What do you want the research to answer?</label><textarea className="cr-textarea cr-question" id="research-question" value={focusQuestion} onChange={e => setFocusQuestion(e.target.value)} maxLength={1200} rows={3} placeholder="e.g. What skills and evidence are commonly expected, and what should I know about this employer?" required /></div>
+            <div className="cr-field"><label htmlFor="research-context">Job description or additional context <span>(optional)</span></label><textarea className="cr-textarea cr-context" id="research-context" value={jobContext} onChange={e => setJobContext(e.target.value)} maxLength={8000} rows={5} placeholder="Paste relevant job duties, company notes, or a specific question. Do not paste passwords, identity numbers, or other sensitive information." /></div>
+            <div className="cr-consent">
+              <label><input type="checkbox" checked={externalConsent} onChange={e => setExternalConsent(e.target.checked)} /><span><strong>Share this research request with Groq Free.</strong> The role, industry, company, question, optional notes, and selected Career Intelligence profile context will be sent to Groq to search and prepare a report. Use only information you are comfortable sharing with the AI provider.</span></label>
             </div>
-            <button className="ci-primary" type="submit" disabled={busy || !externalConsent}>{busy ? "Searching current sources and preparing your report…" : "Research this career direction →"}</button>
+            <button className="ci-primary cr-submit" type="submit" disabled={busy || !externalConsent}>{busy ? <><span className="cr-spinner" aria-hidden="true" />Searching current sources and preparing your report…</> : <>Research this career direction <span aria-hidden="true">→</span></>}</button>
             <p className="ci-helper">Groq Free web search and model inference are rate-limited. Each research or refinement uses 2 CareerDev AI credits for eligible client plans; Staff/Admin test runs do not use customer credits. No paid provider fallback is enabled.</p>
             {message && <p className="ci-message" role="status">{message}</p>}
           </form>
