@@ -124,7 +124,7 @@ export default function InterviewCoachPage() {
           <label>Company notes<textarea value={companyContext} onChange={(e) => setCompanyContext(e.target.value)} maxLength={8000} rows={4} style={inputStyle} placeholder="Optional: paste verified values, products, or role-specific company information." /></label>
           <label style={{ display: "flex", gap: 10, alignItems: "start" }}>
             <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} required />
-            <span>I consent to sending the information entered here to Groq for this mock interview. I understand the feature uses a free-tier service and is not a hiring decision or a job guarantee.</span>
+            <span>I consent to sending the information entered here and, when available, my human-reviewed Career Intelligence profile and active career goals to Groq for this mock interview. I understand the feature uses a free-tier service and is not a hiring decision or a job guarantee.</span>
           </label>
           <button disabled={busy || !consent} style={buttonStyle}>{busy ? "Starting…" : "Start mock interview"}</button>
         </form>
