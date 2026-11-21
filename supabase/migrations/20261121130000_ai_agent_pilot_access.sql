@@ -29,6 +29,30 @@ on conflict (singleton) do nothing;
 alter table public.ai_agent_pilot_settings enable row level security;
 revoke all on public.ai_agent_pilot_settings from public, anon, authenticated;
 
+-- Keep an existing refund/payment entitlement gate when one is installed. The
+-- production project does not currently have this billing helper, while the
+-- restored acceptance project does. Dynamic lookup keeps this migration
+-- compatible with both schema baselines without weakening the latter.
+create or replace function public.ai_agent_subscription_payment_access_allowed(p_subscription_id uuid)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $function$
+declare
+  payment_allowed boolean;
+begin
+  if pg_catalog.to_regprocedure('public.ai_payment_access_allowed(uuid)') is null then
+    return true;
+  end if;
+  execute 'select public.ai_payment_access_allowed($1)' into payment_allowed using p_subscription_id;
+  return coalesce(payment_allowed, false);
+end;
+$function$;
+
+revoke all on function public.ai_agent_subscription_payment_access_allowed(uuid) from public, anon, authenticated, service_role;
+
 create or replace function public.get_my_ai_agent_access(p_agent_key text)
 returns table(allowed boolean, plan_key text, plan_name text, status text)
 language plpgsql
@@ -76,7 +100,9 @@ begin
     join public.ai_agent_subscription_plans p on p.plan_key = s.plan_key
     where s.user_id = u
       and s.status in ('active', 'non_renewing', 'attention')
+      and s.current_period_start <= now()
       and (s.current_period_end is null or s.current_period_end > now())
+      and public.ai_agent_subscription_payment_access_allowed(s.id)
       and p_agent_key = any(p.included_agents)
       and p.active = true
   ),
@@ -86,7 +112,9 @@ begin
     join public.ai_agent_subscription_plans p on p.plan_key = s.plan_key
     where s.user_id = u
       and s.status in ('active', 'non_renewing', 'attention')
+      and s.current_period_start <= now()
       and (s.current_period_end is null or s.current_period_end > now())
+      and public.ai_agent_subscription_payment_access_allowed(s.id)
     order by s.created_at desc limit 1
   ),
   (
@@ -95,6 +123,9 @@ begin
     join public.ai_agent_subscription_plans p on p.plan_key = s.plan_key
     where s.user_id = u
       and s.status in ('active', 'non_renewing', 'attention')
+      and s.current_period_start <= now()
+      and (s.current_period_end is null or s.current_period_end > now())
+      and public.ai_agent_subscription_payment_access_allowed(s.id)
       and p.active = true
     order by s.created_at desc limit 1
   ),
@@ -103,7 +134,9 @@ begin
     from public.ai_agent_subscriptions s
     where s.user_id = u
       and s.status in ('active', 'non_renewing', 'attention')
+      and s.current_period_start <= now()
       and (s.current_period_end is null or s.current_period_end > now())
+      and public.ai_agent_subscription_payment_access_allowed(s.id)
     order by s.created_at desc limit 1
   );
 end;
@@ -114,8 +147,8 @@ grant execute on function public.get_my_ai_agent_access(text) to authenticated, 
 
 create or replace function public.request_ai_agent_execution(
   p_agent_key text,
-  p_workflow_key text,
-  p_trigger_source text,
+  p_workflow_key text default null,
+  p_trigger_source text default 'manual',
   p_input_payload jsonb default '{}'::jsonb
 )
 returns uuid

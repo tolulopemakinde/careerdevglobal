@@ -20,6 +20,14 @@ test("pilot access is disabled by default and time-bounded", () => {
   assert.match(migration, /public\.get_my_ai_agent_access\(a\.agent_key\)/i);
 });
 
+test("paid entitlement checks and request RPC defaults are preserved", () => {
+  assert.match(migration, /pg_catalog\.to_regprocedure\('public\.ai_payment_access_allowed\(uuid\)'\)/i);
+  assert.match(migration, /execute\s+'select public\.ai_payment_access_allowed\(\$1\)'/i);
+  assert.match(migration, /public\.ai_agent_subscription_payment_access_allowed\(s\.id\)/i);
+  assert.match(migration, /s\.current_period_start\s*<=\s*now\(\)/i);
+  assert.match(migration, /p_workflow_key\s+text\s+default\s+null,\s*p_trigger_source\s+text\s+default\s+'manual'/i);
+});
+
 test("pilot access is limited to the 11 no-AI or AI-optional agents", () => {
   const keys = [...migration.matchAll(/^\s*'([a-z_]+_agent)'\s*,?$/gm)].map((match) => match[1]);
   assert.equal(new Set(keys).size, 11);
