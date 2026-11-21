@@ -1,0 +1,33 @@
+-- REVIEW-ONLY PROPOSAL — NOT A MIGRATION; DO NOT APPLY.
+--
+-- Purpose: clients should receive marketplace meeting URLs and location
+-- details only after a server-confirmed settled payment and a confirmed
+-- booking. The browser helper in lib/marketplace/booking-payment-state.mjs is
+-- a display rule only; it cannot protect data returned by PostgREST.
+--
+-- BLOCKED: the current main branch does not contain the authoritative DDL for
+-- client_marketplace_upcoming_bookings or the payment-status RPC/view. Do not
+-- replace the view or alter grants/RLS based on guessed column names. Before
+-- drafting executable SQL, recover and review the exact definitions and
+-- dependencies for:
+--   * client_marketplace_upcoming_bookings and every view built on it;
+--   * get_my_marketplace_payment_status and every function/view it reads;
+--   * marketplace_booking_requests and all payment/transaction tables;
+--   * view owner, security_invoker/security_definer options, grants, default
+--     privileges, table grants, RLS policies and all frontend/RPC writers.
+--
+-- Required design properties for a later reviewed change:
+--   1. Enforce client ownership in the database, independent of browser state.
+--   2. Return no meeting_join_url or meeting_location_details unless the
+--      authoritative booking state is confirmed and an authoritative payment
+--      state is settled (not pending, failed, refunded, disputed or unknown).
+--   3. Preserve other columns needed by existing dashboards and RPCs; do not
+--      widen access to coach tokens, provider secrets, or unrelated records.
+--   4. Preserve coach/admin access through separately reviewed roles/policies.
+--   5. Rehearse view replacement, dependency recreation, grants, RLS, payment
+--      transitions, refund/chargeback transitions and restore on an isolated
+--      local database before any deployment proposal.
+--
+-- No executable DDL is included until those source definitions and dependency
+-- checks are available. This file is intentionally safe to inspect and unsafe
+-- to mistake for an applicable migration.
