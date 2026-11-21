@@ -242,7 +242,7 @@ Deno.serve(async(req)=>{
     return reply({status:advance?.status||'completed',execution_id:agentExec.id,service_execution_id:serviceExecutionId,quality,advance,output},200);
   }
 
-  if(!serviceRoleKey) return reply({error:'SUPABASE_SERVICE_ROLE_KEY is not configured'},500);
+  if(!serviceRoleKey) return reply({error:'Admin persistence is not configured'},500);
   const adminSb=createClient(supabaseUrl,serviceRoleKey);
   const {error:updateErr}=await adminSb.from('ai_agent_executions').update({status:'completed',output_snapshot:output,quality_summary:{mode:'autonomous_draft_runtime',quality_evaluated:false},human_review_required:false,human_review_status:'not_required',completed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',agentExec.id);
   if(updateErr) return reply({error:'Could not persist agent output'},500);
