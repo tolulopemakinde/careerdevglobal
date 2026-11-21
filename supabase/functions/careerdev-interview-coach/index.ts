@@ -73,7 +73,7 @@ async function groqTurn(context: Record<string, unknown>, turns: Array<Record<st
   const system = [
     "You are CareerDev Global's interactive Interview Coach.",
     "Run a realistic, supportive mock interview one question at a time.",
-    "Use only the supplied role, industry, company name, job description, company notes, candidate context, and interview answers. Never claim that you opened links or researched the company.",
+    "Use only the supplied role, industry, company name, job description, company notes, candidate context, human-reviewed shared Career Intelligence profile and active client-stated goals when present, and interview answers. Treat profile and goal provenance labels as authoritative; never claim that you opened links or researched the company.",
     "Derive a stable list of 4 to 8 explicit job criteria from the job description and company notes. Include named operating models, evidence requirements, and responsibilities. Return them in job_criteria and reuse the same criteria throughout the session.",
     "Ask questions that collectively cover these criteria. Each follow-up should probe a specific evidence gap such as the candidate's actions, dates, measures, stakeholders, or outcomes.",
     "Tie answer feedback to the candidate's actual answer and the criterion tested. Do not infer experience from profile links or invent candidate experience, achievements, metrics, company facts, or hiring criteria.",
@@ -133,6 +133,13 @@ async function groqTurn(context: Record<string, unknown>, turns: Array<Record<st
     throw new Error("Interview response did not match the expected contract.");
   }
   return { result, usage: payload.usage || {} };
+}
+
+async function loadSharedCareerContext(caller: ReturnType<typeof createClient>, role: string) {
+  if (role !== "client") return null;
+  const { data, error } = await caller.rpc("get_my_shared_career_context");
+  if (error) return undefined;
+  return data?.included === true ? data as Record<string, unknown> : null;
 }
 
 async function governedGroqTurn(
@@ -256,6 +263,10 @@ Deno.serve(async (req) => {
       const questionLimit = Math.trunc(Math.max(3, Math.min(MAX_QUESTION_LIMIT, Number(body.question_limit) || 6)));
       if (body.external_ai_consent !== true) return json({ error: "Consent is required before interview context is sent to Groq." }, 400);
       assertFreeProvider();
+      const sharedProfileContext = await loadSharedCareerContext(caller, profile.role);
+      if (sharedProfileContext === undefined) {
+        return json({ error: "Could not securely load your Career Intelligence profile. Please try again." }, 503);
+      }
       if (!jobRole || !industry || !companyName) {
         return json({ error: "Job role, industry, and company are required." }, 400);
       }
@@ -266,7 +277,8 @@ Deno.serve(async (req) => {
       const { data: session, error: insertError } = await admin.from("interview_coach_sessions").insert({
         user_id: user.id, job_role: jobRole, industry, company_name: companyName,
         job_description: jobDescription, candidate_context: candidateContext,
-        company_context: companyContext, question_limit: questionLimit,
+        company_context: companyContext, shared_profile_snapshot: sharedProfileContext,
+        question_limit: questionLimit,
         external_ai_consent_at: new Date().toISOString(),
         provider: "groq_free", model: MODEL,
       }).select("id").single();
@@ -274,6 +286,7 @@ Deno.serve(async (req) => {
       const context = {
         job_role: jobRole, industry, company_name: companyName, job_description: jobDescription,
         candidate_context: candidateContext, company_context: companyContext,
+        shared_career_context: sharedProfileContext,
       };
       let generated;
       try {
@@ -311,7 +324,8 @@ Deno.serve(async (req) => {
         job_role: session.job_role, industry: session.industry, company_name: session.company_name,
         job_description: session.job_description, candidate_context: session.candidate_context,
         company_context: session.company_context,
-         job_criteria: Array.isArray(priorTurns?.[0]?.metadata?.job_criteria) ? priorTurns[0].metadata.job_criteria : [],
+        shared_career_context: session.shared_profile_snapshot || null,
+        job_criteria: Array.isArray(priorTurns?.[0]?.metadata?.job_criteria) ? priorTurns[0].metadata.job_criteria : [],
       };
       const generated = await governedGroqTurn(caller, admin, user.id, context, priorWithAnswer, Number(session.question_limit), `interview:${sessionId}:turn:${sequence}`);
       const output = generated.result;
