@@ -277,7 +277,8 @@ Deno.serve(async (req) => {
       const { data: session, error: insertError } = await admin.from("interview_coach_sessions").insert({
         user_id: user.id, job_role: jobRole, industry, company_name: companyName,
         job_description: jobDescription, candidate_context: candidateContext,
-        company_context: companyContext, question_limit: questionLimit,
+        company_context: companyContext, shared_profile_snapshot: sharedProfileContext,
+        question_limit: questionLimit,
         external_ai_consent_at: new Date().toISOString(),
         provider: "groq_free", model: MODEL,
       }).select("id").single();
