@@ -32,8 +32,10 @@ Expiry also closes access automatically. Only active Client/Coach profiles on th
 - The standalone Career Research entry point uses the same entitlement RPC. When pilot credits are unavailable, it saves a source-free structured baseline for coach/human review and makes no Groq request.
 - Agent and certification statuses are not changed by this migration; they remain in testing until the required evidence is independently completed.
 
-## Deployment verification still required
+## Database validation record
 
-The SQL migration has not been applied to production or to the protected populated test project. Validate the migration and RPC behavior against a disposable database before applying it. Production remains unchanged.
+On 2026-11-21, the migration was applied to a separate Free-plan validation project. Because that new project began with the standard Supabase Auth schema rather than CareerDev Global's full application schema, the validation project was given a focused fixture for the seven tables and role enum used by this migration. The relevant table columns and types were checked against the current production schema before the fixture was built.
 
-The current tests are source-contract and synthetic workflow tests. They do not prove live database policy behavior, Groq/OpenAI credentials, provider quotas, external research source quality, or complete browser flows.
+The actual migration applied successfully and was applied a second time successfully. Database checks passed for pilot enable/disable, enrolled and unenrolled Client access, exclusion of an AI-required agent, admin-only configuration, the three-month expiry limit, Staff privileged access, authorized request creation and its two audit events, preserved paid-plan entitlement, and the intended function/table grants.
+
+This is focused database validation, not a full-schema clone or a production migration rehearsal. It does not prove compatibility with every production constraint, policy, trigger, or data condition. Production remains unchanged. Groq/OpenAI credentials, provider quotas, external research quality, credit reservation under live provider calls, and complete browser journeys also remain unverified.
