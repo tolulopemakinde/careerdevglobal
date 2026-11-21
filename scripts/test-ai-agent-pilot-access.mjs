@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {readFile} from "node:fs/promises";
 
 const migration = await readFile(new URL("../supabase/migrations/20261121130000_ai_agent_pilot_access.sql", import.meta.url), "utf8");
+const adminDashboardMigration = await readFile(new URL("../supabase/migrations/20261121150000_restore_admin_ai_release_dashboard.sql", import.meta.url), "utf8");
 const runtime = await readFile(new URL("../supabase/functions/careerdev-ai-agent-runtime/index.ts", import.meta.url), "utf8");
 const agentsPage = await readFile(new URL("../app/agents/page.tsx", import.meta.url), "utf8");
 const careerResearchPage = await readFile(new URL("../app/career-research/research-workspace.tsx", import.meta.url), "utf8");
@@ -32,6 +33,24 @@ test("pilot access is limited to the 11 no-AI or AI-optional agents", () => {
   const keys = [...migration.matchAll(/^\s*'([a-z_]+_agent)'\s*,?$/gm)].map((match) => match[1]);
   assert.equal(new Set(keys).size, 11);
   assert.match(migration, /ai_dependency_mode\s+in\s*\('works_without_ai',\s*'ai_optional'\)/i);
+});
+
+test("Admin release candidates are tracked and require active Staff/Admin access", () => {
+  assert.match(adminDashboardMigration, /create table if not exists public\.ai_release_candidates/i);
+  assert.match(adminDashboardMigration, /alter table public\.ai_release_candidates enable row level security/i);
+  assert.match(adminDashboardMigration, /revoke all on public\.ai_release_candidates from public, anon, authenticated/i);
+  assert.match(adminDashboardMigration, /create or replace function public\.get_ai_release_candidates\(\)/i);
+  assert.match(adminDashboardMigration, /status\s*=\s*'active'[\s\S]*role\s+in\s*\('admin','staff'\)/i);
+  assert.match(adminDashboardMigration, /revoke all on function public\.get_ai_release_candidates\(\) from public, anon/i);
+});
+
+test("Admin analytics requires a present active Admin profile", () => {
+  assert.match(adminDashboardMigration, /create or replace function public\.admin_get_platform_analytics\(\)/i);
+  assert.match(adminDashboardMigration, /security definer/i);
+  assert.match(adminDashboardMigration, /set search_path = ''/i);
+  assert.match(adminDashboardMigration, /if not exists\s*\([\s\S]*where id = auth\.uid\(\)[\s\S]*status = 'active'[\s\S]*role = 'admin'[\s\S]*\) then/i);
+  assert.doesNotMatch(adminDashboardMigration, /caller_role\s*<>\s*'admin'/i);
+  assert.match(adminDashboardMigration, /revoke all on function public\.admin_get_platform_analytics\(\) from public, anon/i);
 });
 
 test("AI-optional executions return the structured fallback when credits or provider are unavailable", () => {
