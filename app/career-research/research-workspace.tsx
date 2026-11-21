@@ -39,6 +39,7 @@ type ResearchReport = {
   generated_at?: string;
   research_round?: number;
   provider?: string;
+  fallback?: boolean;
 };
 
 async function getFunctionErrorMessage(error: unknown, data: unknown, fallback: string): Promise<string> {
@@ -65,6 +66,7 @@ export default function CareerResearchWorkspace() {
   const [busy, setBusy] = useState(false);
   const [role, setRole] = useState("");
   const [allowed, setAllowed] = useState(false);
+  const [pilotAccess, setPilotAccess] = useState(false);
   const [message, setMessage] = useState("");
   const [profile, setProfile] = useState<CareerProfile | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -101,9 +103,10 @@ export default function CareerResearchWorkspace() {
       const staffTesting = account.role === "admin" || account.role === "staff";
       let agentAccess = staffTesting;
       if (!staffTesting) {
-        const { data: subscription } = await supabase.rpc("get_my_ai_subscription");
-        const row = Array.isArray(subscription) ? subscription[0] : subscription;
-        agentAccess = (row?.included_agents || []).includes("career_research_agent");
+        const { data: accessRows, error: accessError } = await supabase.rpc("get_my_ai_agent_access", { p_agent_key: "career_research_agent" });
+        const row = Array.isArray(accessRows) ? accessRows[0] : accessRows;
+        agentAccess = !accessError && row?.allowed === true;
+        if (current && row?.status === "pilot") setPilotAccess(true);
       }
       if (current) setAllowed(agentAccess);
 
@@ -220,6 +223,7 @@ export default function CareerResearchWorkspace() {
 
       <section className="ci-section soft cr-input-section"><div className="ci-container">
         <div className="ci-section-heading"><span>01</span><div><div className="ci-overline">SET YOUR RESEARCH FOCUS</div><h2>What do you want to understand?</h2><p>Use saved career context or adjust the search for a role, industry, company, or location.</p></div></div>
+        {pilotAccess && <p className="ci-helper" role="status">Pilot access is active. Live research uses eligible AI credits. If credits are unavailable, Career Research saves a structured baseline without an AI provider call or customer credit charge.</p>}
         <div className="ci-card cr-research-card">
           {profile && <section className="cr-profile-card">
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}><strong>Saved Career Intelligence Profile</strong><a href="/career-intelligence#profile">Review or update →</a></div>
@@ -248,8 +252,8 @@ export default function CareerResearchWorkspace() {
       </div></section>
 
       {report && <section className="ci-section" id="career-research-report"><div className="ci-container">
-        <div className="ci-section-heading"><span>02</span><div><div className="ci-overline">LIVE RESEARCH REPORT · ROUND {round + 1}</div><h2>{report.title}</h2><p>{report.executive_summary}</p></div></div>
-        {executionId && <p className="ci-helper">Saved to governed Career Research history · {creditsUsed === 0 ? "No customer credits charged for Staff/Admin test access." : `${creditsUsed} CareerDev AI credits used this round.`}</p>}
+        <div className="ci-section-heading"><span>02</span><div><div className="ci-overline">{report.fallback ? "PILOT STRUCTURED BASELINE" : "LIVE RESEARCH REPORT"} · ROUND {round + 1}</div><h2>{report.title}</h2><p>{report.executive_summary}</p></div></div>
+        {executionId && <p className="ci-helper">Saved to governed Career Research history · {creditsUsed === 0 ? (pilotAccess ? "Structured pilot baseline; no AI provider call or customer credits charged." : "No customer credits charged for Staff/Admin test access.") : `${creditsUsed} CareerDev AI credits used this round.`}</p>}
         <div className="ci-grid">
           <article className="ci-card"><h3>Role expectations</h3><List title="" items={report.role_expectations} /><List title="Industry signals" items={report.industry_signals} /><List title="Company signals" items={report.company_signals} /></article>
           <article className="ci-card"><h3>How this relates to your profile</h3><List title="Relevant strengths from your saved profile" items={report.profile_alignment?.relevant_strengths || []} /><List title="Development areas to consider" items={report.profile_alignment?.development_areas || []} /><List title="Suggested positioning" items={report.profile_alignment?.suggested_positioning || []} /></article>
