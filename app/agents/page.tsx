@@ -46,6 +46,7 @@ export default function AgentsPage() {
   const [message, setMessage] = useState('');
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [creditStatus, setCreditStatus] = useState<CreditStatus | null>(null);
+  const [pilotAgents, setPilotAgents] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     void load();
@@ -102,6 +103,12 @@ export default function AgentsPage() {
       if (row?.plan_key) setSubscription(row as Subscription);
       const creditRow = Array.isArray(credits) ? credits[0] : credits;
       if (creditRow?.plan_key) setCreditStatus(creditRow as CreditStatus);
+      const pilotAccess = await Promise.all((agentRows || []).map(async (agent) => {
+        const { data, error } = await supabase.rpc('get_my_ai_agent_access', { p_agent_key: agent.agent_key });
+        const row = Array.isArray(data) ? data[0] : data;
+        return !error && row?.allowed === true && row?.status === 'pilot' ? agent.agent_key : null;
+      }));
+      setPilotAgents(new Set(pilotAccess.filter((key): key is string => Boolean(key))));
     }
 
     setLoading(false);
@@ -117,6 +124,7 @@ export default function AgentsPage() {
   }, {} as Record<string, Agent[]>);
 
   const included = new Set(subscription?.included_agents || []);
+  const pilotActive = pilotAgents.size > 0;
   const staffTestingAccess = role === 'admin' || role === 'staff';
 
   return (
@@ -186,6 +194,10 @@ export default function AgentsPage() {
                     </div>
                   )}
                 </>
+              ) : pilotActive ? (
+                <p role="status" style={{ margin: '10px 0 0', color: '#256341', fontWeight: 800 }}>
+                  Career Intelligence pilot access is active. Non-AI agents and structured fallbacks are available without subscription credits; AI enhancement still requires an eligible credit allowance. All agents remain in testing and outputs require human review.
+                </p>
               ) : (
                 <p style={{ margin: '10px 0 0', color: '#8a5b00', fontWeight: 800 }}>No active AI Agent subscription. <a href="/pricing" style={{ color: '#0b5d9b' }}>Choose a plan →</a></p>
               )}
@@ -196,7 +208,7 @@ export default function AgentsPage() {
                 <h2 style={{ fontSize: 22 }}>{groups[category] || category}</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 14 }}>
                   {list.map(agent => {
-                    const allowed = staffTestingAccess || included.has(agent.agent_key);
+                    const allowed = staffTestingAccess || included.has(agent.agent_key) || pilotAgents.has(agent.agent_key);
                     const destination = agent.agent_key === 'interview_coach_agent' ? '/interview-coach' : agent.agent_key === 'career_coach_agent' ? '/career-coach' : agent.agent_key === 'career_research_agent' ? '/career-research' : '/career-intelligence';
                     const actionLabel = agent.agent_key === 'interview_coach_agent' ? 'Start mock interview →' : agent.agent_key === 'career_coach_agent' ? 'Open Career Coach →' : agent.agent_key === 'career_research_agent' ? 'Research roles and companies →' : 'Start in Career Intelligence →';
                     return (
@@ -209,7 +221,7 @@ export default function AgentsPage() {
                           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'start' }}>
                             <h3 style={{ margin: 0 }}>{agent.name}</h3>
                             <span style={{ fontSize: 11, fontWeight: 900, padding: '4px 7px', borderRadius: 999, background: staffTestingAccess ? '#e9f5ef' : allowed ? '#eaf6ef' : '#f1f3f5', whiteSpace: 'nowrap' }}>
-                              {staffTestingAccess ? 'Staff/Admin Test Access' : allowed ? 'Included' : 'Locked'}
+                              {staffTestingAccess ? 'Staff/Admin Test Access' : pilotAgents.has(agent.agent_key) ? 'Pilot Access' : allowed ? 'Included' : 'Locked'}
                             </span>
                           </div>
                           <p style={{ color: '#527085', lineHeight: 1.55, minHeight: 66 }}>{agent.description}</p>
