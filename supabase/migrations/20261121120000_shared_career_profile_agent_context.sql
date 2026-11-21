@@ -15,6 +15,7 @@ as $function$
 declare
   u uuid := auth.uid();
   role_name text;
+  client_record_id uuid;
   profile_row public.career_profiles%rowtype;
   profile_context jsonb := null;
   goal_context jsonb := '[]'::jsonb;
@@ -23,7 +24,7 @@ begin
   from public.profiles
   where id = u and status = 'active';
 
-  if role_name <> 'client' or u is null then
+  if role_name is distinct from 'client' or u is null then
     return jsonb_build_object(
       'included', false,
       'profile', null,
@@ -32,10 +33,24 @@ begin
     );
   end if;
 
+  select c.id into client_record_id
+  from public.clients c
+  where c.profile_id = u and c.status = 'active'
+  limit 1;
+
+  if client_record_id is null then
+    return jsonb_build_object(
+      'included', false,
+      'profile', null,
+      'goals', '[]'::jsonb,
+      'metadata', jsonb_build_object('reason', 'client_record_not_available')
+    );
+  end if;
+
   select *
   into profile_row
   from public.career_profiles
-  where client_id = u
+  where client_id = client_record_id
     and is_current = true
     and human_reviewed = true
   order by updated_at desc, version desc
@@ -88,7 +103,7 @@ begin
   from (
     select goal, priority, target_date, created_at
     from public.career_goals
-    where client_id = u and status = 'active'
+    where client_id = client_record_id and status = 'active'
     order by priority asc nulls last, created_at desc
     limit 10
   ) goals;
