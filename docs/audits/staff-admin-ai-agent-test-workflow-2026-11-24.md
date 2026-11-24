@@ -186,3 +186,15 @@ Career Discovery remains `testing` and inactive in production. Independent human
 - Focused validation: CV & LinkedIn workspace tests **3 passed**; mocked operational handoff tests **3 passed**; Career Discovery tests **7 passed**; shared Staff/Admin policy tests **12 passed**. `node --check` and `git diff --check` passed. Actual SDK typings and provider account spend controls remain unverified.
 
 CV & LinkedIn remains `testing` and inactive in production. Human reviewers must verify each claim against source documents before client-facing use. The remaining four operational workflows remain blocked pending their own agent-specific rollout passes.
+
+## Lead Generation AI — staged Groq workflow
+
+- Preserved the Staff-led LinkedIn homepage search, manual profile review, session-local lead list, human fit/permission fields, report, and separate spreadsheet-friendly CSV exports. No scraping, LinkedIn API, automated outreach, or database persistence was added.
+- Added an optional Groq qualification draft action for synthetic organization-level role, organization type, needs, service catalog, and consent state only. It is separate from LinkedIn search and rejects obvious personal identifiers/profile URLs.
+- The fixed `lead_qualification` contract returns service fit, evidence, missing information, and a next action. Unknown permission requires a consent/permission review; `do_not_contact` requires an explicit no-contact instruction. Runtime results remain `awaiting_human_review`, and the Admin can only request independent review.
+- The request requires active Staff/Admin authorization, matching Staff ownership and workflow, and a `live` + active + human-review-gated registry row. All seven production agents remain `testing`, inactive, and review-gated; the operational path remains unavailable until a separate activation decision.
+- Staff/Admin runs bypass customer-credit reservation but retain provider usage/cost logging. No Groq inference was made in this work. The configured secret value was not read or printed.
+- Applied the additive guard migration only to the existing AI test project. A synthetic request/preparation check was run inside a transaction and rolled back; follow-up verification confirmed the registry row returned to its original planned state and no operational request persisted.
+- Focused validation: Lead Generation workspace tests **4 passed**; operational handoff tests **3 passed**; Staff/Admin policy tests **14 passed**; `node --check` and `git diff --check` passed. Provider-side model pricing/spend caps remain unverified.
+
+Lead Generation remains `testing` and inactive in production. Human reviewers must verify identity, relevance, lawful basis, permission, and every qualification claim before outreach. The three remaining operational workflows—Marketing Content, Research & Opportunities, and Sales Proposal—remain blocked pending their individual staged reviews.

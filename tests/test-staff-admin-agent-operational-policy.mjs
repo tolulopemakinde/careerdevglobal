@@ -31,6 +31,10 @@ function request(agentKey, overrides = {}) {
     input.career_profile = { source: "synthetic", summary: "Synthetic programme professional.", experience: ["Supported a synthetic youth programme."], skills: ["facilitation"] };
     input.service_request = { source: "synthetic", deliverables: ["cv", "linkedin"], target_role: "Programme Officer" };
   }
+  if (agentKey === "lead_generation_ai") {
+    input.lead = { source: "synthetic", role_title: "Operations Director", organization_type: "Nonprofit", needs: ["career transition workshops"], consent_status: "unknown" };
+    input.service_catalog = [{ source: "synthetic", service_name: "Career development workshop", description: "Group career planning support." }];
+  }
   return evaluateStaffAdminOperationalRequest({
     agent: { agent_key: agentKey, owner_role: policy.ownerRole, status: "live", active: true, human_approval_required: true },
     workflowKey: policy.workflowKey,
@@ -53,7 +57,7 @@ test("the fixed seven agent contracts have owner roles, workflows, and output sc
     assert.equal(policy.workflowKey, expected.workflowKey);
     assert.ok(policy.inputKeys.length > 0);
     assert.equal(policy.outputSchema.additionalProperties, false);
-    assert.equal(policy.operationallyImplemented, ["ceo_operations_ai", "career_discovery_ai", "cv_linkedin_ai"].includes(agentKey));
+    assert.equal(policy.operationallyImplemented, ["ceo_operations_ai", "career_discovery_ai", "cv_linkedin_ai", "lead_generation_ai"].includes(agentKey));
   }
 });
 
@@ -63,8 +67,8 @@ test("CEO Operations accepts only active Admin operational aggregate inputs", ()
   assert.equal(request("ceo_operations_ai", { agent: { ...requestAgent(), owner_role: "staff" } }).code, "AGENT_OWNER_ROLE_MISMATCH");
 });
 
-test("the remaining four operational workflows remain blocked until their individual rollout", () => {
-  for (const agentKey of Object.keys(cases).filter((key) => !["ceo_operations_ai", "career_discovery_ai", "cv_linkedin_ai"].includes(key))) {
+test("the remaining three operational workflows remain blocked until their individual rollout", () => {
+  for (const agentKey of Object.keys(cases).filter((key) => !["ceo_operations_ai", "career_discovery_ai", "cv_linkedin_ai", "lead_generation_ai"].includes(key))) {
     assert.equal(request(agentKey).code, "AGENT_WORKFLOW_NOT_RELEASED_IN_STAGED_ROLLOUT", agentKey);
   }
 });
@@ -100,6 +104,25 @@ test("CV & LinkedIn accepts only synthetic source evidence and matching requeste
   assert.equal(request("cv_linkedin_ai", { input: { ...input, blueprint: { ...input.blueprint, target_role: "Different role" } } }).code, "CV_LINKEDIN_SYNTHETIC_INPUT_INVALID");
   assert.equal(request("cv_linkedin_ai", { callerRole: "client", input }).code, "CALLER_ROLE_NOT_AUTHORIZED");
   assert.equal(policy.inputKeys.length, 4);
+});
+
+test("Lead Generation accepts synthetic organization-level need data without personal identifiers", () => {
+  const input = {
+    lead: { source: "synthetic", role_title: "Operations Director", organization_type: "Nonprofit", needs: ["career transition workshops"], consent_status: "unknown" },
+    service_catalog: [{ source: "synthetic", service_name: "Career development workshop", description: "Group career planning support." }],
+  };
+  assert.equal(request("lead_generation_ai", { input }).allowed, true);
+  assert.equal(request("lead_generation_ai", { input: { ...input, lead: { ...input.lead, full_name: "Test Person" } } }).code, "LEAD_GENERATION_SYNTHETIC_INPUT_INVALID");
+  assert.equal(request("lead_generation_ai", { input: { ...input, lead: { ...input.lead, needs: ["Contact test@example.com"] } } }).code, "LEAD_GENERATION_SYNTHETIC_INPUT_INVALID");
+  assert.equal(request("lead_generation_ai", { input: { ...input, lead: { ...input.lead, source: "linkedin_profile" } } }).code, "LEAD_GENERATION_SYNTHETIC_INPUT_INVALID");
+});
+
+test("Lead Generation cannot recommend outreach without consent or on do-not-contact", () => {
+  const output = { next_action: "Confirm consent and permission before any contact.", service_fit: "Possible fit based on supplied synthetic needs; unverified.", qualification: { status: "incomplete", missing: ["consent confirmation"], evidence: ["Synthetic needs align with a listed service."] } };
+  assert.equal(validateStaffAdminOperationalOutput("lead_generation_ai", output, { lead: { consent_status: "unknown" } }).valid, true);
+  assert.equal(validateStaffAdminOperationalOutput("lead_generation_ai", { ...output, next_action: "Send an introduction." }, { lead: { consent_status: "unknown" } }).code, "LEAD_OUTREACH_PERMISSION_REVIEW_MISSING");
+  assert.equal(validateStaffAdminOperationalOutput("lead_generation_ai", { ...output, next_action: "No outreach. Do not contact this lead." }, { lead: { consent_status: "do_not_contact" } }).valid, true);
+  assert.equal(validateStaffAdminOperationalOutput("lead_generation_ai", { ...output, next_action: "Confirm consent before contact." }, { lead: { consent_status: "do_not_contact" } }).code, "LEAD_DO_NOT_CONTACT_BOUNDARY_MISSING");
 });
 
 function requestAgent() {
@@ -145,6 +168,7 @@ test("runtime keeps Staff/Admin requests on the bounded Groq path and awaiting h
   assert.match(runtime, /evaluateStaffAdminOperationalRequest/);
   assert.match(runtime, /STAFF_ADMIN_GROQ_HARD_LIMIT_CONFIRMED/);
   assert.match(runtime, /if\(!staffAdminPolicy&&dependencyMode!=='works_without_ai'\)/);
+  assert.match(runtime, /never initiate outreach/);
   assert.match(runtime, /staffAdminPolicy\?staffAdminPolicy\.outputSchema/);
   assert.match(runtime, /EXECUTION_CLAIM_FAILED/);
   assert.match(runtime, /human_review_required:requiresHumanReview,human_review_status:requiresHumanReview\?'pending':'not_required'/);
@@ -172,4 +196,8 @@ test("database migration pins the staged request path and prevents review bypass
   assert.match(cvMigration, /agent_row\.agent_key not in \('ceo_operations_ai', 'career_discovery_ai', 'cv_linkedin_ai'\)/);
   assert.match(cvMigration, /CV & LinkedIn accepts only bounded synthetic career evidence/);
   assert.match(cvMigration, /new\.human_review_required is not true/);
+  const leadMigration = await readFile(new URL("../supabase/migrations/20261124220000_staff_admin_lead_generation_guard.sql", import.meta.url), "utf8");
+  assert.match(leadMigration, /agent_row\.agent_key not in \('ceo_operations_ai', 'career_discovery_ai', 'cv_linkedin_ai', 'lead_generation_ai'\)/);
+  assert.match(leadMigration, /Lead Generation accepts only bounded synthetic organization-level need data/);
+  assert.match(leadMigration, /new\.human_review_required is not true/);
 });

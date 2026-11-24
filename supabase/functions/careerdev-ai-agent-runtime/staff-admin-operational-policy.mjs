@@ -72,7 +72,7 @@ const policies = {
     outputTypes: { cv_draft: "string", quality_summary: "string", review_required: "boolean" },
   },
   lead_generation_ai: {
-    operationallyImplemented: false,
+    operationallyImplemented: true,
     ownerRole: "staff",
     workflowKey: "lead_qualification",
     inputKeys: ["lead", "service_catalog"],
@@ -212,10 +212,26 @@ export function evaluateStaffAdminOperationalRequest({ agent, workflowKey, workf
       return { allowed: false, code: "CV_LINKEDIN_SYNTHETIC_INPUT_INVALID" };
     }
   }
+  if (agent.agent_key === "lead_generation_ai") {
+    const { lead, service_catalog: services } = input;
+    const boundedText = (value, maximum = 1200) => typeof value === "string" && value.trim().length > 0 && value.length <= maximum;
+    const boundedTextList = (value, maximum) => Array.isArray(value) && value.length > 0 && value.length <= maximum && value.every((item) => boundedText(item));
+    if (!hasExactKeys(input, policy.inputKeys)
+      || !hasExactKeys(lead, ["source", "role_title", "organization_type", "needs", "consent_status"])
+      || lead.source !== "synthetic" || !boundedText(lead.role_title) || !boundedText(lead.organization_type)
+      || !boundedTextList(lead.needs, 10)
+      || !["unknown", "consent_confirmed", "do_not_contact"].includes(lead.consent_status)
+      || !Array.isArray(services) || services.length < 1 || services.length > 10
+      || services.some((service) => !hasExactKeys(service, ["source", "service_name", "description"])
+        || service.source !== "synthetic" || !boundedText(service.service_name) || !boundedText(service.description))
+      || containsPersonalIdentifierText(input)) {
+      return { allowed: false, code: "LEAD_GENERATION_SYNTHETIC_INPUT_INVALID" };
+    }
+  }
   return { allowed: true, policy };
 }
 
-export function validateStaffAdminOperationalOutput(agentKey, output) {
+export function validateStaffAdminOperationalOutput(agentKey, output, input = null) {
   const policy = getStaffAdminOperationalPolicy(agentKey);
   if (!policy || !isObject(output)) return { valid: false, code: "OUTPUT_NOT_AN_OBJECT" };
   const expected = Object.keys(policy.outputTypes);
@@ -232,6 +248,18 @@ export function validateStaffAdminOperationalOutput(agentKey, output) {
   }
   if (agentKey === "cv_linkedin_ai" && output.review_required !== true) return { valid: false, code: "HUMAN_REVIEW_FLAG_REQUIRED" };
   if (agentKey === "cv_linkedin_ai" && (!/CV DRAFT/i.test(output.cv_draft) || !/LINKEDIN DRAFT/i.test(output.cv_draft))) return { valid: false, code: "CV_LINKEDIN_SECTIONS_MISSING" };
+  if (agentKey === "lead_generation_ai") {
+    const qualification = output.qualification;
+    if (!hasExactKeys(qualification, ["status", "missing", "evidence"]) || !["possible_fit", "incomplete", "not_fit"].includes(qualification.status)
+      || !Array.isArray(qualification.missing) || !Array.isArray(qualification.evidence)
+      || qualification.missing.length > 12 || qualification.evidence.length > 12
+      || [...qualification.missing, ...qualification.evidence].some((item) => typeof item !== "string" || !item.trim() || item.length > 1000)) {
+      return { valid: false, code: "LEAD_QUALIFICATION_OUTPUT_INVALID" };
+    }
+    const consentStatus = input?.lead?.consent_status;
+    if (consentStatus === "do_not_contact" && !/do not contact|no outreach|do not outreach/i.test(output.next_action)) return { valid: false, code: "LEAD_DO_NOT_CONTACT_BOUNDARY_MISSING" };
+    if (consentStatus !== "consent_confirmed" && consentStatus !== "do_not_contact" && !/consent|permission/i.test(output.next_action)) return { valid: false, code: "LEAD_OUTREACH_PERMISSION_REVIEW_MISSING" };
+  }
   if (agentKey === "ceo_operations_ai" && Object.values(output).some((items) => !items.length)) return { valid: false, code: "CEO_REVIEW_SECTIONS_MUST_NOT_BE_EMPTY" };
   if (agentKey === "career_discovery_ai" && (!output.recommendations.length || !output.gaps.length)) return { valid: false, code: "CAREER_DISCOVERY_REVIEW_SECTIONS_MUST_NOT_BE_EMPTY" };
   return { valid: true };

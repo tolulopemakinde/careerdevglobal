@@ -15,4 +15,4 @@ export function evaluateStaffAdminOperationalRequest(args: {
   triggerSource: string;
   input: unknown;
 }): { allowed: boolean; code?: string; policy?: StaffAdminOperationalPolicy };
-export function validateStaffAdminOperationalOutput(agentKey: string, output: unknown): { valid: boolean; code?: string };
+export function validateStaffAdminOperationalOutput(agentKey: string, output: unknown, input?: unknown): { valid: boolean; code?: string };

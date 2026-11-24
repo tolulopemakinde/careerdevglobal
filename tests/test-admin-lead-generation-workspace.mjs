@@ -34,14 +34,20 @@ test('CSV quotes content and neutralizes spreadsheet formulas', () => {
   assert.match(csv, /"a, ""quoted"" note"/);
 });
 
-test('workspace keeps LinkedIn access manual and lead records session-local', async () => {
+test('workspace keeps LinkedIn access manual and gates Groq qualification to synthetic data', async () => {
   const { readFile } = await import('node:fs/promises');
   const source = await readFile(new URL('../app/admin/lead-generation-workspace.tsx', import.meta.url), 'utf8');
+  const admin = await readFile(new URL('../app/admin/page.tsx', import.meta.url), 'utf8');
   assert.match(source, /Open LinkedIn and copy search terms/);
   assert.match(source, /navigator\.clipboard\.writeText/);
   assert.match(source, /scrape profiles/);
   assert.match(source, /setLeads\(\(current\)/);
-  assert.doesNotMatch(source, /localStorage|sessionStorage|fetch\s*\(|supabase\./);
+  assert.match(source, /Operational use is disabled until this agent is status live/);
+  assert.match(source, /source: 'synthetic'/);
+  assert.match(source, /Do not enter a real person/);
+  assert.match(source, /runLeadGenerationDraft\(supabase, payload\)/);
+  assert.doesNotMatch(source, /localStorage|sessionStorage|fetch\s*\(|linkedin\.com\/v\d/i);
+  assert.match(admin, /LeadGenerationWorkspace onMessage=\{setMessage\} agentStatus=/);
   assert.match(source, /Export lead list CSV/);
   assert.match(source, /Export report CSV/);
 });

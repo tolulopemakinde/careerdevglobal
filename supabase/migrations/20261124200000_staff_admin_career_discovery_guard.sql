@@ -167,7 +167,7 @@ begin
        or jsonb_typeof(new.input_payload->'career_profile') <> 'object'
        or career_profile_key_count <> 4
        or not (new.input_payload->'career_profile' ?& array['source', 'education', 'experience', 'skills'])
-       or new.input_payload#>>'{career_profile,source}' <> 'synthetic'
+       or new.input_payload#>>'{career_profile,source}' is distinct from 'synthetic'
        or length(btrim(coalesce(new.input_payload#>>'{career_profile,education}', ''))) not between 1 and 1200
        or length(btrim(coalesce(new.input_payload#>>'{career_profile,experience}', ''))) not between 1 and 1200
        or jsonb_typeof(new.input_payload#>'{career_profile,skills}') <> 'array'
@@ -176,7 +176,7 @@ begin
        or jsonb_typeof(new.input_payload->'service_request') <> 'object'
        or service_request_key_count <> 3
        or not (new.input_payload->'service_request' ?& array['source', 'goal', 'target_roles'])
-       or new.input_payload#>>'{service_request,source}' <> 'synthetic'
+       or new.input_payload#>>'{service_request,source}' is distinct from 'synthetic'
        or length(btrim(coalesce(new.input_payload#>>'{service_request,goal}', ''))) not between 1 and 1200
        or jsonb_typeof(new.input_payload#>'{service_request,target_roles}') <> 'array'
        or jsonb_array_length(new.input_payload#>'{service_request,target_roles}') > 10
