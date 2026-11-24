@@ -102,3 +102,12 @@ Validation: local Node tests cover input bounds, aggregate calculations, Admin-o
 ## Production registry safety update
 
 On 2026-11-24, the testing-only migration `20261124170000_staff_admin_agents_testing_only` was applied to the existing production Supabase project. A follow-up read-only query returned exactly these seven agent keys, each with `status = testing`, `active = false`, and `human_approval_required = true`. The migration guard also required all seven rows to match. No provider/model calls were made.
+
+
+## Career Discovery AI follow-up
+
+- Added a distinct Staff/Admin-guarded `Initiate Career Discovery AI` workspace for `career_profile_analysis`, separate from the seven-agent contract-test button and the autonomous functional test.
+- It accepts synthetic education, experience, skills, career goal, and optional target roles. The local preview reports the supplied profile, user-stated direction, targets, preparation recommendations, and evidence gaps. It does not infer qualifications or evaluate a real account profile.
+- The preview can be downloaded as Markdown. Data remains in the browser session; there is no database persistence, network call, provider/model inference, credit use, or operational execution.
+- Human review is required before any use of career guidance. The agent remains in testing.
+- Validation: three focused Node tests cover output fields, input errors, the Admin page role gate, and absence of provider/network/database calls.
