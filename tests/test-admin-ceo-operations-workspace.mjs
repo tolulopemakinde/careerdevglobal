@@ -20,11 +20,17 @@ test('invalid aggregate values are rejected', () => {
   assert.throws(() => createExecutiveReview({ ...fixture, period: '' }), /reporting period is required/);
 });
 
-test('workspace is Admin-only and does not call a provider, runtime, or database', async () => {
+test('workspace is Admin-only and the operational Groq path is gated by registry state and human review', async () => {
   const ui = await readFile(new URL('../app/admin/ceo-operations-workspace.tsx', import.meta.url), 'utf8');
   const admin = await readFile(new URL('../app/admin/page.tsx', import.meta.url), 'utf8');
   assert.match(admin, /a\.agent_key==='ceo_operations_ai'&&isAdmin/);
   assert.match(admin, /ceoOperationsOpen&&isAdmin&&<CEOOperationsWorkspace/);
   assert.match(ui, /Create aggregate review preview/);
-  assert.doesNotMatch(ui, /\bfetch\s*\(|supabase\.|request_ai_agent_execution/);
+  assert.match(ui, /agentStatus === 'active' && agentActive && humanApprovalRequired/);
+  assert.match(ui, /request_ai_agent_execution/);
+  assert.match(ui, /prepare_ai_agent_execution/);
+  assert.match(ui, /functions\.invoke\('careerdev-ai-agent-runtime'/);
+  assert.match(ui, /run\.data\.status !== 'awaiting_human_review'/);
+  assert.match(ui, /request_ai_human_approval/);
+  assert.doesNotMatch(ui, /\bfetch\s*\(|api\.groq\.com|api\.openai\.com/);
 });

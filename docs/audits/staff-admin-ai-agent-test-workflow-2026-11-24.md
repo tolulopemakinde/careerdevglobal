@@ -129,24 +129,24 @@ On 2026-11-24, the testing-only migration `20261124170000_staff_admin_agents_tes
 - Validation: focused Node tests cover output shape, input errors, Staff/Admin gating, and absence of provider/network/runtime/database calls.
 
 
-## CEO Operations AI — operational-readiness pass
+## CEO Operations AI — staged operational path
 
-The separate Admin initiation button currently opens an aggregate-only local preview for `executive_performance_review`. It computes completion rates and threshold flags from values typed by an Admin; it does not fetch source metrics, call Groq/OpenAI, persist a report, or create a durable execution log. The focused CEO workspace checks pass (3/3). This proves the local preview boundary, not an operational AI workflow.
+The separate Admin initiation workspace now has two distinct actions: a deterministic local aggregate preview, and a Groq-backed operational draft action. The live action is available only when the registry reports this agent as `status = active`, `active = true`, and `human_approval_required = true`; it submits the fixed `executive_performance_review` workflow through request, preparation, and the governed runtime. CEO Operations is the only agent permitted by this staged implementation. The other six operational workflows remain blocked until their own agent-by-agent work is complete.
 
-The operational version should remain decision support for organization-level indicators. It must not ingest named employee records, rank or score identifiable staff, recommend hiring/firing/promotion/discipline/compensation decisions, or take follow-up actions. An Administrator must review the input evidence and AI-generated findings before use. Operational runs need bounded inputs/outputs and durable audit records for actor, agent/workflow version, provider/model, token usage, run outcome, and approval state while avoiding unnecessary retention of raw prompts or personal data.
+The deployed Supabase Edge Function version 27 was retrieved read-only and added as tracked source. The new Staff/Admin path requires an active Admin for the Admin-owned CEO agent, an active matching workflow, the explicit operational trigger, fixed server-side output schema, aggregate-only inputs, Groq strict JSON output, and configured provider/model/price/spend-limit settings. It persists provider, model, token counts, estimated cost, output-contract status, and the human-review state. The run remains `awaiting_human_review`; completing it requires an independent approval record. It cannot identify or assess individual employees or recommend employment actions. No external action is available from this workflow.
 
-The first agent is **not ready to activate**. The deployed `careerdev-ai-agent-runtime` was retrieved read-only from production (active version 27) and reviewed; its source is not yet tracked in the repository. The production CEO row is still `testing`, inactive, and human-review-gated, with Admin ownership. No secret values were read or printed, and no provider call was attempted.
+A proposed migration adds direct-RPC request guards and execution triggers. It requires operationally active registry state, enforces the CEO owner role, rejects other six agents during this rollout stage, limits CEO input to aggregate values and a reporting period, blocks client-supplied schema/routing overrides, and prevents the seven agents' execution review flag from being cleared or completed without independent approval. The migration has **not** been applied to any database.
 
-The runtime has material operational blockers that apply to this CEO path:
+## Validation and release status
 
-- It calls OpenAI directly; there is no Groq execution path for this workflow.
-- The ordinary runtime completion branch explicitly writes `human_review_required = false` and `human_review_status = not_required`, then transitions to `completed`. Because the database completion guard checks the execution row's review flag, this write can remove the condition that would require independent approval.
-- Runtime authorization checks that the profile is active and broadly permits Admin, Staff, Coach, and Client. The database request RPC limits Staff/Admin-owned agents to Staff/Admin, but does not enforce Admin-only access for an Admin-owned agent; preparation does not re-check agent active state or owner-role authorization.
-- Provider usage records currently write `estimated_cost_usd = 0`, which would misstate billable OpenAI usage.
-- The runtime does not enforce the exact workflow contract for this agent before provider execution; its output schema can be supplied in the request payload when no service step is present.
+- `npm run test:admin-ceo-operations`: 3 passed.
+- `npm run test:staff-admin-agent-operational-policy`: 9 passed, including staged allowlist, Admin-only CEO access, invalid/individual inputs, output schema, human-review enforcement, and migration guard source checks.
+- `git diff --check`: passed.
+- No provider/API/model calls, production database writes, migrations, function deployments, or paid services were used.
+- Deno, TypeScript, and PostgreSQL runtime validation could not be run in this checkout. The migration remains proposed and must be checked/applied in a non-production database before release.
+- The local environment had no Groq provider configuration. Provider-side hard spend limits, alerts, price configuration, and secret availability remain unverified. No secret values were read or printed.
 
-CEO Operations exit criteria: bring the deployed source under repository control; add a fixed allowlist and Admin-only authorization for `executive_performance_review`; make workflow inputs and output schema server-controlled; preserve the database-captured human-review requirement through result persistence and approval; add accurate provider/model/usage metering; introduce the Groq path with bounded output and clear failure handling; and validate the request, preparation, result, and approval transitions with mocked provider responses. Verify provider-side hard spend limits and alerts before any separately authorized low-volume inference. Do not activate CEO Operations or proceed to another agent until these checks pass.
-
+The CEO agent remains **not active in production**: its verified registry row is still `testing`, inactive, and human-review-gated. The code path is guarded but cannot run until the required runtime deployment, non-production migration validation, and provider billing controls are completed. All seven agents remain testing/inactive in production. No production deployment occurred.
 
 ## Career Discovery initiation control follow-up
 
