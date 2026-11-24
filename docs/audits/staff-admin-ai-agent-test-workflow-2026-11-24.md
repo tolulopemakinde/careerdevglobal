@@ -198,3 +198,13 @@ CV & LinkedIn remains `testing` and inactive in production. Human reviewers must
 - Focused validation: Lead Generation workspace tests **4 passed**; operational handoff tests **3 passed**; Staff/Admin policy tests **14 passed**; `node --check` and `git diff --check` passed. Provider-side model pricing/spend caps remain unverified.
 
 Lead Generation remains `testing` and inactive in production. Human reviewers must verify identity, relevance, lawful basis, permission, and every qualification claim before outreach. The three remaining operational workflows—Marketing Content, Research & Opportunities, and Sales Proposal—remain blocked pending their individual staged reviews.
+
+## Marketing Content AI — staged Groq workflow
+
+- Preserved the deterministic local testing preview and added a distinct Groq draft action for the existing `content_creation` workflow. The action accepts only bounded synthetic topic, audience, and brand guidance; the requested CTA is passed as part of that guidance. Obvious contact details and URLs are rejected by server policy and the database guard.
+- Added fixed output validation for CTA, main content, and one to five repurposed channel drafts. Unsupported claims, guarantees, statistics, testimonials, and fabricated verification are prohibited by the runtime instructions. Results are accepted only in `awaiting_human_review`; the UI supports a review request and a Markdown download but cannot publish or send content.
+- Staff/Admin authorization, exact Staff ownership/workflow, the explicit operational trigger, current live/active registry state, and human-review configuration are checked before execution. Registry state for the seven production agents was not changed; all remain testing, inactive, and review-gated.
+- Applied the additive Marketing Content database guard only to the existing AI test project. A rollback-only synthetic request/preparation check succeeded; follow-up verification confirmed the registry row returned to its original planned state and no operational request persisted. No model inference was run.
+- Focused validation: deterministic workspace tests **3 passed**; mocked operational handoff tests **3 passed**; shared Staff/Admin policy and migration checks **15 passed**; `node --check` and `git diff --check` passed. Provider account limits/rates and actual Supabase SDK typings remain unverified.
+
+Marketing Content remains `testing` and inactive in production. Before publication or external sharing, a human must verify factual claims, permissions, brand fit, and any required legal or marketing review. Research & Opportunities and Sales Proposal remain blocked pending their individual staged passes.

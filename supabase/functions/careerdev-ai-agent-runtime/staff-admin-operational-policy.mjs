@@ -85,7 +85,7 @@ const policies = {
     outputTypes: { next_action: "string", service_fit: "string", qualification: "object" },
   },
   marketing_content_ai: {
-    operationallyImplemented: false,
+    operationallyImplemented: true,
     ownerRole: "staff",
     workflowKey: "content_creation",
     inputKeys: ["topic", "audience", "brand_guidance"],
@@ -228,6 +228,15 @@ export function evaluateStaffAdminOperationalRequest({ agent, workflowKey, workf
       return { allowed: false, code: "LEAD_GENERATION_SYNTHETIC_INPUT_INVALID" };
     }
   }
+  if (agent.agent_key === "marketing_content_ai") {
+    const { topic, audience, brand_guidance: brandGuidance } = input;
+    const boundedContentField = (value) => typeof value === "string" && value.trim().length > 0 && value.length <= 1200;
+    if (!hasExactKeys(input, policy.inputKeys)
+      || !boundedContentField(topic) || !boundedContentField(audience) || !boundedContentField(brandGuidance)
+      || containsPersonalIdentifierText(input)) {
+      return { allowed: false, code: "MARKETING_CONTENT_SYNTHETIC_INPUT_INVALID" };
+    }
+  }
   return { allowed: true, policy };
 }
 
@@ -259,6 +268,17 @@ export function validateStaffAdminOperationalOutput(agentKey, output, input = nu
     const consentStatus = input?.lead?.consent_status;
     if (consentStatus === "do_not_contact" && !/do not contact|no outreach|do not outreach/i.test(output.next_action)) return { valid: false, code: "LEAD_DO_NOT_CONTACT_BOUNDARY_MISSING" };
     if (consentStatus !== "consent_confirmed" && consentStatus !== "do_not_contact" && !/consent|permission/i.test(output.next_action)) return { valid: false, code: "LEAD_OUTREACH_PERMISSION_REVIEW_MISSING" };
+  }
+  if (agentKey === "marketing_content_ai") {
+    const repurposing = output.repurposing;
+    if (typeof output.cta !== "string" || !output.cta.trim() || output.cta.length > 1200
+      || typeof output.content !== "string" || !output.content.trim() || output.content.length > 6000
+      || !Array.isArray(repurposing) || repurposing.length < 1 || repurposing.length > 5
+      || repurposing.some((item) => !hasExactKeys(item, ["channel", "draft"])
+        || typeof item.channel !== "string" || !item.channel.trim() || item.channel.length > 80
+        || typeof item.draft !== "string" || !item.draft.trim() || item.draft.length > 2000)) {
+      return { valid: false, code: "MARKETING_CONTENT_OUTPUT_INVALID" };
+    }
   }
   if (agentKey === "ceo_operations_ai" && Object.values(output).some((items) => !items.length)) return { valid: false, code: "CEO_REVIEW_SECTIONS_MUST_NOT_BE_EMPTY" };
   if (agentKey === "career_discovery_ai" && (!output.recommendations.length || !output.gaps.length)) return { valid: false, code: "CAREER_DISCOVERY_REVIEW_SECTIONS_MUST_NOT_BE_EMPTY" };

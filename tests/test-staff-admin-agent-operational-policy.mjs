@@ -57,7 +57,7 @@ test("the fixed seven agent contracts have owner roles, workflows, and output sc
     assert.equal(policy.workflowKey, expected.workflowKey);
     assert.ok(policy.inputKeys.length > 0);
     assert.equal(policy.outputSchema.additionalProperties, false);
-    assert.equal(policy.operationallyImplemented, ["ceo_operations_ai", "career_discovery_ai", "cv_linkedin_ai", "lead_generation_ai"].includes(agentKey));
+    assert.equal(policy.operationallyImplemented, ["ceo_operations_ai", "career_discovery_ai", "cv_linkedin_ai", "lead_generation_ai", "marketing_content_ai"].includes(agentKey));
   }
 });
 
@@ -67,8 +67,8 @@ test("CEO Operations accepts only active Admin operational aggregate inputs", ()
   assert.equal(request("ceo_operations_ai", { agent: { ...requestAgent(), owner_role: "staff" } }).code, "AGENT_OWNER_ROLE_MISMATCH");
 });
 
-test("the remaining three operational workflows remain blocked until their individual rollout", () => {
-  for (const agentKey of Object.keys(cases).filter((key) => !["ceo_operations_ai", "career_discovery_ai", "cv_linkedin_ai", "lead_generation_ai"].includes(key))) {
+test("the remaining two operational workflows remain blocked until their individual rollout", () => {
+  for (const agentKey of Object.keys(cases).filter((key) => !["ceo_operations_ai", "career_discovery_ai", "cv_linkedin_ai", "lead_generation_ai", "marketing_content_ai"].includes(key))) {
     assert.equal(request(agentKey).code, "AGENT_WORKFLOW_NOT_RELEASED_IN_STAGED_ROLLOUT", agentKey);
   }
 });
@@ -123,6 +123,16 @@ test("Lead Generation cannot recommend outreach without consent or on do-not-con
   assert.equal(validateStaffAdminOperationalOutput("lead_generation_ai", { ...output, next_action: "Send an introduction." }, { lead: { consent_status: "unknown" } }).code, "LEAD_OUTREACH_PERMISSION_REVIEW_MISSING");
   assert.equal(validateStaffAdminOperationalOutput("lead_generation_ai", { ...output, next_action: "No outreach. Do not contact this lead." }, { lead: { consent_status: "do_not_contact" } }).valid, true);
   assert.equal(validateStaffAdminOperationalOutput("lead_generation_ai", { ...output, next_action: "Confirm consent before contact." }, { lead: { consent_status: "do_not_contact" } }).code, "LEAD_DO_NOT_CONTACT_BOUNDARY_MISSING");
+});
+
+test("Marketing Content accepts bounded synthetic fields and validates structured draft output", () => {
+  const input = { topic: "Synthetic career planning", audience: "Synthetic early-career audience", brand_guidance: "Practical tone; CTA should invite resource exploration." };
+  assert.equal(request("marketing_content_ai", { input }).allowed, true);
+  assert.equal(request("marketing_content_ai", { input: { ...input, topic: "Contact test@example.com" } }).code, "MARKETING_CONTENT_SYNTHETIC_INPUT_INVALID");
+  assert.equal(request("marketing_content_ai", { input: { ...input, unknown: "override" } }).code, "MARKETING_CONTENT_SYNTHETIC_INPUT_INVALID");
+  const output = { cta: "Explore available resources.", content: "A draft based only on the synthetic topic.", repurposing: [{ channel: "LinkedIn", draft: "A short synthetic draft." }] };
+  assert.equal(validateStaffAdminOperationalOutput("marketing_content_ai", output, input).valid, true);
+  assert.equal(validateStaffAdminOperationalOutput("marketing_content_ai", { ...output, repurposing: [{ channel: "LinkedIn", draft: "" }] }, input).code, "MARKETING_CONTENT_OUTPUT_INVALID");
 });
 
 function requestAgent() {
@@ -200,4 +210,8 @@ test("database migration pins the staged request path and prevents review bypass
   assert.match(leadMigration, /agent_row\.agent_key not in \('ceo_operations_ai', 'career_discovery_ai', 'cv_linkedin_ai', 'lead_generation_ai'\)/);
   assert.match(leadMigration, /Lead Generation accepts only bounded synthetic organization-level need data/);
   assert.match(leadMigration, /new\.human_review_required is not true/);
+  const marketingMigration = await readFile(new URL("../supabase/migrations/20261124230000_staff_admin_marketing_content_guard.sql", import.meta.url), "utf8");
+  assert.match(marketingMigration, /agent_row\.agent_key not in \('ceo_operations_ai', 'career_discovery_ai', 'cv_linkedin_ai', 'lead_generation_ai', 'marketing_content_ai'\)/);
+  assert.match(marketingMigration, /Marketing Content accepts only bounded synthetic topic, audience, and brand guidance/);
+  assert.match(marketingMigration, /new\.human_review_required is not true/);
 });
