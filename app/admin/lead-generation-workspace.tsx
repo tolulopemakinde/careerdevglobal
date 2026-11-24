@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from 'react';
 import { buildLinkedInSearchTerms, LINKEDIN_HOME_URL, createLeadReport, LEAD_STATUS_OPTIONS, toSpreadsheetCsv } from '../../lib/admin/lead-generation-workspace.mjs';
+import { createSupabaseBrowserClient } from '../../lib/supabase-browser';
+import { runLeadGenerationDraft } from '../../lib/admin/lead-generation-operational.mjs';
 
 type Lead = { id: string; name: string; title: string; company: string; linkedinUrl: string; status: string; contactPermission: string; notes: string };
 const blankLead = (): Lead => ({ id: '', name: '', title: '', company: '', linkedinUrl: '', status: 'Needs review', contactPermission: 'Unknown', notes: '' });
@@ -11,10 +13,17 @@ const columns = [
   { key: 'contactPermission', label: 'Contact permission' }, { key: 'notes', label: 'Review notes' },
 ];
 
-export default function LeadGenerationWorkspace({ onMessage }: { onMessage: (message: string) => void }) {
+export default function LeadGenerationWorkspace({ onMessage, agentStatus, agentActive, humanApprovalRequired }: { onMessage: (message: string) => void; agentStatus: string; agentActive: boolean; humanApprovalRequired: boolean }) {
+  const [supabase] = useState(() => createSupabaseBrowserClient());
   const [criteria, setCriteria] = useState({ keywords: '', jobTitles: '', company: '', location: '' });
+  const [syntheticInput, setSyntheticInput] = useState({ roleTitle: '', organizationType: '', needs: '', serviceName: '', serviceDescription: '', consentStatus: 'unknown' });
   const [leads, setLeads] = useState<Lead[]>([]);
   const [draft, setDraft] = useState<Lead>(blankLead());
+  const [operationalBusy, setOperationalBusy] = useState(false);
+  const [operationalResult, setOperationalResult] = useState<any>(null);
+  const [approvalBusy, setApprovalBusy] = useState(false);
+  const [approvalMessage, setApprovalMessage] = useState('');
+  const operationalReady = agentStatus === 'live' && agentActive && humanApprovalRequired;
   const report = useMemo(() => createLeadReport(leads, criteria), [leads, criteria]);
   const setField = (key: keyof typeof criteria, value: string) => setCriteria((current) => ({ ...current, [key]: value }));
   const fieldStyle = { width: '100%', padding: '10px 11px', border: '1px solid #c8d9e8', borderRadius: 8, boxSizing: 'border-box' as const };
@@ -26,6 +35,39 @@ export default function LeadGenerationWorkspace({ onMessage }: { onMessage: (mes
       await navigator.clipboard.writeText(terms);
       onMessage('LinkedIn opened and search terms copied. Paste them into LinkedIn search and review results manually.');
     } catch (error: any) { onMessage(error?.message || 'LinkedIn could not be opened or the search terms could not be copied. You can copy the criteria manually.'); }
+  }
+  async function runGroqQualification() {
+    if (!operationalReady || operationalBusy) return;
+    const needs = syntheticInput.needs.split(',').map((item) => item.trim()).filter(Boolean);
+    if (!syntheticInput.roleTitle.trim() || !syntheticInput.organizationType.trim() || !needs.length || !syntheticInput.serviceName.trim() || !syntheticInput.serviceDescription.trim()) {
+      onMessage('Complete every synthetic lead and service field before starting a Groq request.'); return;
+    }
+    if (needs.length > 10 || needs.some((item) => item.length > 1200)) { onMessage('Use no more than 10 synthetic needs, each 1,200 characters or fewer.'); return; }
+    const payload = {
+      lead: { source: 'synthetic', role_title: syntheticInput.roleTitle.trim(), organization_type: syntheticInput.organizationType.trim(), needs, consent_status: syntheticInput.consentStatus },
+      service_catalog: [{ source: 'synthetic', service_name: syntheticInput.serviceName.trim(), description: syntheticInput.serviceDescription.trim() }],
+    };
+    setOperationalBusy(true); setOperationalResult(null); setApprovalMessage('');
+    try {
+      const result = await runLeadGenerationDraft(supabase, payload);
+      setOperationalResult(result);
+      onMessage(`Synthetic lead qualification draft is awaiting human review. Estimated provider cost: $${Number(result.estimated_cost_usd || 0).toFixed(6)}.`);
+    } catch (error: any) {
+      onMessage(error?.message || 'Lead Generation could not produce a governed qualification draft.');
+    } finally { setOperationalBusy(false); }
+  }
+  async function requestIndependentReview() {
+    if (!operationalResult?.requestId || !operationalResult?.executionId || approvalBusy) return;
+    setApprovalBusy(true); setApprovalMessage('');
+    try {
+      const { data, error } = await supabase.rpc('request_ai_human_approval', { p_request_id: operationalResult.requestId, p_execution_id: operationalResult.executionId });
+      if (error || !data) throw new Error('No approval ID returned');
+      setApprovalMessage('Independent review request created. Another authorized user must review it.');
+      onMessage('Lead qualification draft queued for independent human approval.');
+    } catch {
+      setApprovalMessage('Independent review request could not be created. Open AI Governance and inspect the execution.');
+      onMessage('Independent Lead Generation review request could not be created.');
+    } finally { setApprovalBusy(false); }
   }
   function addLead(event: React.FormEvent) {
     event.preventDefault();
@@ -51,6 +93,21 @@ export default function LeadGenerationWorkspace({ onMessage }: { onMessage: (mes
       {([['keywords', 'Keywords'], ['jobTitles', 'Job titles'], ['company', 'Company'], ['location', 'Location']] as const).map(([key, label]) => <label key={key} style={labelStyle}>{label}<input value={criteria[key]} onChange={(event) => setField(key, event.target.value)} style={fieldStyle} placeholder={label === 'Keywords' ? 'e.g. HR director, workforce development' : `Optional ${label.toLowerCase()}`} /></label>)}
     </div>
     <button type="button" onClick={openSearch} style={{ marginTop: 10, border: 0, borderRadius: 9, padding: '10px 14px', background: '#0b5d9b', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>Open LinkedIn and copy search terms ↗</button>
+    <article aria-label="Synthetic lead qualification test" style={{ marginTop: 18, padding: 16, border: '1px solid #d8e6f1', borderRadius: 12, background: '#f8fcff' }}>
+      <strong>Groq lead qualification test</strong>
+      <p style={{ fontSize: 12, lineHeight: 1.6, color: '#527085' }}>Synthetic-only model test. Do not enter a real person’s name, LinkedIn profile, contact details, or private notes. This action does not search LinkedIn or contact leads; the output is a draft for human review and may incur provider charges.</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 10, marginTop: 10 }}>
+        <label style={labelStyle}>Synthetic role title<input maxLength={500} value={syntheticInput.roleTitle} onChange={(e) => setSyntheticInput({ ...syntheticInput, roleTitle: e.target.value })} style={fieldStyle} /></label>
+        <label style={labelStyle}>Synthetic organization type<input maxLength={500} value={syntheticInput.organizationType} onChange={(e) => setSyntheticInput({ ...syntheticInput, organizationType: e.target.value })} style={fieldStyle} placeholder="e.g. nonprofit" /></label>
+        <label style={labelStyle}>Synthetic needs (comma-separated)<input maxLength={1500} value={syntheticInput.needs} onChange={(e) => setSyntheticInput({ ...syntheticInput, needs: e.target.value })} style={fieldStyle} /></label>
+        <label style={labelStyle}>Synthetic service<input maxLength={500} value={syntheticInput.serviceName} onChange={(e) => setSyntheticInput({ ...syntheticInput, serviceName: e.target.value })} style={fieldStyle} /></label>
+        <label style={labelStyle}>Service description<input maxLength={1200} value={syntheticInput.serviceDescription} onChange={(e) => setSyntheticInput({ ...syntheticInput, serviceDescription: e.target.value })} style={fieldStyle} /></label>
+        <label style={labelStyle}>Synthetic contact permission<select value={syntheticInput.consentStatus} onChange={(e) => setSyntheticInput({ ...syntheticInput, consentStatus: e.target.value })} style={fieldStyle}><option value="unknown">Unknown</option><option value="consent_confirmed">Consent confirmed</option><option value="do_not_contact">Do not contact</option></select></label>
+      </div>
+      <button type="button" disabled={!operationalReady || operationalBusy} onClick={runGroqQualification} style={{ marginTop: 10, border: 0, borderRadius: 9, padding: '10px 14px', background: operationalReady ? '#0b5d9b' : '#8da6ba', color: '#fff', fontWeight: 800, cursor: operationalReady ? 'pointer' : 'not-allowed' }}>{operationalBusy ? 'Running qualification…' : 'Qualify synthetic lead with Groq'}</button>
+      {!operationalReady && <p role="note" style={{ fontSize: 12, color: '#7a5b23' }}>Operational use is disabled until this agent is status live, active, and human-review-gated. Current state: {agentStatus}, operational access {agentActive ? 'enabled' : 'disabled'}, review gate {humanApprovalRequired ? 'on' : 'off'}.</p>}
+      {operationalResult && <div style={{ marginTop: 14, padding: 12, borderRadius: 9, background: '#fff', border: '1px solid #c8d9e8' }}><b>Awaiting human review</b><p>Estimated Groq cost: ${Number(operationalResult.estimated_cost_usd || 0).toFixed(6)}. Usage log persisted: {operationalResult.usage_event_persisted ? 'yes' : 'no; check AI Governance before further runs'}.</p><p><b>Service fit:</b> {operationalResult.output.service_fit}</p><p><b>Qualification:</b> {operationalResult.output.qualification.status}</p><b>Evidence supplied</b><ul>{operationalResult.output.qualification.evidence.map((item: string, index: number) => <li key={`evidence-${index}`}>{item}</li>)}</ul><b>Missing or unverified</b><ul>{operationalResult.output.qualification.missing.map((item: string, index: number) => <li key={`missing-${index}`}>{item}</li>)}</ul><p><b>Suggested next step:</b> {operationalResult.output.next_action}</p><p>Do not contact anyone from this result. Confirm identity, business need, lawful basis, and permission with a human before outreach.</p><button type="button" disabled={approvalBusy} onClick={requestIndependentReview} style={{ border: '1px solid #c8d9e8', borderRadius: 9, padding: '9px 12px', background: '#fff', color: '#173b59', fontWeight: 700 }}>{approvalBusy ? 'Requesting review…' : 'Request independent approval'}</button>{approvalMessage && <p role="status">{approvalMessage}</p>}</div>}
+    </article>
     <h3 style={{ margin: '20px 0 8px' }}>2. Add a lead you reviewed</h3>
     <form onSubmit={addLead}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 10 }}>

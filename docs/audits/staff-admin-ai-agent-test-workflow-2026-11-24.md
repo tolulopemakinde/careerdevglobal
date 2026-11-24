@@ -129,6 +129,29 @@ On 2026-11-24, the testing-only migration `20261124170000_staff_admin_agents_tes
 - Validation: focused Node tests cover output shape, input errors, Staff/Admin gating, and absence of provider/network/runtime/database calls.
 
 
+## CEO Operations AI — staged operational path
+
+The separate Admin initiation workspace now has two distinct actions: a deterministic local aggregate preview, and a Groq-backed operational draft action. The live action is available only when the registry reports this agent as `status = live`, `active = true`, and `human_approval_required = true`; it submits the fixed `executive_performance_review` workflow through request, preparation, and the governed runtime. `live` is the allowed operational registry status in the database check constraint; `active` is not a valid status value. CEO Operations is the only agent permitted by this staged implementation. The other six operational workflows remain blocked until their own agent-by-agent work is complete.
+
+The deployed Supabase Edge Function version 27 was retrieved read-only and added as tracked source. The new Staff/Admin path requires an active Admin for the Admin-owned CEO agent, an active matching workflow, the explicit operational trigger, fixed server-side output schema, aggregate-only inputs, Groq strict JSON output, and configured provider/model/price/spend-limit settings. It persists provider, model, token counts, estimated cost, output-contract status, and the human-review state. The run remains `awaiting_human_review`; completing it requires an independent approval record. It cannot identify or assess individual employees or recommend employment actions. No external action is available from this workflow.
+
+A migration adds direct-RPC request guards and execution triggers. It requires the operational registry state (`status = live`, `active = true`, and human review enabled), enforces the CEO owner role, rejects other six agents during this rollout stage, limits CEO input to aggregate values and a reporting period, blocks client-supplied schema/routing overrides, and prevents the seven agents' execution review flag from being cleared or completed without independent approval. It was applied to the existing non-production test project for DDL validation only; no production database was changed.
+
+## Validation and release status
+
+- `npm run test:admin-ceo-operations`: 5 passed, including mocked request, preparation, runtime, and independent-review handoff.
+- `npm run test:staff-admin-agent-operational-policy`: 9 passed, including staged allowlist, Admin-only CEO access, invalid/individual inputs, output schema, human-review enforcement, and migration guard source checks.
+- `npm run test:staff-admin-groq-transport`: 3 passed using injected mock fetch responses; no network request or inference was made.
+- `git diff --check`: passed.
+- The Vercel pull-request preview completed with `READY`; its Next.js build and application TypeScript check passed. This was a preview build only, not production.
+- No provider/API/model calls or production database/deployment changes were made. The connected Vercel project generated a pull-request preview build; no production alias was changed.
+- PostgreSQL accepted the guard migration in the existing non-production test project. Anonymous request and review-flag-clear smoke checks were rejected by the database triggers. A request/preparation test using synthetic aggregate input completed inside a transaction and was rolled back; registry state and operational request/execution counts were verified unchanged afterward.
+- The database test exposed and corrected two migration defects: the registry uses `live` rather than `active` for operational status, and PostgreSQL has no `jsonb_object_length` function. JSON object key counts now use `jsonb_object_keys`.
+- Deno syntax/type checking with temporary local stubs for Supabase and edge-runtime imports passed. A follow-up check using the actual Supabase npm SDK could not complete because the environment stalled downloading from `registry.npmjs.org`; actual SDK typings remain unverified.
+- The user confirmed the Groq runtime secret is configured. The secret value was not retrieved or printed. Provider-side spending limits and alerts, the configured model and rates, and the target project's secret presence were not independently verified through available account tools. No model-provider call was made.
+
+The CEO agent remains **not active in production**: its verified registry row is still `testing`, inactive, and human-review-gated. The code path cannot run until the runtime is safely deployed and provider billing controls are verified. All seven agents remain testing/inactive in production. No production deployment occurred.
+
 ## Career Discovery initiation control follow-up
 
 - Added the dedicated `Initiate Career Discovery AI` toggle to the Staff/Admin Agents card. It opens the existing local `career_profile_analysis` test workspace; it does not call the autonomous functional test or live runtime.
@@ -140,3 +163,68 @@ On 2026-11-24, the testing-only migration `20261124170000_staff_admin_agents_tes
 - The new workspace accepts synthetic topic, audience, CTA, and optional brand guidance and generates a deterministic local template with one repurposed draft and Markdown download.
 - It does not call an AI provider, runtime, or database and cannot save, publish, or send content. Human review remains required. The registry agent stays `testing`, inactive, and human-review-gated.
 - Validation: focused Node tests cover output shape, input errors, Staff/Admin gating, and absence of provider/network/runtime/database calls.
+
+## Career Discovery AI — staged Groq workflow
+
+- Added a distinct Groq draft action inside the Career Discovery workspace. It uses only bounded synthetic education, experience, skills, goal, and target-role inputs and the existing `career_profile_analysis` workflow. Obvious contact details and profile URLs are rejected by the server policy and the database request guard.
+- Added a strict output contract for career direction, target roles, recommendations, and evidence gaps. Runtime results must report `awaiting_human_review`, `human_review_required = true`, `human_review_gate = true`, and `human_approved = false`; the UI offers a separate independent approval request and never completes the execution.
+- The action is available only when the registry reports `status = live`, `active = true`, and human approval enabled. It remains unavailable while Career Discovery is `testing` or otherwise inactive. Staff and Admin may access the Staff-owned workflow; the database checks active Staff/Admin role and exact owner/workflow state.
+- Staff/Admin operational runs bypass client AI-credit reservation. Provider usage and estimated cost are still logged through the existing runtime path. The local deterministic preview remains free and separate.
+- The additive database guard migration was applied only to the existing non-production test project. A rollback-only synthetic request/preparation transaction succeeded after temporarily matching the test registry owner/status fields; follow-up verification confirmed the original registry state and no operational requests persisted. No Groq inference was made.
+- Focused validation: Career Discovery workspace tests **3 passed**; entrypoint test **1 passed**; mocked operational handoff tests **3 passed**; shared CEO workflow tests **5 passed**; Staff/Admin policy and database guard tests **11 passed**; Groq transport tests **3 passed**; `git diff --check` passed.
+- The actual Supabase SDK typecheck remains unavailable because the package download stalled; the local Deno stub check does not certify SDK typings. Provider account spending limits and configured rates remain unverified. No production registry or deployment changes occurred.
+
+Career Discovery remains `testing` and inactive in production. Independent human review is required before using any model-generated guidance; reviewers must verify evidence and current role requirements. The other four not-yet-staged operational workflows remain blocked pending their own agent-specific rollout passes.
+
+## CV & LinkedIn AI — staged Groq workflow
+
+- Added a separate Groq action beside the deterministic local CV and LinkedIn preview. It is shown as operationally available only when the registry reports `status = live`, `active = true`, and human approval required. The Admin page passes the registry state into the workspace; Staff and Admin access remain role-gated.
+- The request uses only synthetic target-role, summary, experience, and skills data, fixed to the existing `cv_service_delivery` workflow and the two requested deliverables. The server policy and migration require exact input shapes, enforce field and array bounds, and reject obvious contact details and profile URLs.
+- The Groq contract returns a combined draft with separately labeled `CV DRAFT` and `LINKEDIN DRAFT` sections, a quality summary, and `review_required = true`. Results are accepted only in the runtime's `awaiting_human_review` state with the human-review fields still set; the UI does not save a final document, publish, or submit anything.
+- Staff/Admin requests bypass customer AI-credit reservation and use the existing provider usage-cost logging. No model inference was made.
+- Applied the additive CV guard migration only to the existing non-production test project. A rollback-only transaction successfully requested and prepared a synthetic CV/LinkedIn run after temporarily setting the test registry row to its matching Staff/live state. Follow-up reads confirmed no operational request persisted and the test registry row returned to its prior planned/coach values.
+- Focused validation: CV & LinkedIn workspace tests **3 passed**; mocked operational handoff tests **3 passed**; Career Discovery tests **7 passed**; shared Staff/Admin policy tests **12 passed**. `node --check` and `git diff --check` passed. Actual SDK typings and provider account spend controls remain unverified.
+
+CV & LinkedIn remains `testing` and inactive in production. Human reviewers must verify each claim against source documents before client-facing use. The remaining four operational workflows remain blocked pending their own agent-specific rollout passes.
+
+## Lead Generation AI — staged Groq workflow
+
+- Preserved the Staff-led LinkedIn homepage search, manual profile review, session-local lead list, human fit/permission fields, report, and separate spreadsheet-friendly CSV exports. No scraping, LinkedIn API, automated outreach, or database persistence was added.
+- Added an optional Groq qualification draft action for synthetic organization-level role, organization type, needs, service catalog, and consent state only. It is separate from LinkedIn search and rejects obvious personal identifiers/profile URLs.
+- The fixed `lead_qualification` contract returns service fit, evidence, missing information, and a next action. Unknown permission requires a consent/permission review; `do_not_contact` requires an explicit no-contact instruction. Runtime results remain `awaiting_human_review`, and the Admin can only request independent review.
+- The request requires active Staff/Admin authorization, matching Staff ownership and workflow, and a `live` + active + human-review-gated registry row. All seven production agents remain `testing`, inactive, and review-gated; the operational path remains unavailable until a separate activation decision.
+- Staff/Admin runs bypass customer-credit reservation but retain provider usage/cost logging. No Groq inference was made in this work. The configured secret value was not read or printed.
+- Applied the additive guard migration only to the existing AI test project. A synthetic request/preparation check was run inside a transaction and rolled back; follow-up verification confirmed the registry row returned to its original planned state and no operational request persisted.
+- Focused validation: Lead Generation workspace tests **4 passed**; operational handoff tests **3 passed**; Staff/Admin policy tests **14 passed**; `node --check` and `git diff --check` passed. Provider-side model pricing/spend caps remain unverified.
+
+Lead Generation remains `testing` and inactive in production. Human reviewers must verify identity, relevance, lawful basis, permission, and every qualification claim before outreach. The three remaining operational workflows—Marketing Content, Research & Opportunities, and Sales Proposal—remain blocked pending their individual staged reviews.
+
+## Marketing Content AI — staged Groq workflow
+
+- Preserved the deterministic local testing preview and added a distinct Groq draft action for the existing `content_creation` workflow. The action accepts only bounded synthetic topic, audience, and brand guidance; the requested CTA is passed as part of that guidance. Obvious contact details and URLs are rejected by server policy and the database guard.
+- Added fixed output validation for CTA, main content, and one to five repurposed channel drafts. Unsupported claims, guarantees, statistics, testimonials, and fabricated verification are prohibited by the runtime instructions. Results are accepted only in `awaiting_human_review`; the UI supports a review request and a Markdown download but cannot publish or send content.
+- Staff/Admin authorization, exact Staff ownership/workflow, the explicit operational trigger, current live/active registry state, and human-review configuration are checked before execution. Registry state for the seven production agents was not changed; all remain testing, inactive, and review-gated.
+- Applied the additive Marketing Content database guard only to the existing AI test project. A rollback-only synthetic request/preparation check succeeded; follow-up verification confirmed the registry row returned to its original planned state and no operational request persisted. No model inference was run.
+- Focused validation: deterministic workspace tests **3 passed**; mocked operational handoff tests **3 passed**; shared Staff/Admin policy and migration checks **15 passed**; `node --check` and `git diff --check` passed. Provider account limits/rates and actual Supabase SDK typings remain unverified.
+
+Marketing Content remains `testing` and inactive in production. Before publication or external sharing, a human must verify factual claims, permissions, brand fit, and any required legal or marketing review. Research & Opportunities and Sales Proposal remain blocked pending their individual staged passes.
+
+## Research & Opportunities AI — staged Groq workflow
+
+- Preserved the manual search homepage flow, source/deadline review fields, session-local opportunity list, report, and CSV exports. Added a separate Groq extraction test that accepts only synthetic topic/profile criteria and up to five synthetic source excerpts; it has no live search capability.
+- Runtime instructions prohibit invented opportunities, sources, eligibility, and dates. Results may refer only to synthetic source identifiers. Server output validation cross-checks each returned title and deadline against the supplied synthetic excerpt and rejects any item marked verified. The UI and Markdown export state clearly that the results are synthetic and not current.
+- The workflow requires Staff/Admin authorization, exact Staff ownership, `opportunity_research`, the explicit operational trigger, current live/active registry state, and human review. Drafts remain `awaiting_human_review`; the UI can request independent review and download the draft but cannot act on an opportunity.
+- Applied the additive database guard only to the existing AI test project. The test row originally had owner role `coach`; within a rollback-only transaction it was temporarily aligned to the Staff workflow contract to run a synthetic request/preparation check. Follow-up verification confirmed the original planned/coach state and zero operational requests.
+- Focused validation: manual workspace tests **3 passed**; mocked operational handoff tests **3 passed**; shared policy/guard checks **16 passed**; `node --check` and `git diff --check` passed. No model inference or live web search was performed.
+
+Research & Opportunities remains `testing` and inactive in production. Human reviewers must verify real primary sources, eligibility, and deadlines before relying on results. Sales Proposal remains blocked pending its individual staged pass.
+
+## Sales Proposal AI — staged Groq workflow
+
+- Preserved the local non-AI proposal preview and added a separate `proposal_generation` Groq draft action. It accepts only bounded synthetic organization category, decision role, needs, service, and timeline inputs; no real client name, price, payment term, or legal term is sent.
+- Enforced structured scope sections and next steps. The draft must say pricing is pending authorized confirmation, cannot introduce a price or guarantee, and must include human pricing confirmation and review steps. The output is non-binding and remains `awaiting_human_review`.
+- The Admin workspace can download the draft and request independent review. It cannot save the result to the proposal system, approve terms, send the proposal, or accept it.
+- Added a direct-RPC database guard. It was applied only to the existing AI test project. A rollback-only synthetic request/preparation check succeeded and follow-up verification confirmed the test row returned to its original planned state with no operational request persisted.
+- Focused validation: local Sales Proposal tests **4 passed**; mocked operational handoff tests **3 passed**; shared Staff/Admin policy/guard checks **17 passed**; `node --check` and `git diff --check` passed. No model inference was run.
+
+Sales Proposal remains `testing` and inactive in production. A qualified human must confirm scope, price, legal language, authority, and any client-specific commitments before sharing or accepting a proposal. All seven agent-specific staged paths are now represented in the draft PR; none of the seven agents has been activated.

@@ -3,6 +3,8 @@
 import { useMemo, useState } from 'react';
 import { buildOpportunitySearchTerms, createOpportunityReport } from '../../lib/admin/research-opportunities-workspace.mjs';
 import { toSpreadsheetCsv } from '../../lib/admin/lead-generation-workspace.mjs';
+import { runResearchOpportunitiesDraft, researchDraftToMarkdown } from '../../lib/admin/research-opportunities-operational.mjs';
+import { createSupabaseBrowserClient } from '../../lib/supabase-browser';
 
 type Opportunity = { id: string; title: string; type: string; organization: string; geography: string; deadline: string; sourceUrl: string; sourceReview: string; deadlineReview: string; notes: string };
 const blankOpportunity = (): Opportunity => ({ id: '', title: '', type: '', organization: '', geography: '', deadline: '', sourceUrl: '', sourceReview: 'Not reviewed', deadlineReview: 'Not reviewed', notes: '' });
@@ -12,10 +14,17 @@ const columns = [
   { key: 'sourceReview', label: 'Source review' }, { key: 'deadlineReview', label: 'Deadline review' }, { key: 'notes', label: 'Notes' },
 ];
 
-export default function ResearchOpportunitiesWorkspace({ onMessage }: { onMessage: (message: string) => void }) {
+export default function ResearchOpportunitiesWorkspace({ onMessage, agentStatus, agentActive, humanApprovalRequired }: { onMessage: (message: string) => void; agentStatus: string; agentActive: boolean; humanApprovalRequired: boolean }) {
+  const [supabase] = useState(() => createSupabaseBrowserClient());
   const [criteria, setCriteria] = useState({ keywords: '', opportunityType: '', geography: '', targetProfile: '' });
+  const [synthetic, setSynthetic] = useState({ title: '', excerpt: '', deadline: '', targetProfile: '' });
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [draft, setDraft] = useState<Opportunity>(blankOpportunity());
+  const [aiDraft, setAiDraft] = useState<any>(null);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [approvalBusy, setApprovalBusy] = useState(false);
+  const [approvalMessage, setApprovalMessage] = useState('');
+  const operationalReady = agentStatus === 'live' && agentActive && humanApprovalRequired;
   const report = useMemo(() => createOpportunityReport(opportunities, criteria), [opportunities, criteria]);
   const fieldStyle = { width: '100%', padding: '10px 11px', border: '1px solid #c8d9e8', borderRadius: 8, boxSizing: 'border-box' as const };
   const labelStyle = { display: 'grid', gap: 5, fontSize: 12, fontWeight: 700 as const, color: '#36566f' };
@@ -26,6 +35,45 @@ export default function ResearchOpportunitiesWorkspace({ onMessage }: { onMessag
       await navigator.clipboard.writeText(terms);
       onMessage('Web search opened and terms copied. Search manually, prefer primary sources, and add only records you reviewed.');
     } catch (error: any) { onMessage(error?.message || 'Search could not open or terms could not be copied. You can copy the criteria manually.'); }
+  }
+  async function runSyntheticResearch() {
+    if (!operationalReady || aiBusy) return;
+    const keywords = criteria.keywords.trim();
+    if (!keywords || !synthetic.title.trim() || !synthetic.excerpt.trim() || !synthetic.targetProfile.trim()) {
+      onMessage('Enter synthetic keywords, a source title and excerpt, and a synthetic target profile before starting Groq.'); return;
+    }
+    if (synthetic.excerpt.length > 3000 || synthetic.title.length > 500 || synthetic.targetProfile.length > 1200 || synthetic.deadline.length > 80) {
+      onMessage('Synthetic source title, excerpt, target profile, or date exceeds the allowed test limit.'); return;
+    }
+    const payload = {
+      research_scope: { source: 'synthetic', keywords, opportunity_type: criteria.opportunityType.trim(), geography: criteria.geography.trim(), sources: [{ source: 'synthetic', title: synthetic.title.trim(), excerpt: synthetic.excerpt.trim(), deadline: synthetic.deadline.trim() }] },
+      target_profile: { source: 'synthetic', description: synthetic.targetProfile.trim() },
+    };
+    setAiBusy(true); setAiDraft(null); setApprovalMessage('');
+    try {
+      const result = await runResearchOpportunitiesDraft(supabase, payload);
+      setAiDraft(result);
+      onMessage(`Synthetic research draft is awaiting human review. Estimated provider cost: $${Number(result.estimated_cost_usd || 0).toFixed(6)}.`);
+    } catch (error: any) { onMessage(error?.message || 'Research & Opportunities could not produce a governed draft.'); }
+    finally { setAiBusy(false); }
+  }
+  async function requestIndependentReview() {
+    if (!aiDraft?.requestId || !aiDraft?.executionId || approvalBusy) return;
+    setApprovalBusy(true); setApprovalMessage('');
+    try {
+      const { data, error } = await supabase.rpc('request_ai_human_approval', { p_request_id: aiDraft.requestId, p_execution_id: aiDraft.executionId });
+      if (error || !data) throw new Error('No approval ID returned');
+      setApprovalMessage('Independent review request created. Another authorized user must review it.');
+      onMessage('Synthetic research draft queued for independent human review.');
+    } catch {
+      setApprovalMessage('Independent review request could not be created. Open AI Governance and inspect the execution.');
+      onMessage('Independent Research & Opportunities review request could not be created.');
+    } finally { setApprovalBusy(false); }
+  }
+  function downloadResearchDraft() {
+    if (!aiDraft) return;
+    const url = URL.createObjectURL(new Blob([researchDraftToMarkdown(aiDraft)], { type: 'text/markdown;charset=utf-8' }));
+    const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'research-opportunities-synthetic-review.md'; anchor.click(); URL.revokeObjectURL(url);
   }
   function addOpportunity(event: React.FormEvent) {
     event.preventDefault();
@@ -51,6 +99,19 @@ export default function ResearchOpportunitiesWorkspace({ onMessage }: { onMessag
       {([['keywords', 'Keywords'], ['opportunityType', 'Opportunity type'], ['geography', 'Geography'], ['targetProfile', 'Target profile or interests']] as const).map(([key, label]) => <label key={key} style={labelStyle}>{label}<input value={criteria[key]} onChange={(event) => setCriteria((current) => ({ ...current, [key]: event.target.value }))} style={fieldStyle} placeholder={key === 'keywords' ? 'e.g. youth livelihoods grant' : `Optional ${label.toLowerCase()}`} /></label>)}
     </div>
     <button type="button" onClick={openSearch} style={{ marginTop: 10, border: 0, borderRadius: 9, padding: '10px 14px', background: '#0b5d9b', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>Open web search and copy terms ↗</button>
+    <article aria-label="Synthetic Research and Opportunities Groq test" style={{ marginTop: 18, padding: 16, border: '1px solid #d8e6f1', borderRadius: 12, background: '#f8fcff' }}>
+      <strong>Groq research extraction test</strong>
+      <p style={{ fontSize: 12, lineHeight: 1.6, color: '#527085' }}>Synthetic excerpts only. This test does not search the web. Do not enter private or identifying information. Every source, opportunity, and deadline remains unverified until a human checks a real primary source; this action may incur provider charges.</p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 10, marginTop: 10 }}>
+        <label style={labelStyle}>Synthetic source title<input maxLength={500} value={synthetic.title} onChange={(e) => setSynthetic({ ...synthetic, title: e.target.value })} style={fieldStyle} /></label>
+        <label style={labelStyle}>Synthetic deadline<input maxLength={80} value={synthetic.deadline} onChange={(e) => setSynthetic({ ...synthetic, deadline: e.target.value })} style={fieldStyle} placeholder="Synthetic date or leave blank" /></label>
+        <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>Synthetic target profile<textarea maxLength={1200} value={synthetic.targetProfile} onChange={(e) => setSynthetic({ ...synthetic, targetProfile: e.target.value })} style={{ ...fieldStyle, minHeight: 55 }} /></label>
+        <label style={{ ...labelStyle, gridColumn: '1 / -1' }}>Synthetic source excerpt<textarea maxLength={3000} value={synthetic.excerpt} onChange={(e) => setSynthetic({ ...synthetic, excerpt: e.target.value })} style={{ ...fieldStyle, minHeight: 80 }} /></label>
+      </div>
+      <button type="button" disabled={!operationalReady || aiBusy} onClick={runSyntheticResearch} style={{ marginTop: 10, border: 0, borderRadius: 9, padding: '10px 14px', background: operationalReady ? '#0b5d9b' : '#8da6ba', color: '#fff', fontWeight: 800, cursor: operationalReady ? 'pointer' : 'not-allowed' }}>{aiBusy ? 'Preparing research draft…' : 'Extract synthetic opportunity draft with Groq'}</button>
+      {!operationalReady && <p role="note" style={{ fontSize: 12, color: '#7a5b23' }}>Operational execution is disabled until the agent is status live, active, and human-review-gated. Current state: {agentStatus}, operational access {agentActive ? 'enabled' : 'disabled'}, review gate {humanApprovalRequired ? 'on' : 'off'}.</p>}
+      {aiDraft && <div style={{ marginTop: 14, padding: 12, borderRadius: 9, background: '#fff', border: '1px solid #c8d9e8' }}><b>Synthetic output · All entries unverified · Human review required</b><p>Estimated Groq cost: ${Number(aiDraft.estimated_cost_usd || 0).toFixed(6)}. Usage log persisted: {aiDraft.usage_event_persisted ? 'yes' : 'no; check AI Governance before further runs'}.</p><p>Source references: {aiDraft.output.sources.join(', ')}</p><b>Potential opportunity drafts</b>{aiDraft.output.opportunities.length ? <ul>{aiDraft.output.opportunities.map((item: any, index: number) => <li key={`${item.source_url}-${index}`}><strong>{item.title}</strong>: {item.summary} — deadline {item.deadline || 'not supplied'} — {item.verification_status}</li>)}</ul> : <p>No opportunity extracted from the synthetic excerpt.</p>}<p>Do not treat these as current or real opportunities. Recheck eligibility and dates on primary sources.</p><button type="button" onClick={downloadResearchDraft} style={{ border: '1px solid #c8d9e8', borderRadius: 9, padding: '9px 12px', background: '#fff', color: '#173b59', fontWeight: 700 }}>Download synthetic review draft</button>{' '}<button type="button" disabled={approvalBusy} onClick={requestIndependentReview} style={{ border: '1px solid #c8d9e8', borderRadius: 9, padding: '9px 12px', background: '#fff', color: '#173b59', fontWeight: 700 }}>{approvalBusy ? 'Requesting review…' : 'Request independent review'}</button>{approvalMessage && <p role="status">{approvalMessage}</p>}</div>}
+    </article>
     <h3 style={{ margin: '20px 0 8px' }}>2. Add a manually reviewed opportunity</h3>
     <form onSubmit={addOpportunity}><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 10 }}>
       <label style={labelStyle}>Opportunity title *<input required value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} style={fieldStyle} /></label>
