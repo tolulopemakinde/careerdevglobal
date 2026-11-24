@@ -24,6 +24,12 @@ LinkedIn's current User Agreement prohibits scraping and unauthorized automated 
 
 Lead data remains in browser memory and is lost on refresh or navigation. Staff must verify identity, relevance, lawful basis, and consent before outreach or sharing. The agent remains `testing`; these changes do not alter registry status, activation, workflows, database policies, production data, or human approval controls. Validation: local Node tests cover search-term preparation, report counts, CSV escaping/formula safety, and the session-local/no-network boundary. TypeScript validation could not run because dependencies are not installed in this workspace (`tsc: not found`); no package installation or provider call was attempted.
 
+## Marketing Content AI follow-up
+
+The existing Admin Blog Management action creates a `weekly_blog_draft` execution and calls the deployed AI runtime. The page now reads the Marketing Content AI registry state and only exposes live generation when the row is explicitly `active`, has `active=true`, and requires human approval. Missing or unreadable configuration fails closed before any execution request. While the agent is testing, an Admin can run a local synthetic content preview to inspect content, SEO, CTA, source, and review fields; the fixture is not saved or published and makes no provider, runtime, or network call. The existing live draft flow still loads reviewed output into the editor as a draft when the agent is explicitly active; a human must review before saving or publishing.
+
+Validation: local static Node tests assert the Admin-only route, fail-closed registry check ordering, and zero-network synthetic preview. No Groq or other inference was invoked. The production registry migration remains unapplied, and the earlier read-only production audit indicated that the agent row is testing while its operational `active` flag remains true and its human-review flag false; the page-level guard prevents the live Blog action in that state but does not replace backend enforcement. Runtime/server authorization still requires a separate review.
+
 ## Read-only production findings
 
 The production Supabase project was inspected with SELECT-only queries on 24 November. No database changes were applied.
@@ -70,6 +76,14 @@ All seven remain `testing`; operational activation is not authorized by this cha
 5. Have a qualified human review each agent’s synthetic and representative outputs, including evidence, factual claims, consent, pricing, deadlines, publication, and external-action boundaries as applicable.
 
 The local mock proves only the seven workflow contract fixtures and UI reporting. It does not certify the deployed database or Edge Function.
+
+
+## Research & Opportunities AI follow-up
+
+The repository had no Admin research entry point for `opportunity_research`, only the synthetic workflow contract. The Admin agent card now opens a test-only manual research workspace. Staff can prepare search terms, open a search homepage, review primary sources themselves, record an opportunity and deadline, mark source/deadline review state, see a count-based report, and export separate CSV files. Data remains in browser memory for the session. The workspace does not scrape websites, call search APIs or AI providers, persist records, or send communications. Its report distinguishes checked from unverified sources and deadlines; it does not claim the synthetic/manual path proves live research capability.
+
+Validation: local Node tests cover query preparation, report counts, the Admin initiation control, and the no-network/session-only boundary. No paid search or inference was used. This agent remains in testing, and humans must verify primary source, eligibility, and deadlines before acting on or sharing results.
+
 
 ## Sales Proposal AI follow-up
 
