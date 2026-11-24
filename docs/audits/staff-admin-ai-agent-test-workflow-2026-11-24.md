@@ -208,3 +208,13 @@ Lead Generation remains `testing` and inactive in production. Human reviewers mu
 - Focused validation: deterministic workspace tests **3 passed**; mocked operational handoff tests **3 passed**; shared Staff/Admin policy and migration checks **15 passed**; `node --check` and `git diff --check` passed. Provider account limits/rates and actual Supabase SDK typings remain unverified.
 
 Marketing Content remains `testing` and inactive in production. Before publication or external sharing, a human must verify factual claims, permissions, brand fit, and any required legal or marketing review. Research & Opportunities and Sales Proposal remain blocked pending their individual staged passes.
+
+## Research & Opportunities AI — staged Groq workflow
+
+- Preserved the manual search homepage flow, source/deadline review fields, session-local opportunity list, report, and CSV exports. Added a separate Groq extraction test that accepts only synthetic topic/profile criteria and up to five synthetic source excerpts; it has no live search capability.
+- Runtime instructions prohibit invented opportunities, sources, eligibility, and dates. Results may refer only to synthetic source identifiers. Server output validation cross-checks each returned title and deadline against the supplied synthetic excerpt and rejects any item marked verified. The UI and Markdown export state clearly that the results are synthetic and not current.
+- The workflow requires Staff/Admin authorization, exact Staff ownership, `opportunity_research`, the explicit operational trigger, current live/active registry state, and human review. Drafts remain `awaiting_human_review`; the UI can request independent review and download the draft but cannot act on an opportunity.
+- Applied the additive database guard only to the existing AI test project. The test row originally had owner role `coach`; within a rollback-only transaction it was temporarily aligned to the Staff workflow contract to run a synthetic request/preparation check. Follow-up verification confirmed the original planned/coach state and zero operational requests.
+- Focused validation: manual workspace tests **3 passed**; mocked operational handoff tests **3 passed**; shared policy/guard checks **16 passed**; `node --check` and `git diff --check` passed. No model inference or live web search was performed.
+
+Research & Opportunities remains `testing` and inactive in production. Human reviewers must verify real primary sources, eligibility, and deadlines before relying on results. Sales Proposal remains blocked pending its individual staged pass.

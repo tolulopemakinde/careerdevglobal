@@ -35,6 +35,10 @@ function request(agentKey, overrides = {}) {
     input.lead = { source: "synthetic", role_title: "Operations Director", organization_type: "Nonprofit", needs: ["career transition workshops"], consent_status: "unknown" };
     input.service_catalog = [{ source: "synthetic", service_name: "Career development workshop", description: "Group career planning support." }];
   }
+  if (agentKey === "research_opportunities_ai") {
+    input.research_scope = { source: "synthetic", keywords: "career fellowship", opportunity_type: "fellowship", geography: "Nigeria", sources: [{ source: "synthetic", title: "Example Fellowship", excerpt: "Synthetic excerpt with unverified program details.", deadline: "December 15, 2026" }] };
+    input.target_profile = { source: "synthetic", description: "Synthetic Nigeria-based early-career applicant profile." };
+  }
   return evaluateStaffAdminOperationalRequest({
     agent: { agent_key: agentKey, owner_role: policy.ownerRole, status: "live", active: true, human_approval_required: true },
     workflowKey: policy.workflowKey,
@@ -57,7 +61,7 @@ test("the fixed seven agent contracts have owner roles, workflows, and output sc
     assert.equal(policy.workflowKey, expected.workflowKey);
     assert.ok(policy.inputKeys.length > 0);
     assert.equal(policy.outputSchema.additionalProperties, false);
-    assert.equal(policy.operationallyImplemented, ["ceo_operations_ai", "career_discovery_ai", "cv_linkedin_ai", "lead_generation_ai", "marketing_content_ai"].includes(agentKey));
+    assert.equal(policy.operationallyImplemented, ["ceo_operations_ai", "career_discovery_ai", "cv_linkedin_ai", "lead_generation_ai", "marketing_content_ai", "research_opportunities_ai"].includes(agentKey));
   }
 });
 
@@ -67,8 +71,8 @@ test("CEO Operations accepts only active Admin operational aggregate inputs", ()
   assert.equal(request("ceo_operations_ai", { agent: { ...requestAgent(), owner_role: "staff" } }).code, "AGENT_OWNER_ROLE_MISMATCH");
 });
 
-test("the remaining two operational workflows remain blocked until their individual rollout", () => {
-  for (const agentKey of Object.keys(cases).filter((key) => !["ceo_operations_ai", "career_discovery_ai", "cv_linkedin_ai", "lead_generation_ai", "marketing_content_ai"].includes(key))) {
+test("Sales Proposal remains blocked until its individual rollout", () => {
+  for (const agentKey of Object.keys(cases).filter((key) => !["ceo_operations_ai", "career_discovery_ai", "cv_linkedin_ai", "lead_generation_ai", "marketing_content_ai", "research_opportunities_ai"].includes(key))) {
     assert.equal(request(agentKey).code, "AGENT_WORKFLOW_NOT_RELEASED_IN_STAGED_ROLLOUT", agentKey);
   }
 });
@@ -135,6 +139,19 @@ test("Marketing Content accepts bounded synthetic fields and validates structure
   assert.equal(validateStaffAdminOperationalOutput("marketing_content_ai", { ...output, repurposing: [{ channel: "LinkedIn", draft: "" }] }, input).code, "MARKETING_CONTENT_OUTPUT_INVALID");
 });
 
+test("Research & Opportunities accepts only synthetic excerpts and unverified source-linked output", () => {
+  const input = {
+    research_scope: { source: "synthetic", keywords: "career fellowship", opportunity_type: "fellowship", geography: "Nigeria", sources: [{ source: "synthetic", title: "Example Fellowship", excerpt: "Synthetic excerpt says applications close on the stated date.", deadline: "December 15, 2026" }] },
+    target_profile: { source: "synthetic", description: "Synthetic Nigeria-based early-career applicant profile." },
+  };
+  assert.equal(request("research_opportunities_ai", { input }).allowed, true);
+  assert.equal(request("research_opportunities_ai", { input: { ...input, research_scope: { ...input.research_scope, sources: [{ ...input.research_scope.sources[0], excerpt: "Visit https://example.org to apply." }] } } }).code, "RESEARCH_OPPORTUNITIES_SYNTHETIC_INPUT_INVALID");
+  const output = { sources: ["synthetic://source-1"], deadlines: [{ deadline: "December 15, 2026", verification_status: "unverified", source: "synthetic://source-1" }], opportunities: [{ title: "Example Fellowship", summary: "Synthetic summary from supplied excerpt only.", source_url: "synthetic://source-1", deadline: "December 15, 2026", verification_status: "unverified" }] };
+  assert.equal(validateStaffAdminOperationalOutput("research_opportunities_ai", output, input).valid, true);
+  assert.equal(validateStaffAdminOperationalOutput("research_opportunities_ai", { ...output, deadlines: [{ ...output.deadlines[0], verification_status: "verified" }] }, input).code, "RESEARCH_OPPORTUNITIES_OUTPUT_INVALID_OR_VERIFIED");
+  assert.equal(validateStaffAdminOperationalOutput("research_opportunities_ai", { ...output, opportunities: [{ ...output.opportunities[0], title: "Invented Fellowship" }] }, input).code, "RESEARCH_OPPORTUNITIES_OUTPUT_INVALID_OR_VERIFIED");
+});
+
 function requestAgent() {
   return { agent_key: "ceo_operations_ai", owner_role: "admin", status: "live", active: true, human_approval_required: true };
 }
@@ -179,6 +196,7 @@ test("runtime keeps Staff/Admin requests on the bounded Groq path and awaiting h
   assert.match(runtime, /STAFF_ADMIN_GROQ_HARD_LIMIT_CONFIRMED/);
   assert.match(runtime, /if\(!staffAdminPolicy&&dependencyMode!=='works_without_ai'\)/);
   assert.match(runtime, /never initiate outreach/);
+  assert.match(runtime, /this Staff\/Admin Groq path has no live search capability/);
   assert.match(runtime, /staffAdminPolicy\?staffAdminPolicy\.outputSchema/);
   assert.match(runtime, /EXECUTION_CLAIM_FAILED/);
   assert.match(runtime, /human_review_required:requiresHumanReview,human_review_status:requiresHumanReview\?'pending':'not_required'/);
@@ -214,4 +232,8 @@ test("database migration pins the staged request path and prevents review bypass
   assert.match(marketingMigration, /agent_row\.agent_key not in \('ceo_operations_ai', 'career_discovery_ai', 'cv_linkedin_ai', 'lead_generation_ai', 'marketing_content_ai'\)/);
   assert.match(marketingMigration, /Marketing Content accepts only bounded synthetic topic, audience, and brand guidance/);
   assert.match(marketingMigration, /new\.human_review_required is not true/);
+  const researchMigration = await readFile(new URL("../supabase/migrations/20261124240000_staff_admin_research_opportunities_guard.sql", import.meta.url), "utf8");
+  assert.match(researchMigration, /agent_row\.agent_key not in \('ceo_operations_ai', 'career_discovery_ai', 'cv_linkedin_ai', 'lead_generation_ai', 'marketing_content_ai', 'research_opportunities_ai'\)/);
+  assert.match(researchMigration, /Research & Opportunities accepts only bounded synthetic excerpts/);
+  assert.match(researchMigration, /new\.human_review_required is not true/);
 });

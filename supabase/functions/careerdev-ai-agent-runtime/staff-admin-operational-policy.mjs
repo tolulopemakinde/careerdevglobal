@@ -98,7 +98,7 @@ const policies = {
     outputTypes: { cta: "string", content: "string", repurposing: "object_array" },
   },
   research_opportunities_ai: {
-    operationallyImplemented: false,
+    operationallyImplemented: true,
     ownerRole: "staff",
     workflowKey: "opportunity_research",
     inputKeys: ["research_scope", "target_profile"],
@@ -237,6 +237,22 @@ export function evaluateStaffAdminOperationalRequest({ agent, workflowKey, workf
       return { allowed: false, code: "MARKETING_CONTENT_SYNTHETIC_INPUT_INVALID" };
     }
   }
+  if (agent.agent_key === "research_opportunities_ai") {
+    const { research_scope: scope, target_profile: profile } = input;
+    const boundedText = (value, maximum = 1200, required = true) => typeof value === "string" && value.length <= maximum && (!required || Boolean(value.trim()));
+    const sourcesValid = Array.isArray(scope?.sources) && scope.sources.length >= 1 && scope.sources.length <= 5
+      && scope.sources.every((source) => hasExactKeys(source, ["source", "title", "excerpt", "deadline"])
+        && source.source === "synthetic" && boundedText(source.title, 500) && boundedText(source.excerpt, 3000)
+        && boundedText(source.deadline, 80, false));
+    if (!hasExactKeys(input, policy.inputKeys)
+      || !hasExactKeys(scope, ["source", "keywords", "opportunity_type", "geography", "sources"])
+      || scope.source !== "synthetic" || !boundedText(scope.keywords) || !boundedText(scope.opportunity_type, 400, false)
+      || !boundedText(scope.geography, 400, false) || !sourcesValid
+      || !hasExactKeys(profile, ["source", "description"]) || profile.source !== "synthetic"
+      || !boundedText(profile.description, 1200) || containsPersonalIdentifierText(input)) {
+      return { allowed: false, code: "RESEARCH_OPPORTUNITIES_SYNTHETIC_INPUT_INVALID" };
+    }
+  }
   return { allowed: true, policy };
 }
 
@@ -278,6 +294,29 @@ export function validateStaffAdminOperationalOutput(agentKey, output, input = nu
         || typeof item.channel !== "string" || !item.channel.trim() || item.channel.length > 80
         || typeof item.draft !== "string" || !item.draft.trim() || item.draft.length > 2000)) {
       return { valid: false, code: "MARKETING_CONTENT_OUTPUT_INVALID" };
+    }
+  }
+  if (agentKey === "research_opportunities_ai") {
+    const scope = input?.research_scope;
+    const opportunities = output.opportunities;
+    const sourceById = new Map((scope?.sources || []).map((source, index) => [`synthetic://source-${index + 1}`, source]));
+    const syntheticSourceIds = new Set(sourceById.keys());
+    const unverified = (value) => value === "unverified";
+    if (!Array.isArray(output.sources) || output.sources.length < 1 || output.sources.length > 5
+      || output.sources.some((source) => !syntheticSourceIds.has(source))
+      || !Array.isArray(output.deadlines) || output.deadlines.length > 5
+      || output.deadlines.some((item) => !hasExactKeys(item, ["deadline", "verification_status", "source"])
+        || typeof item.deadline !== "string" || item.deadline.length > 80 || !unverified(item.verification_status)
+        || !syntheticSourceIds.has(item.source) || item.deadline !== sourceById.get(item.source)?.deadline)
+      || !Array.isArray(opportunities) || opportunities.length > 5
+      || opportunities.some((item) => !hasExactKeys(item, ["title", "summary", "source_url", "deadline", "verification_status"])
+        || typeof item.title !== "string" || !item.title.trim() || item.title.length > 500
+        || typeof item.summary !== "string" || !item.summary.trim() || item.summary.length > 2000
+        || !syntheticSourceIds.has(item.source_url) || item.title !== sourceById.get(item.source_url)?.title
+        || typeof item.deadline !== "string" || item.deadline.length > 80
+        || item.deadline !== sourceById.get(item.source_url)?.deadline
+        || !unverified(item.verification_status))) {
+      return { valid: false, code: "RESEARCH_OPPORTUNITIES_OUTPUT_INVALID_OR_VERIFIED" };
     }
   }
   if (agentKey === "ceo_operations_ai" && Object.values(output).some((items) => !items.length)) return { valid: false, code: "CEO_REVIEW_SECTIONS_MUST_NOT_BE_EMPTY" };

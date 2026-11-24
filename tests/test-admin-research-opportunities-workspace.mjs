@@ -23,7 +23,7 @@ test('report counts human source checks, deadline checks, and duplicate URLs', (
   assert.equal(report.humanReviewRequired, true);
 });
 
-test('workspace uses manual search and keeps records session-local without APIs or network calls', async () => {
+test('workspace preserves manual search and keeps opportunity records session-local', async () => {
   const ui = await readFile(new URL('../app/admin/research-opportunities-workspace.tsx', import.meta.url), 'utf8');
   const admin = await readFile(new URL('../app/admin/page.tsx', import.meta.url), 'utf8');
   assert.match(ui, /Open web search and copy terms/);
@@ -31,6 +31,16 @@ test('workspace uses manual search and keeps records session-local without APIs 
   assert.match(ui, /navigator\.clipboard\.writeText/);
   assert.match(ui, /Export opportunity list CSV/);
   assert.match(ui, /Export report CSV/);
-  assert.doesNotMatch(ui, /\bfetch\s*\(|supabase\.|localStorage|sessionStorage/);
+  assert.match(ui, /Operational execution is disabled until the agent is status live/);
+  assert.match(ui, /Synthetic excerpts only\. This test does not search the web/);
+  assert.match(ui, /runResearchOpportunitiesDraft/);
+  assert.match(ui, /All entries unverified/);
+  assert.match(ui, /Do not treat these as current or real opportunities/);
+  const helper = await readFile(new URL('../lib/admin/research-opportunities-operational.mjs', import.meta.url), 'utf8');
+  assert.match(helper, /request_ai_agent_execution/);
+  assert.match(helper, /prepare_ai_agent_execution/);
+  assert.match(helper, /careerdev-ai-agent-runtime/);
+  assert.match(helper, /verification_status === 'unverified'/);
+  assert.match(helper, /researchDraftToMarkdown/);
   assert.match(admin, /a\.agent_key==='research_opportunities_ai'.*Initiate Research & Opportunities/);
 });
