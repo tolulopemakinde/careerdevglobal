@@ -26,7 +26,8 @@
     "report:ai-pilot-readiness": "node scripts/report-ai-pilot-readiness.mjs",
     "evaluate:ai-gateway:synthetic": "node scripts/run-ai-gateway-synthetic.mjs",
     "test:admin-research-opportunities": "node --test tests/test-admin-research-opportunities-workspace.mjs",
-    "test:admin-sales-proposal": "node --test tests/test-admin-sales-proposal-workspace.mjs"
+    "test:admin-sales-proposal": "node --test tests/test-admin-sales-proposal-workspace.mjs",
+    "test:admin-ceo-operations": "node --test tests/test-admin-ceo-operations-workspace.mjs"
   },
   "dependencies": {
     "@ai-sdk/groq": "4.0.76",
