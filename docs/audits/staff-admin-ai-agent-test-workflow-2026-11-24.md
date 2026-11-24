@@ -34,7 +34,7 @@ Validation: local static Node tests assert the Admin-only route, fail-closed reg
 
 The production Supabase project was inspected with SELECT-only queries on 24 November. No database changes were applied.
 
-- All seven registry rows have `status = testing`, but also `active = true` and `human_approval_required = false`. This contradicts the intended test-only, human-reviewed boundary.
+- At the initial read-only audit, all seven registry rows had `status = testing`, but also `active = true` and `human_approval_required = false`. The production registry was subsequently corrected; see the verification update below.
 - Each of the seven configured workflows is active. The workflow input and output contracts are present and differ by agent; the old Admin action sent a generic payload and generic permissive output schema, so it did not honor these contracts.
 - `request_ai_agent_execution` is `SECURITY DEFINER`, executable by `authenticated` but not `anon`, and checks an active profile and `active = true` on the selected agent. It limits Staff/Admin-owned agents to Staff/Admin callers, but does not distinguish an Admin-owned agent from a Staff-owned agent.
 - `prepare_ai_agent_execution` checks an active profile and ownership for Client/Coach requests. It snapshots the registry human-review flag, but does not re-check that the agent remains active or testing-only.
@@ -50,7 +50,7 @@ The seven-agent runtime source is deployed in Supabase and is not tracked in thi
 - Replaced both seven-agent test entry points on the Admin page, including Career Discovery’s separate governed-test button, with a deterministic local mock harness. It performs no database RPC, Edge Function call, provider call, or network request and persists no result.
 - Added distinct synthetic inputs and mock outputs matching each workflow’s stored contract. Each result reports role/owner-role, workflow, testing/inactive state, human-review requirement, result-contract checks, and explicit zero provider calls, zero network calls, zero model tokens, and `$0` estimated cost.
 - Enforced Admin-only access for the Admin-owned CEO Operations test; active Staff or Admin may run the Staff-owned mock cases. Client, Coach, inactive Staff, unknown agents, mismatched workflows, enabled operational access, and missing human-review enforcement are blocked in the harness.
-- Added a migration that pins the seven registry rows to `testing`, sets `active = false`, and requires human review. It includes a seven-row verification guard. The migration is only a proposed repository change and has not been applied to Production or another database.
+- Added a migration that pins the seven registry rows to `testing`, sets `active = false`, and requires human review. It includes a seven-row verification guard. It was later applied to the production project and verified; see below.
 - Updated Admin labels and result notes so mock output cannot be mistaken for deployed runtime evidence or a persisted execution log.
 
 ## Validation
@@ -69,7 +69,7 @@ Live database/RPC authorization, runtime behavior, external provider quality, an
 
 All seven remain `testing`; operational activation is not authorized by this change. Before any separate activation decision:
 
-1. Review and apply the testing-only registry migration through the approved database process, then verify all seven rows are still `testing`, inactive, and human-review-gated.
+1. **Completed 2026-11-24:** applied and verified the testing-only registry migration in production; all seven remain `testing`, inactive, and human-review-gated.
 2. Reconcile the nonterminal Career Discovery test records and confirm no prepared request can reach the deployed runtime after an agent is deactivated.
 3. Update or replace the deployed runtime so Staff/Admin testing has an explicit mock-only path and every operational path re-checks current role, owner role, active status, workflow contract, and human-review configuration.
 4. Verify database transition and approval protections for each workflow in an isolated environment with mocked providers. Keep request, preparation, result persistence, and human approval as separately observable states.
@@ -97,3 +97,8 @@ Validation: local Node tests cover required inputs, price-status handling, human
 The repository had no Admin workflow UI for `executive_performance_review` beyond its synthetic mock test. The CEO-owned card now exposes a separate Admin-only aggregate review workspace. It accepts a reporting period, target, completed count, and aggregate quality score, then deterministically reports completion rate, threshold risks, and suggested actions. It excludes individual staff assessment and source-data verification. The preview is not persisted and can be downloaded as Markdown; it makes no provider, runtime, or network call.
 
 Validation: local Node tests cover input bounds, aggregate calculations, Admin-only visibility, evidence limitations, and the no-network boundary. No AI inference or database write was used. Human review remains required and the agent stays in testing.
+
+
+## Production registry safety update
+
+On 2026-11-24, the testing-only migration `20261124170000_staff_admin_agents_testing_only` was applied to the existing production Supabase project. A follow-up read-only query returned exactly these seven agent keys, each with `status = testing`, `active = false`, and `human_approval_required = true`. The migration guard also required all seven rows to match. No provider/model calls were made.
