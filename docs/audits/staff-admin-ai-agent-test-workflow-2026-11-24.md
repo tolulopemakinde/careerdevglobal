@@ -119,3 +119,11 @@ On 2026-11-24, the testing-only migration `20261124170000_staff_admin_agents_tes
 - The local formatter accepts synthetic target role, summary, experience evidence, and skills. It produces CV and LinkedIn draft structures without adding achievements, dates, metrics, or credentials not supplied in the fixture. It can download a Markdown preview.
 - The workspace has no account-profile access, provider/model inference, runtime call, database write, or persistence. It labels output as testing-only and requires source-document verification and human review.
 - Validation: three focused Node tests cover draft contract, input limits, Staff/Admin gating, and absence of provider/network/database calls.
+
+
+## Marketing Content AI Admin initiation follow-up
+
+- Added a separate Staff/Admin-guarded `Initiate Marketing Content AI` control on the Admin AI Agents card. The prior Blog Management page remains Admin-only because it can save and publish posts.
+- The new workspace accepts synthetic topic, audience, CTA, and optional brand guidance and generates a deterministic local template with one repurposed draft and Markdown download.
+- It does not call an AI provider, runtime, or database and cannot save, publish, or send content. Human review remains required. The registry agent stays `testing`, inactive, and human-review-gated.
+- Validation: focused Node tests cover output shape, input errors, Staff/Admin gating, and absence of provider/network/runtime/database calls.
