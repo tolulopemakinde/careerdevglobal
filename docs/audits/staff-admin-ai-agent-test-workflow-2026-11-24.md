@@ -16,6 +16,14 @@ This review is limited to the seven Staff/Admin agents and their existing Admin 
 
 Repository baseline: `main` at `0b35abc` (`Gate AI subscription checkout by USD availability`), clean before this work. The existing Admin role gate checks for a signed-in user with an active `admin` or `staff` profile. The existing action labelled “Run autonomous functional test” then created a database request, prepared an execution, and called `careerdev-ai-agent-runtime` with the request ID.
 
+## Lead Generation workspace follow-up
+
+The Lead Generation AI card now has a separate **Initiate Lead Generation** action that opens an Admin-only, session-local workspace for the existing `lead_qualification` workflow. Staff/Admin users enter search criteria, open LinkedIn's homepage, paste the copied terms into LinkedIn themselves, and manually enter leads they have reviewed. The workspace does not call a LinkedIn API, scrape or automate LinkedIn, send outreach, persist lead records, or call an AI provider. It presents a human-reviewed lead list and a deterministic report covering fit-review status, contact permission, and duplicate profile URLs. Separate CSV downloads provide the lead list and summary report; CSV cells are escaped and formula-like values are neutralized.
+
+LinkedIn's current User Agreement prohibits scraping and unauthorized automated access and restricts deep links to LinkedIn pages. Accordingly, the workflow opens only the LinkedIn homepage and copies the search terms for user-directed search. Direct LinkedIn API access is not implemented; applicable member/profile APIs require developer approval and are governed by data restrictions. See [LinkedIn User Agreement](https://www.linkedin.com/legal/user-agreement), [Profile API access restrictions](https://learn.microsoft.com/en-us/linkedin/shared/integrations/people/profile-api), and [Getting Access to LinkedIn APIs](https://learn.microsoft.com/en-us/linkedin/shared/authentication/getting-access).
+
+Lead data remains in browser memory and is lost on refresh or navigation. Staff must verify identity, relevance, lawful basis, and consent before outreach or sharing. The agent remains `testing`; these changes do not alter registry status, activation, workflows, database policies, production data, or human approval controls. Validation: local Node tests cover search-term preparation, report counts, CSV escaping/formula safety, and the session-local/no-network boundary. TypeScript validation could not run because dependencies are not installed in this workspace (`tsc: not found`); no package installation or provider call was attempted.
+
 ## Read-only production findings
 
 The production Supabase project was inspected with SELECT-only queries on 24 November. No database changes were applied.
