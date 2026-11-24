@@ -70,3 +70,9 @@ All seven remain `testing`; operational activation is not authorized by this cha
 5. Have a qualified human review each agent’s synthetic and representative outputs, including evidence, factual claims, consent, pricing, deadlines, publication, and external-action boundaries as applicable.
 
 The local mock proves only the seven workflow contract fixtures and UI reporting. It does not certify the deployed database or Edge Function.
+
+## Research & Opportunities AI follow-up
+
+The repository had no Admin research entry point for `opportunity_research`, only the synthetic workflow contract. The Admin agent card now opens a test-only manual research workspace. Staff can prepare search terms, open a search homepage, review primary sources themselves, record an opportunity and deadline, mark source/deadline review state, see a count-based report, and export separate CSV files. Data remains in browser memory for the session. The workspace does not scrape websites, call search APIs or AI providers, persist records, or send communications. Its report distinguishes checked from unverified sources and deadlines; it does not claim the synthetic/manual path proves live research capability.
+
+Validation: local Node tests cover query preparation, report counts, the Admin initiation control, and the no-network/session-only boundary. No paid search or inference was used. This agent remains in testing, and humans must verify primary source, eligibility, and deadlines before acting on or sharing results.
