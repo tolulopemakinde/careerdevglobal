@@ -70,3 +70,11 @@ All seven remain `testing`; operational activation is not authorized by this cha
 5. Have a qualified human review each agent’s synthetic and representative outputs, including evidence, factual claims, consent, pricing, deadlines, publication, and external-action boundaries as applicable.
 
 The local mock proves only the seven workflow contract fixtures and UI reporting. It does not certify the deployed database or Edge Function.
+
+## Career Discovery AI follow-up
+
+- Added a distinct Staff/Admin-guarded `Initiate Career Discovery AI` workspace for `career_profile_analysis`, separate from the seven-agent contract-test button and the autonomous functional test.
+- It accepts synthetic education, experience, skills, career goal, and optional target roles. The local preview reports the supplied profile, user-stated direction, targets, preparation recommendations, and evidence gaps. It does not infer qualifications or evaluate a real account profile.
+- The preview can be downloaded as Markdown. Data remains in the browser session; there is no database persistence, network call, provider/model inference, credit use, or operational execution.
+- Human review is required before any use of career guidance. The agent remains in testing.
+- Validation: three focused Node tests cover output fields, input errors, the Admin page role gate, and absence of provider/network/database calls.
