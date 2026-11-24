@@ -39,6 +39,11 @@ function request(agentKey, overrides = {}) {
     input.research_scope = { source: "synthetic", keywords: "career fellowship", opportunity_type: "fellowship", geography: "Nigeria", sources: [{ source: "synthetic", title: "Example Fellowship", excerpt: "Synthetic excerpt with unverified program details.", deadline: "December 15, 2026" }] };
     input.target_profile = { source: "synthetic", description: "Synthetic Nigeria-based early-career applicant profile." };
   }
+  if (agentKey === "sales_proposal_ai") {
+    input.lead = { source: "synthetic", organization_type: "Nonprofit", decision_role: "Program Director" };
+    input.needs = { source: "synthetic", summary: "Improve career readiness workshops.", objectives: ["Clarify workshop outcomes"], deliverables: ["Facilitator guide"], timeline: "Eight weeks" };
+    input.service = { source: "synthetic", service_name: "Career readiness workshop", description: "A synthetic workshop design service." };
+  }
   return evaluateStaffAdminOperationalRequest({
     agent: { agent_key: agentKey, owner_role: policy.ownerRole, status: "live", active: true, human_approval_required: true },
     workflowKey: policy.workflowKey,
@@ -61,7 +66,7 @@ test("the fixed seven agent contracts have owner roles, workflows, and output sc
     assert.equal(policy.workflowKey, expected.workflowKey);
     assert.ok(policy.inputKeys.length > 0);
     assert.equal(policy.outputSchema.additionalProperties, false);
-    assert.equal(policy.operationallyImplemented, ["ceo_operations_ai", "career_discovery_ai", "cv_linkedin_ai", "lead_generation_ai", "marketing_content_ai", "research_opportunities_ai"].includes(agentKey));
+    assert.equal(policy.operationallyImplemented, ["ceo_operations_ai", "career_discovery_ai", "cv_linkedin_ai", "lead_generation_ai", "marketing_content_ai", "research_opportunities_ai", "sales_proposal_ai"].includes(agentKey));
   }
 });
 
@@ -71,10 +76,24 @@ test("CEO Operations accepts only active Admin operational aggregate inputs", ()
   assert.equal(request("ceo_operations_ai", { agent: { ...requestAgent(), owner_role: "staff" } }).code, "AGENT_OWNER_ROLE_MISMATCH");
 });
 
-test("Sales Proposal remains blocked until its individual rollout", () => {
-  for (const agentKey of Object.keys(cases).filter((key) => !["ceo_operations_ai", "career_discovery_ai", "cv_linkedin_ai", "lead_generation_ai", "marketing_content_ai", "research_opportunities_ai"].includes(key))) {
-    assert.equal(request(agentKey).code, "AGENT_WORKFLOW_NOT_RELEASED_IN_STAGED_ROLLOUT", agentKey);
+test("all seven workflow contracts are in the staged allowlist", () => {
+  for (const agentKey of Object.keys(cases)) {
+    assert.equal(getStaffAdminOperationalPolicy(agentKey).operationallyImplemented, true, agentKey);
   }
+});
+
+test("Sales Proposal accepts synthetic scope only and requires pending pricing and review steps", () => {
+  assert.equal(request("sales_proposal_ai").allowed, true);
+  const input = {
+    lead: { source: "synthetic", organization_type: "Nonprofit", decision_role: "Program Director" },
+    needs: { source: "synthetic", summary: "Improve career readiness workshops.", objectives: ["Clarify workshop outcomes"], deliverables: ["Facilitator guide"], timeline: "Eight weeks" },
+    service: { source: "synthetic", service_name: "Career readiness workshop", description: "A synthetic workshop design service." },
+  };
+  assert.equal(request("sales_proposal_ai", { input: { ...input, lead: { ...input.lead, organization: "Named Org Ltd" } } }).code, "SALES_PROPOSAL_SYNTHETIC_INPUT_INVALID");
+  const output = { scope: { inclusions: ["Workshop design"], exclusions: ["Outcomes are not guaranteed."], assumptions: ["Client provides synthetic materials."] }, proposal: "We propose the listed workshop design. Pricing is pending authorized confirmation.", next_steps: ["Confirm pricing with an authorized approver.", "Complete human review before sharing."] };
+  assert.equal(validateStaffAdminOperationalOutput("sales_proposal_ai", output).valid, true);
+  assert.equal(validateStaffAdminOperationalOutput("sales_proposal_ai", { ...output, proposal: "The fee is USD 500 and employment is guaranteed." }).code, "SALES_PROPOSAL_OUTPUT_UNSAFE_OR_INCOMPLETE");
+  assert.equal(validateStaffAdminOperationalOutput("sales_proposal_ai", { ...output, next_steps: ["Send it now.", "Sign the agreement."] }).code, "SALES_PROPOSAL_OUTPUT_UNSAFE_OR_INCOMPLETE");
 });
 
 test("Career Discovery accepts only bounded synthetic profile and request fields", () => {
@@ -197,6 +216,8 @@ test("runtime keeps Staff/Admin requests on the bounded Groq path and awaiting h
   assert.match(runtime, /if\(!staffAdminPolicy&&dependencyMode!=='works_without_ai'\)/);
   assert.match(runtime, /never initiate outreach/);
   assert.match(runtime, /this Staff\/Admin Groq path has no live search capability/);
+  assert.match(runtime, /pricing is pending authorized confirmation/);
+  assert.match(runtime, /Do not invent prices, payment terms, legal terms/);
   assert.match(runtime, /staffAdminPolicy\?staffAdminPolicy\.outputSchema/);
   assert.match(runtime, /EXECUTION_CLAIM_FAILED/);
   assert.match(runtime, /human_review_required:requiresHumanReview,human_review_status:requiresHumanReview\?'pending':'not_required'/);
@@ -236,4 +257,8 @@ test("database migration pins the staged request path and prevents review bypass
   assert.match(researchMigration, /agent_row\.agent_key not in \('ceo_operations_ai', 'career_discovery_ai', 'cv_linkedin_ai', 'lead_generation_ai', 'marketing_content_ai', 'research_opportunities_ai'\)/);
   assert.match(researchMigration, /Research & Opportunities accepts only bounded synthetic excerpts/);
   assert.match(researchMigration, /new\.human_review_required is not true/);
+  const proposalMigration = await readFile(new URL("../supabase/migrations/20261124250000_staff_admin_sales_proposal_guard.sql", import.meta.url), "utf8");
+  assert.match(proposalMigration, /agent_row\.agent_key not in \('ceo_operations_ai', 'career_discovery_ai', 'cv_linkedin_ai', 'lead_generation_ai', 'marketing_content_ai', 'research_opportunities_ai', 'sales_proposal_ai'\)/);
+  assert.match(proposalMigration, /Sales Proposal accepts only bounded synthetic needs/);
+  assert.match(proposalMigration, /new\.human_review_required is not true/);
 });

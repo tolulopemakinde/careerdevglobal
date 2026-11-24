@@ -111,7 +111,7 @@ const policies = {
     outputTypes: { sources: "string_array", deadlines: "object_array", opportunities: "object_array" },
   },
   sales_proposal_ai: {
-    operationallyImplemented: false,
+    operationallyImplemented: true,
     ownerRole: "staff",
     workflowKey: "proposal_generation",
     inputKeys: ["lead", "needs", "service"],
@@ -253,6 +253,22 @@ export function evaluateStaffAdminOperationalRequest({ agent, workflowKey, workf
       return { allowed: false, code: "RESEARCH_OPPORTUNITIES_SYNTHETIC_INPUT_INVALID" };
     }
   }
+  if (agent.agent_key === "sales_proposal_ai") {
+    const { lead, needs, service } = input;
+    const bounded = (value, maximum = 1200) => typeof value === "string" && value.trim().length > 0 && value.length <= maximum;
+    const boundedList = (value, maximum = 10) => Array.isArray(value) && value.length <= maximum && value.every((item) => bounded(item));
+    if (!hasExactKeys(input, policy.inputKeys)
+      || !hasExactKeys(lead, ["source", "organization_type", "decision_role"]) || lead.source !== "synthetic"
+      || !bounded(lead.organization_type, 400) || !bounded(lead.decision_role, 400)
+      || !hasExactKeys(needs, ["source", "summary", "objectives", "deliverables", "timeline"]) || needs.source !== "synthetic"
+      || !bounded(needs.summary) || !boundedList(needs.objectives) || !boundedList(needs.deliverables)
+      || !bounded(needs.timeline, 400)
+      || !hasExactKeys(service, ["source", "service_name", "description"]) || service.source !== "synthetic"
+      || !bounded(service.service_name, 400) || !bounded(service.description)
+      || containsPersonalIdentifierText(input)) {
+      return { allowed: false, code: "SALES_PROPOSAL_SYNTHETIC_INPUT_INVALID" };
+    }
+  }
   return { allowed: true, policy };
 }
 
@@ -317,6 +333,25 @@ export function validateStaffAdminOperationalOutput(agentKey, output, input = nu
         || item.deadline !== sourceById.get(item.source_url)?.deadline
         || !unverified(item.verification_status))) {
       return { valid: false, code: "RESEARCH_OPPORTUNITIES_OUTPUT_INVALID_OR_VERIFIED" };
+    }
+  }
+  if (agentKey === "sales_proposal_ai") {
+    const scope = output.scope;
+    const validList = (value, min = 0) => Array.isArray(value) && value.length >= min && value.length <= 12
+      && value.every((item) => typeof item === "string" && item.trim() && item.length <= 1200);
+    const pricingPending = /pricing (?:is )?(?:pending|to be confirmed)|price (?:is )?(?:pending|to be confirmed)/i.test(output.proposal || "");
+    const noUnsupportedPrice = !/(?:[$€£]\s?\d|\b(?:USD|NGN|EUR|GBP)\s?\d)/i.test(output.proposal || "");
+    const noPromise = !/guarantee(?:d)?|will definitely|assured placement|promise(?:d)? (?:employment|funding|results|outcomes)/i.test(output.proposal || "");
+    const steps = Array.isArray(output.next_steps) ? output.next_steps : [];
+    if (!hasExactKeys(scope, ["inclusions", "exclusions", "assumptions"])
+      || !validList(scope.inclusions, 1) || !validList(scope.exclusions, 1) || !validList(scope.assumptions)
+      || typeof output.proposal !== "string" || !output.proposal.trim() || output.proposal.length > 6000
+      || !pricingPending || !noUnsupportedPrice || !noPromise
+      || !Array.isArray(steps) || steps.length < 2 || steps.length > 8
+      || steps.some((step) => typeof step !== "string" || !step.trim() || step.length > 1200)
+      || !steps.some((step) => /pricing|price/i.test(step) && /confirm|approve|authorize/i.test(step))
+      || !steps.some((step) => /human|review|approval|approve/i.test(step))) {
+      return { valid: false, code: "SALES_PROPOSAL_OUTPUT_UNSAFE_OR_INCOMPLETE" };
     }
   }
   if (agentKey === "ceo_operations_ai" && Object.values(output).some((items) => !items.length)) return { valid: false, code: "CEO_REVIEW_SECTIONS_MUST_NOT_BE_EMPTY" };

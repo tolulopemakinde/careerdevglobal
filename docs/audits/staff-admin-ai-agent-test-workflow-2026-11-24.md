@@ -218,3 +218,13 @@ Marketing Content remains `testing` and inactive in production. Before publicati
 - Focused validation: manual workspace tests **3 passed**; mocked operational handoff tests **3 passed**; shared policy/guard checks **16 passed**; `node --check` and `git diff --check` passed. No model inference or live web search was performed.
 
 Research & Opportunities remains `testing` and inactive in production. Human reviewers must verify real primary sources, eligibility, and deadlines before relying on results. Sales Proposal remains blocked pending its individual staged pass.
+
+## Sales Proposal AI — staged Groq workflow
+
+- Preserved the local non-AI proposal preview and added a separate `proposal_generation` Groq draft action. It accepts only bounded synthetic organization category, decision role, needs, service, and timeline inputs; no real client name, price, payment term, or legal term is sent.
+- Enforced structured scope sections and next steps. The draft must say pricing is pending authorized confirmation, cannot introduce a price or guarantee, and must include human pricing confirmation and review steps. The output is non-binding and remains `awaiting_human_review`.
+- The Admin workspace can download the draft and request independent review. It cannot save the result to the proposal system, approve terms, send the proposal, or accept it.
+- Added a direct-RPC database guard. It was applied only to the existing AI test project. A rollback-only synthetic request/preparation check succeeded and follow-up verification confirmed the test row returned to its original planned state with no operational request persisted.
+- Focused validation: local Sales Proposal tests **4 passed**; mocked operational handoff tests **3 passed**; shared Staff/Admin policy/guard checks **17 passed**; `node --check` and `git diff --check` passed. No model inference was run.
+
+Sales Proposal remains `testing` and inactive in production. A qualified human must confirm scope, price, legal language, authority, and any client-specific commitments before sharing or accepting a proposal. All seven agent-specific staged paths are now represented in the draft PR; none of the seven agents has been activated.
