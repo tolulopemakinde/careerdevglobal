@@ -111,3 +111,11 @@ On 2026-11-24, the testing-only migration `20261124170000_staff_admin_agents_tes
 - The preview can be downloaded as Markdown. Data remains in the browser session; there is no database persistence, network call, provider/model inference, credit use, or operational execution.
 - Human review is required before any use of career guidance. The agent remains in testing.
 - Validation: three focused Node tests cover output fields, input errors, the Admin page role gate, and absence of provider/network/database calls.
+
+
+## CV & LinkedIn AI follow-up
+
+- Added a distinct Staff/Admin-guarded `Initiate CV & LinkedIn AI` workspace for `cv_service_delivery`, separate from the autonomous functional test and shared contract mock.
+- The local formatter accepts synthetic target role, summary, experience evidence, and skills. It produces CV and LinkedIn draft structures without adding achievements, dates, metrics, or credentials not supplied in the fixture. It can download a Markdown preview.
+- The workspace has no account-profile access, provider/model inference, runtime call, database write, or persistence. It labels output as testing-only and requires source-document verification and human review.
+- Validation: three focused Node tests cover draft contract, input limits, Staff/Admin gating, and absence of provider/network/database calls.
