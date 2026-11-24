@@ -133,6 +133,45 @@ function safeProviderError(payload: any) {
     param: safeProviderValue(error.param),
   };
 }
+function buildPilotResearchFallback(input: ResearchInput) {
+  const focus = input.focus_question.trim();
+  const target = [input.job_role, input.industry, input.company_name].filter(Boolean).join(" · ") || "the supplied career focus";
+  const suppliedContextNotice = input.job_context
+    ? "User-provided job context was saved with this request but was not checked against an external source."
+    : "No job description or employer source was supplied for verification.";
+  return {
+    title: `Structured research baseline: ${target}`,
+    executive_summary: "This pilot baseline uses only the details entered in the request. No web search or AI synthesis was performed, so it is not a current research report.",
+    role_expectations: [input.job_role ? `Role requirements for ${input.job_role} were not independently verified.` : "Add a target role before researching role requirements."],
+    industry_signals: [input.industry ? `Current industry signals for ${input.industry} were not independently verified.` : "Add an industry to define the research scope."],
+    company_signals: [input.company_name ? `Current information about ${input.company_name} was not independently verified.` : "Add an employer or organization to research company-specific information."],
+    profile_alignment: {
+      relevant_strengths: [],
+      development_areas: [],
+      suggested_positioning: ["Compare verified role requirements with documented career evidence before using positioning advice."],
+    },
+    key_findings: [],
+    questions_for_user: [
+      `Which official or employer source should a Coach use to verify: ${focus}`,
+      "Which requirements or findings are most important to validate for your location and target role?",
+    ],
+    sources: [],
+    uncertainty_flags: [
+      "No live web search or AI synthesis was performed because no eligible AI credit reservation was available.",
+      suppliedContextNotice,
+      "Verify current employer, job, industry, regulatory, and other changing information from authoritative sources before relying on it.",
+    ],
+    generated_at: new Date().toISOString(),
+    research_round: input.round,
+    provider: "none",
+    generated_by_ai: false,
+    web_search_used: false,
+    fallback: true,
+    pilot_access: true,
+    decision_support_only: true,
+    coach_review_recommended: true,
+  };
+}
 async function groqChat(body: Record<string, unknown>, stage: "web_search" | "report_synthesis") {
   const key = Deno.env.get("GROQ_API_KEY");
   if (!key) throw fail("Groq Free-tier provider is not configured.", "FREE_PROVIDER_NOT_CONFIGURED");
@@ -288,6 +327,13 @@ Deno.serve(async (req: Request) => {
   if (!profile || profile.status !== "active" || !["client", "coach", "admin", "staff"].includes(profile.role)) {
     return json({ error: "Active CareerDev Global access is required" }, 403);
   }
+  let pilotAccess = false;
+  if (["client", "coach"].includes(profile.role)) {
+    const { data: accessRows, error: accessError } = await caller.rpc("get_my_ai_agent_access", { p_agent_key: "career_research_agent" });
+    const access = Array.isArray(accessRows) ? accessRows[0] : accessRows;
+    if (accessError || !access?.allowed) return json({ error: "Career Research access could not be verified." }, 403);
+    pilotAccess = access.status === "pilot";
+  }
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return json({ error: "Invalid JSON" }, 400); }
@@ -319,7 +365,6 @@ Deno.serve(async (req: Request) => {
   if (!/^[A-Za-z0-9:_-]{12,100}$/.test(idempotencyKey)) return json({ error: "A unique request key is required." }, 400);
 
   try {
-    assertFreeProvider();
     const profileContext = body.use_saved_profile === true
       ? await loadProfileContext(caller, user.id)
       : { profile: null, goals: [] };
@@ -347,6 +392,34 @@ Deno.serve(async (req: Request) => {
     const reservation = Array.isArray(reservations) ? reservations[0] : reservations;
     if (reserveError || !reservation?.allowed) {
       const message = reserveError?.message || reservation?.reason || "Career Research is not included in the current plan or credit allowance.";
+      if (!reserveError && pilotAccess) {
+        const result = buildPilotResearchFallback(input);
+        const completedAt = new Date().toISOString();
+        const { error: executionUpdateError } = await admin.from("ai_agent_executions")
+          .update({
+            status: "awaiting_human_review",
+            output_snapshot: result,
+            quality_summary: { mode: "pilot_structured_baseline", web_search_used: false, quality_evaluated: false },
+            human_review_required: true,
+            human_review_status: "pending",
+            completed_at: null,
+            updated_at: completedAt,
+          })
+          .eq("id", executionId);
+        if (executionUpdateError) throw fail("Career Research baseline could not be saved to the agent history.", "PERSISTENCE_ERROR");
+        const { error: requestUpdateError } = await admin.from("ai_agent_execution_requests")
+          .update({ status: "completed", completed_at: completedAt })
+          .eq("id", requestId);
+        if (requestUpdateError) throw fail("Career Research request status could not be saved.", "PERSISTENCE_ERROR");
+        await admin.from("ai_agent_execution_events").insert({
+          request_id: requestId,
+          execution_id: executionId,
+          event_type: "completed",
+          event_data: { feature: "career_research_standalone", fallback: true, pilot_access: true, ai_provider_called: false, credits_used: 0, reason: message },
+          actor_id: user.id,
+        });
+        return json({ status: "fallback", execution_id: executionId, report: result, credits_used: 0, research_round: input.round, pilot_fallback: true });
+      }
       await admin.from("ai_agent_execution_requests").update({ status: "blocked", denial_reason: message, completed_at: new Date().toISOString() }).eq("id", requestId);
       await admin.from("ai_agent_executions").update({ status: "blocked", error_message: message, completed_at: new Date().toISOString(), updated_at: new Date().toISOString() }).eq("id", executionId);
       throw fail("Career Research is not available under the current agent access or credit allowance.", "GOVERNANCE_DENIED");
@@ -377,6 +450,7 @@ Deno.serve(async (req: Request) => {
     });
 
     try {
+      assertFreeProvider();
       const search = await searchWeb(input, profileContext);
       const report = await synthesizeReport(input, profileContext, search.text);
       const usage = {

@@ -18,6 +18,7 @@ export default function CareerCoachPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [allowed, setAllowed] = useState(false);
+  const [pilotAccess, setPilotAccess] = useState(false);
   const [canSave, setCanSave] = useState(false);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [careerContext, setCareerContext] = useState<CareerContext | null>(null);
@@ -45,9 +46,10 @@ export default function CareerCoachPanel() {
       const staffAccess = profile.role === "staff" || profile.role === "admin";
       let hasAccess = staffAccess;
       if (!staffAccess) {
-        const { data: subscription } = await supabase.rpc("get_my_ai_subscription");
-        const row = Array.isArray(subscription) ? subscription[0] : subscription;
-        hasAccess = (row?.included_agents || []).includes("career_coach_agent");
+        const { data: accessRows, error: accessError } = await supabase.rpc("get_my_ai_agent_access", { p_agent_key: "career_coach_agent" });
+        const row = Array.isArray(accessRows) ? accessRows[0] : accessRows;
+        hasAccess = !accessError && row?.allowed === true;
+        if (live && row?.status === "pilot") setPilotAccess(true);
       }
       if (!live) return;
       setAllowed(hasAccess);
@@ -132,6 +134,7 @@ export default function CareerCoachPanel() {
     <section className="ci-section" id="career-coach">
       <div className="ci-container">
         <div className="ci-section-heading"><span>COACH</span><div><div className="ci-overline">CAREER COACH</div><h2>Turn a career goal into one clear next step.</h2><p>A short guided session uses your saved career goals when available, then helps you identify a barrier, a realistic action, and evidence of progress.</p></div></div>
+        {pilotAccess && <p className="ci-helper" role="status">Career Coach pilot access is active. This structured coaching workflow does not use AI credits.</p>}
         <div style={{ maxWidth: 820, margin: "0 auto 18px", padding: "clamp(16px,3vw,24px)", borderRadius: 16, background: "#f2f8fc", border: "1px solid #d8e6f1" }}>
           <h3 style={{ marginTop: 0 }}>Career Intelligence context</h3>
           {savedContextItems.length > 0 ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
