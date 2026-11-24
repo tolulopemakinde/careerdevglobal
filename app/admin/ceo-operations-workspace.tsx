@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { createSupabaseBrowserClient } from '../../lib/supabase-browser';
 import { createExecutiveReview, executiveReviewToMarkdown } from '../../lib/admin/ceo-operations-workspace.mjs';
 
@@ -8,7 +8,7 @@ const fieldStyle = { width: '100%', padding: '10px 11px', border: '1px solid #c8
 const labelStyle = { display: 'grid', gap: 5, fontSize: 12, fontWeight: 700 as const, color: '#36566f' };
 
 export default function CEOOperationsWorkspace({ onMessage, agentStatus, agentActive, humanApprovalRequired }: { onMessage: (message: string) => void; agentStatus: string; agentActive: boolean; humanApprovalRequired: boolean }) {
-  const supabase = createSupabaseBrowserClient();
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [input, setInput] = useState({ period: '', target: '', completed: '', qualityScore: '' });
   const [review, setReview] = useState<any>(null);
   const [operationalBusy, setOperationalBusy] = useState(false);
