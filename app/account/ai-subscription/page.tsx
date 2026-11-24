@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import '../../career-intelligence/styles.css';
 import { createSupabaseBrowserClient } from '../../../lib/supabase-browser';
 
 type Subscription = { plan_key:string; status:string; billing_interval:string; currency:string; amount:number; current_period_end:string|null };
@@ -13,14 +14,17 @@ export default function ManageAiSubscription(){
  const [busy,setBusy]=useState(false);
  const cancellationReady=false;
  const [loading,setLoading]=useState(true);
+ const [dashboardHref,setDashboardHref]=useState('/account');
  useEffect(()=>{void (async()=>{
   const db=createSupabaseBrowserClient();
   const {data:{user}}=await db.auth.getUser();
   if(!user){window.location.replace('/account');return;}
-  const [sub,available]=await Promise.all([
+  const [profile,sub,available]=await Promise.all([
+   db.from('profiles').select('role').eq('id',user.id).maybeSingle(),
    db.rpc('get_my_ai_subscription'),
    db.from('ai_agent_subscription_plans').select('plan_key,name,monthly_price,annual_price,monthly_price_ngn,annual_price_ngn,monthly_credits').eq('active',true).order('sort_order')
   ]);
+  setDashboardHref(profile.data?.role==='coach'?'/coach-dashboard':profile.data?.role==='client'?'/client-dashboard':'/account');
   if(sub.error)setMessage('Unable to load subscription. Please try again.');
   else setSubscription((Array.isArray(sub.data)?sub.data[0]:null) as Subscription|null);
   setPlans((available.data||[]) as Plan[]);setLoading(false);
@@ -38,9 +42,34 @@ export default function ManageAiSubscription(){
   }catch(e){setMessage(e instanceof Error?e.message:'Please try again.')}finally{setBusy(false)}
  }
  const current=plans.find(p=>p.plan_key===subscription?.plan_key);
- return <main style={{maxWidth:860,margin:'40px auto',padding:'24px',color:'#09233f'}}>
-  <Link href="/client-dashboard">← Dashboard</Link>
-  <h1>Manage AI Subscription</h1>
+ return <main className="ci-page ai-subscription-page">
+  <nav className="ci-subnav" aria-label="Account navigation">
+   <div className="ci-container ci-subnav-inner">
+    <span><span className="ci-live-dot"/>CareerDev Global · ACCOUNT</span>
+    <div><Link href={dashboardHref}>Dashboard</Link><Link href="/agents">AI Agents</Link></div>
+   </div>
+  </nav>
+  <section className="ci-hero" aria-labelledby="ai-subscription-title">
+   <div className="ci-container ci-hero-grid">
+    <div>
+     <div className="ci-kicker">CAREERDEV GLOBAL · SUBSCRIPTION MANAGEMENT</div>
+     <h1 id="ai-subscription-title">Manage your AI subscription.</h1>
+     <p>Review your current plan, billing status and access period. Your account keeps plan information and available management options together.</p>
+     <div className="ci-hero-actions">
+      <Link className="ci-primary" href={dashboardHref}>Return to dashboard</Link>
+      <Link className="ci-secondary" href="/agents">Explore AI Agents</Link>
+     </div>
+     <div className="ci-trust"><span>✓ Plan details</span><span>✓ Billing status</span><span>✓ Access period</span></div>
+    </div>
+    <aside className="ci-hero-panel" aria-label="Subscription management overview">
+     <div className="ci-panel-label">AI SUBSCRIPTION WORKSPACE</div>
+     <div className="ci-panel-title">Your plan, clearly managed.</div>
+     <div className="ci-journey"><span>Plan</span><b>→</b><span>Billing</span><b>→</b><span>Access</span><b>→</b><span>Options</span></div>
+     <div className="ci-panel-metrics"><div><strong>01</strong><small>Review plan</small></div><div><strong>02</strong><small>Check status</small></div><div><strong>03</strong><small>Manage access</small></div></div>
+    </aside>
+   </div>
+  </section>
+  <div className="ci-container" style={{padding:'42px 0 76px',color:'#09233f'}}>
   {loading?<p>Loading subscription…</p>:!subscription?<><p>No current AI subscription was found.</p><Link href="/pricing">Explore plans</Link></>:<>
    <section style={{border:'1px solid #c8d9e8',borderRadius:16,padding:24,marginBottom:24}}>
     <h2>{current?.name||subscription.plan_key}</h2>
@@ -60,5 +89,6 @@ export default function ManageAiSubscription(){
    </div>
   </>}
   {message&&<p role="status" style={{marginTop:20}}>{message}</p>}
+  </div>
  </main>
 }
