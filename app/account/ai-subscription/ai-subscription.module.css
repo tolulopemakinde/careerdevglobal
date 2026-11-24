@@ -1,0 +1,40 @@
+.heroArt {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url('/ai-subscription-neural-overlay.webp');
+  background-repeat: no-repeat;
+  background-size: min(88vw, 1120px) auto;
+  background-position: right -110px center;
+  opacity: 0.34;
+  mix-blend-mode: screen;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 900px) {
+  .heroArt {
+    background-size: min(108vw, 960px) auto;
+    background-position: right -170px center;
+    opacity: 0.24;
+  }
+}
+
+@media (max-width: 700px) {
+  .heroArt {
+    background-size: auto 78%;
+    background-position: 72% center;
+    opacity: 0.2;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .heroArt {
+    opacity: 0.12;
+    mix-blend-mode: normal;
+  }
+}
