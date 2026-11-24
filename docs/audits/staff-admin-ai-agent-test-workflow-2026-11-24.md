@@ -70,3 +70,9 @@ All seven remain `testing`; operational activation is not authorized by this cha
 5. Have a qualified human review each agent’s synthetic and representative outputs, including evidence, factual claims, consent, pricing, deadlines, publication, and external-action boundaries as applicable.
 
 The local mock proves only the seven workflow contract fixtures and UI reporting. It does not certify the deployed database or Edge Function.
+
+## Sales Proposal AI follow-up
+
+The repository had no proposal-generation UI for `proposal_generation`, only its synthetic workflow contract. The Admin agent card now opens a local proposal-template preview for Staff-supplied organization, service, needs, objectives, deliverables, timeline, and assumptions. Pricing remains pending unless explicitly marked confirmed. The preview includes exclusions against guaranteed outcomes and next steps that require authorized human approval; it can be downloaded as Markdown but is not saved to the database or sent. It performs no model, runtime, or network call and does not create financial or contractual commitments.
+
+Validation: local Node tests cover required inputs, price-status handling, human review, no-guarantee language, Markdown export, and the no-network Admin workspace boundary. No inference or external service was used. The agent remains in testing.
