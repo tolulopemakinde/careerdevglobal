@@ -1,0 +1,61 @@
+# READ-ONLY PRODUCTION SOURCE SNAPSHOT
+# Function: careerdev-paystack-payout-transfer
+# Retrieved from Supabase project: ufmhrmzumqkjvaezrmxf
+# Deployed version: v9
+# verify_jwt: true
+# Runtime source fingerprint (ezbr_sha256 reported by Supabase): f43b51e553774748e901bbfa2eecdf5658f00ce0b239b17a0edca9bd3ac46575
+# Retrieved: 2026-10-23
+# WARNING: Evidence snapshot only; not a deployable source tree. Do not deploy this .txt file.
+# This is a copy of the currently deployed source, not proof of the original authoring source or migration history.
+
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
+
+const url = Deno.env.get("SUPABASE_URL")!;
+const anon = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!;
+const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const secret = Deno.env.get("PAYSTACK_SECRET_KEY");
+const enabled = Deno.env.get("PAYSTACK_TRANSFERS_ENABLED") === "true";
+const cors = { "Access-Control-Allow-Origin":"*", "Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type", "Content-Type":"application/json" };
+const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:cors});
+
+async function authenticateAdmin(req: Request) {
+  const auth=req.headers.get('Authorization');
+  if(!auth) return { error: reply({error:'Not authenticated'},401) };
+  const uc=createClient(url,anon,{global:{headers:{Authorization:auth}}});
+  const {data:{user},error:ue}=await uc.auth.getUser();
+  if(ue||!user) return { error: reply({error:'Not authenticated'},401) };
+  const sb=createClient(url,service);
+  const {data:profile,error:pe}=await sb.from('profiles').select('role').eq('id',user.id).maybeSingle();
+  if(pe||profile?.role?.toString()!=='admin') return { error: reply({error:'Admin access required'},403) };
+  return { sb };
+}
+
+Deno.serve(async req => {
+ if(req.method==='OPTIONS') return new Response('ok',{headers:cors});
+ if(req.method!=='GET' && req.method!=='POST') return reply({error:'Method not allowed'},405);
+ try {
+  const authResult=await authenticateAdmin(req);
+  if(authResult.error) return authResult.error;
+  if(req.method==='GET') return reply({enabled, providerConfigured:Boolean(secret), mode:enabled?'enabled':'disabled'});
+  if(!secret) return reply({error:'Paystack credentials are not configured'},503);
+  if(!enabled) return reply({error:'Paystack transfers are disabled. Enable PAYSTACK_TRANSFERS_ENABLED only after live transfer access, business verification, webhook configuration, and internal approval are complete.'},409);
+  const sb=authResult.sb!;
+  const body=await req.json().catch(()=>({}));
+  const payoutId=String(body?.payout_id??'').trim(); if(!payoutId) return reply({error:'payout_id is required'},400);
+  const {data:prepared,error:prepError}=await sb.rpc('prepare_coach_payout_transfer',{p_payout_id:payoutId});
+  if(prepError||!prepared?.length) return reply({error:'Payout is not eligible for transfer',detail:prepError?.message??'Validation failed'},409);
+  const p=prepared[0];
+  const amountMinor=Math.round(Number(p.amount)*100);
+  if(!Number.isSafeInteger(amountMinor)||amountMinor<=0) return reply({error:'Invalid payout amount'},409);
+  const response=await fetch('https://api.paystack.co/transfer',{method:'POST',headers:{Authorization:`Bearer ${secret}`,'Content-Type':'application/json'},body:JSON.stringify({source:'balance',amount:amountMinor,recipient:p.recipient_code,reference:p.transfer_reference,reason:'CareerDev Global coach marketplace payout',currency:'NGN'})});
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok||!result?.status){
+   await sb.from('marketplace_payouts').update({status:'failed',failure_reason:String(result?.message??'Paystack transfer request failed'),updated_at:new Date().toISOString()}).eq('id',p.payout_id).eq('status','processing');
+   return reply({error:'Paystack transfer request failed',detail:result?.message??'Provider error'},502);
+  }
+  const d=result.data??{};
+  await sb.from('marketplace_payouts').update({metadata:{provider:'paystack',transfer_code:d.transfer_code??null,transfer_id:d.id??null,provider_status:d.status??'pending',initiated_at:new Date().toISOString()},status:d.status==='success'?'paid':'processing',updated_at:new Date().toISOString()}).eq('id',p.payout_id).eq('status','processing');
+  return reply({success:true,payout_id:p.payout_id,status:d.status??'pending',reference:p.transfer_reference,transfer_code:d.transfer_code??null});
+ } catch(err){ return reply({error:'Payout transfer operation failed',detail:String(err)},500); }
+});

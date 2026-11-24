@@ -1,0 +1,36 @@
+# READ-ONLY PRODUCTION SOURCE SNAPSHOT
+# Function: careerdev-paystack-payout-webhook
+# Retrieved from Supabase project: ufmhrmzumqkjvaezrmxf
+# Deployed version: v8
+# verify_jwt: false
+# Runtime source fingerprint (ezbr_sha256 reported by Supabase): c2c9f3614f2d87b501416cb5f7f7eb8c328ab064cd5534a2f0f8165a1c185755
+# Retrieved: 2026-10-23
+# WARNING: Evidence snapshot only; not a deployable source tree. Do not deploy this .txt file.
+# This is a copy of the currently deployed source, not proof of the original authoring source or migration history.
+
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
+const url=Deno.env.get("SUPABASE_URL")!; const service=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY"); const secret=Deno.env.get("PAYSTACK_SECRET_KEY");
+const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json"}});
+function hex(b:ArrayBuffer){return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');}
+async function hmac(s:string,b:Uint8Array){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(s),{name:'HMAC',hash:'SHA-512'},false,['sign']);return hex(await crypto.subtle.sign('HMAC',k,b));}
+function eq(a:string,b:string){if(a.length!==b.length)return false;let d=0;for(let i=0;i<a.length;i++)d|=a.charCodeAt(i)^b.charCodeAt(i);return d===0;}
+Deno.serve(async req=>{
+ if(req.method!=='POST')return reply({error:'Method not allowed'},405);
+ if(!service||!secret)return reply({error:'Webhook credentials are not configured'},503);
+ try{
+  const raw=new Uint8Array(await req.arrayBuffer()); const sig=(req.headers.get('x-paystack-signature')??'').trim().toLowerCase(); if(!sig)return reply({error:'Missing Paystack signature'},401);
+  if(!eq(await hmac(secret,raw),sig))return reply({error:'Invalid Paystack signature'},401);
+  const event=JSON.parse(new TextDecoder().decode(raw)); const type=String(event?.event??'').toLowerCase(); const data=event?.data??{}; const reference=String(data?.reference??'').trim();
+  if(!['transfer.success','transfer.failed','transfer.reversed'].includes(type)||!reference)return reply({received:true,ignored:true});
+  const sb=createClient(url,service); const payout=await sb.from('marketplace_payouts').select('id,status,payout_amount,currency').eq('provider_payout_reference',reference).maybeSingle();
+  if(payout.error)return reply({error:'Could not locate payout'},500); if(!payout.data)return reply({received:true,ignored:true});
+  const status=type==='transfer.success'?'paid':type==='transfer.reversed'?'reversed':'failed';
+  const failure=type==='transfer.success'?null:String(data?.failures??data?.reason??`Paystack reported ${type}`);
+  const {error:insertError}=await sb.from('marketplace_payout_transfer_events').insert({payout_id:payout.data.id,provider_key:'paystack',provider_transfer_reference:String(data?.transfer_code??data?.id??reference),event_type:type,status,payload_hash:await crypto.subtle.digest('SHA-256',raw).then(hex),payload:event});
+  if(insertError && !String(insertError.message).toLowerCase().includes('duplicate'))return reply({error:'Could not record transfer event'},500);
+  const update=await sb.from('marketplace_payouts').update({status, failure_reason:failure, metadata:{provider:'paystack',transfer_code:data?.transfer_code??null,transfer_id:data?.id??null,provider_status:data?.status??status,completed_at:type==='transfer.success'?new Date().toISOString():null},updated_at:new Date().toISOString()}).eq('id',payout.data.id);
+  if(update.error)return reply({error:'Could not update payout status'},500);
+  return reply({received:true,processed:true,payout_id:payout.data.id,status});
+ }catch(err){return reply({error:'Payout webhook processing failed',detail:String(err)},500);}
+});
