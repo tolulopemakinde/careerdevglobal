@@ -29,7 +29,8 @@
     "test:admin-sales-proposal": "node --test tests/test-admin-sales-proposal-workspace.mjs",
     "test:admin-ceo-operations": "node --test tests/test-admin-ceo-operations-workspace.mjs",
     "test:admin-career-discovery": "node --test tests/test-admin-career-discovery-workspace.mjs",
-    "test:admin-cv-linkedin": "node --test tests/test-admin-cv-linkedin-workspace.mjs"
+    "test:admin-cv-linkedin": "node --test tests/test-admin-cv-linkedin-workspace.mjs",
+    "test:admin-career-discovery-entrypoint": "node --test tests/test-admin-career-discovery-entrypoint.mjs"
   },
   "dependencies": {
     "@ai-sdk/groq": "4.0.76",

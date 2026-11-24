@@ -127,3 +127,16 @@ On 2026-11-24, the testing-only migration `20261124170000_staff_admin_agents_tes
 - The new workspace accepts synthetic topic, audience, CTA, and optional brand guidance and generates a deterministic local template with one repurposed draft and Markdown download.
 - It does not call an AI provider, runtime, or database and cannot save, publish, or send content. Human review remains required. The registry agent stays `testing`, inactive, and human-review-gated.
 - Validation: focused Node tests cover output shape, input errors, Staff/Admin gating, and absence of provider/network/runtime/database calls.
+
+
+## Career Discovery initiation control follow-up
+
+- Added the dedicated `Initiate Career Discovery AI` toggle to the Staff/Admin Agents card. It opens the existing local `career_profile_analysis` test workspace; it does not call the autonomous functional test or live runtime.
+- Staff/Admin gating remains in place. Validation includes a source guard for the distinct control and its state toggle.
+
+## Marketing Content AI Admin initiation follow-up
+
+- Added a separate Staff/Admin-guarded `Initiate Marketing Content AI` control on the Admin AI Agents card. The prior Blog Management page remains Admin-only because it can save and publish posts.
+- The new workspace accepts synthetic topic, audience, CTA, and optional brand guidance and generates a deterministic local template with one repurposed draft and Markdown download.
+- It does not call an AI provider, runtime, or database and cannot save, publish, or send content. Human review remains required. The registry agent stays `testing`, inactive, and human-review-gated.
+- Validation: focused Node tests cover output shape, input errors, Staff/Admin gating, and absence of provider/network/runtime/database calls.
