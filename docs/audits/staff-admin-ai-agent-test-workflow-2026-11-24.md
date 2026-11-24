@@ -70,3 +70,10 @@ All seven remain `testing`; operational activation is not authorized by this cha
 5. Have a qualified human review each agent’s synthetic and representative outputs, including evidence, factual claims, consent, pricing, deadlines, publication, and external-action boundaries as applicable.
 
 The local mock proves only the seven workflow contract fixtures and UI reporting. It does not certify the deployed database or Edge Function.
+
+## CV & LinkedIn AI follow-up
+
+- Added a distinct Staff/Admin-guarded `Initiate CV & LinkedIn AI` workspace for `cv_service_delivery`, separate from the autonomous functional test and shared contract mock.
+- The local formatter accepts synthetic target role, summary, experience evidence, and skills. It produces CV and LinkedIn draft structures without adding achievements, dates, metrics, or credentials not supplied in the fixture. It can download a Markdown preview.
+- The workspace has no account-profile access, provider/model inference, runtime call, database write, or persistence. It labels output as testing-only and requires source-document verification and human review.
+- Validation: three focused Node tests cover draft contract, input limits, Staff/Admin gating, and absence of provider/network/database calls.
