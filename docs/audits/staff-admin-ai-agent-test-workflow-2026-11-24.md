@@ -129,6 +129,17 @@ On 2026-11-24, the testing-only migration `20261124170000_staff_admin_agents_tes
 - Validation: focused Node tests cover output shape, input errors, Staff/Admin gating, and absence of provider/network/runtime/database calls.
 
 
+## CEO Operations AI — operational-readiness pass
+
+The separate Admin initiation button currently opens an aggregate-only local preview for `executive_performance_review`. It computes completion rates and threshold flags from values typed by an Admin; it does not fetch source metrics, call Groq/OpenAI, persist a report, or create a durable execution log. The focused CEO workspace checks pass (3/3). This proves the local preview boundary, not an operational AI workflow.
+
+The operational version should remain decision support for organization-level indicators. It must not ingest named employee records, rank or score identifiable staff, recommend hiring/firing/promotion/discipline/compensation decisions, or take follow-up actions. An Administrator must review the input evidence and AI-generated findings before use. Operational runs need bounded inputs/outputs and durable audit records for actor, agent/workflow version, provider/model, token usage, run outcome, and approval state while avoiding unnecessary retention of raw prompts or personal data.
+
+The first agent is **not ready to activate** from this checkout. The deployed `careerdev-ai-agent-runtime` source is not tracked here, so its provider execution, persisted results, and human-approval transitions cannot be changed or verified in this branch. The local environment also has no provider configuration available; no secret values were read or printed and no provider call was attempted. Provider-side monthly spend enforcement and alert settings require verification in the relevant provider accounts before any billable inference. Production registry status was previously verified as `testing`, inactive, and human-review-gated after the 24 November migration; keep that state until the operational runtime and its database safeguards are reviewed.
+
+CEO Operations exit criteria: review the deployed runtime source and map it to its production deployment; verify Admin-only authorization and independent human approval in database transitions; configure provider-side hard spend limits and alerts; then exercise the operational request path with mocked provider responses and inspect its audit trail. Only after those pass should the separately authorized, low-volume inference step be considered. The other six agents remain untouched while this first-agent review is blocked.
+
+
 ## Career Discovery initiation control follow-up
 
 - Added the dedicated `Initiate Career Discovery AI` toggle to the Staff/Admin Agents card. It opens the existing local `career_profile_analysis` test workspace; it does not call the autonomous functional test or live runtime.
