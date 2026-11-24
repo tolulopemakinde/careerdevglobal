@@ -70,3 +70,9 @@ All seven remain `testing`; operational activation is not authorized by this cha
 5. Have a qualified human review each agent’s synthetic and representative outputs, including evidence, factual claims, consent, pricing, deadlines, publication, and external-action boundaries as applicable.
 
 The local mock proves only the seven workflow contract fixtures and UI reporting. It does not certify the deployed database or Edge Function.
+
+## CEO Operations AI follow-up
+
+The repository had no Admin workflow UI for `executive_performance_review` beyond its synthetic mock test. The CEO-owned card now exposes a separate Admin-only aggregate review workspace. It accepts a reporting period, target, completed count, and aggregate quality score, then deterministically reports completion rate, threshold risks, and suggested actions. It excludes individual staff assessment and source-data verification. The preview is not persisted and can be downloaded as Markdown; it makes no provider, runtime, or network call.
+
+Validation: local Node tests cover input bounds, aggregate calculations, Admin-only visibility, evidence limitations, and the no-network boundary. No AI inference or database write was used. Human review remains required and the agent stays in testing.
