@@ -142,8 +142,8 @@ A migration adds direct-RPC request guards and execution triggers. It requires t
 - `npm run test:admin-ceo-operations`: 5 passed, including mocked request, preparation, runtime, and independent-review handoff.
 - `npm run test:staff-admin-agent-operational-policy`: 9 passed, including staged allowlist, Admin-only CEO access, invalid/individual inputs, output schema, human-review enforcement, and migration guard source checks.
 - `npm run test:staff-admin-groq-transport`: 3 passed using injected mock fetch responses; no network request or inference was made.
-- Mocked provider transport and RPC-flow tests cover strict JSON-schema request formatting, authorization, preparation, runtime review state, approval request, and failure paths; no network request or inference was used.
 - `git diff --check`: passed.
+- The Vercel pull-request preview completed with `READY`; its Next.js build and application TypeScript check passed. This was a preview build only, not production.
 - No provider/API/model calls, production database writes, function deployments, or paid services were used.
 - PostgreSQL accepted the guard migration in the existing non-production test project. Anonymous request and review-flag-clear smoke checks were rejected by the database triggers. A request/preparation test using synthetic aggregate input completed inside a transaction and was rolled back; registry state and operational request/execution counts were verified unchanged afterward.
 - The database test exposed and corrected two migration defects: the registry uses `live` rather than `active` for operational status, and PostgreSQL has no `jsonb_object_length` function. JSON object key counts now use `jsonb_object_keys`.
