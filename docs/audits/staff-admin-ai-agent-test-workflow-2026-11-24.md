@@ -144,7 +144,7 @@ A migration adds direct-RPC request guards and execution triggers. It requires t
 - `npm run test:staff-admin-groq-transport`: 3 passed using injected mock fetch responses; no network request or inference was made.
 - `git diff --check`: passed.
 - The Vercel pull-request preview completed with `READY`; its Next.js build and application TypeScript check passed. This was a preview build only, not production.
-- No provider/API/model calls, production database writes, function deployments, or paid services were used.
+- No provider/API/model calls or production database/deployment changes were made. The connected Vercel project generated a pull-request preview build; no production alias was changed.
 - PostgreSQL accepted the guard migration in the existing non-production test project. Anonymous request and review-flag-clear smoke checks were rejected by the database triggers. A request/preparation test using synthetic aggregate input completed inside a transaction and was rolled back; registry state and operational request/execution counts were verified unchanged afterward.
 - The database test exposed and corrected two migration defects: the registry uses `live` rather than `active` for operational status, and PostgreSQL has no `jsonb_object_length` function. JSON object key counts now use `jsonb_object_keys`.
 - Deno syntax/type checking with temporary local stubs for Supabase and edge-runtime imports passed. Normal JSR dependency resolution was blocked because the environment could not connect to `jsr.io`; the stub check does not validate actual Supabase SDK typings.
