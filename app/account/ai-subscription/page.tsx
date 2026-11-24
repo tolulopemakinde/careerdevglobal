@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import '../../career-intelligence/styles.css';
+import styles from './ai-subscription.module.css';
 import { createSupabaseBrowserClient } from '../../../lib/supabase-browser';
 
 type Subscription = { plan_key:string; status:string; billing_interval:string; currency:string; amount:number; current_period_end:string|null };
@@ -50,7 +51,8 @@ export default function ManageAiSubscription(){
    </div>
   </nav>
   <section className="ci-hero" aria-labelledby="ai-subscription-title">
-   <div className="ci-container ci-hero-grid">
+   <div className={styles.heroArt} aria-hidden="true" />
+   <div className={`ci-container ci-hero-grid ${styles.heroContent}`}>
     <div>
      <div className="ci-kicker">CAREERDEV GLOBAL · SUBSCRIPTION MANAGEMENT</div>
      <h1 id="ai-subscription-title">Manage your AI subscription.</h1>
