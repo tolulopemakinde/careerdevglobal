@@ -59,7 +59,7 @@ const policies = {
     outputTypes: { career_direction: "string", target_roles: "string_array", recommendations: "string_array", gaps: "string_array" },
   },
   cv_linkedin_ai: {
-    operationallyImplemented: false,
+    operationallyImplemented: true,
     ownerRole: "staff",
     workflowKey: "cv_service_delivery",
     inputKeys: ["blueprint", "documents", "career_profile", "service_request"],
@@ -192,6 +192,26 @@ export function evaluateStaffAdminOperationalRequest({ agent, workflowKey, workf
       return { allowed: false, code: "CAREER_DISCOVERY_SYNTHETIC_INPUT_INVALID" };
     }
   }
+  if (agent.agent_key === "cv_linkedin_ai") {
+    const { blueprint, documents, career_profile: profile, service_request: request } = input;
+    const boundedText = (value, maximum = 1500) => typeof value === "string" && value.trim().length > 0 && value.length <= maximum;
+    const boundedTextList = (value, maximum, itemLength = 1000) => Array.isArray(value) && value.length > 0 && value.length <= maximum && value.every((item) => boundedText(item, itemLength));
+    if (!hasExactKeys(input, policy.inputKeys)
+      || !hasExactKeys(blueprint, ["source", "target_role"]) || blueprint.source !== "synthetic" || !boundedText(blueprint.target_role)
+      || !Array.isArray(documents) || documents.length !== 1
+      || !hasExactKeys(documents[0], ["source", "document_type", "content"]) || documents[0].source !== "synthetic"
+      || documents[0].document_type !== "career_evidence" || !boundedText(documents[0].content, 6000)
+      || !hasExactKeys(profile, ["source", "summary", "experience", "skills"]) || profile.source !== "synthetic"
+      || !boundedText(profile.summary) || !boundedTextList(profile.experience, 10) || !boundedTextList(profile.skills, 20)
+      || !hasExactKeys(request, ["source", "deliverables", "target_role"]) || request.source !== "synthetic"
+      || !Array.isArray(request.deliverables) || request.deliverables.length !== 2
+      || !request.deliverables.includes("cv") || !request.deliverables.includes("linkedin")
+      || !boundedText(request.target_role)
+      || blueprint.target_role !== request.target_role
+      || containsPersonalIdentifierText(input)) {
+      return { allowed: false, code: "CV_LINKEDIN_SYNTHETIC_INPUT_INVALID" };
+    }
+  }
   return { allowed: true, policy };
 }
 
@@ -211,6 +231,7 @@ export function validateStaffAdminOperationalOutput(agentKey, output) {
     if (type === "object_array" && (!Array.isArray(value) || value.length > 25 || value.some((item) => !isObject(item)))) return { valid: false, code: `OUTPUT_FIELD_INVALID:${key}` };
   }
   if (agentKey === "cv_linkedin_ai" && output.review_required !== true) return { valid: false, code: "HUMAN_REVIEW_FLAG_REQUIRED" };
+  if (agentKey === "cv_linkedin_ai" && (!/CV DRAFT/i.test(output.cv_draft) || !/LINKEDIN DRAFT/i.test(output.cv_draft))) return { valid: false, code: "CV_LINKEDIN_SECTIONS_MISSING" };
   if (agentKey === "ceo_operations_ai" && Object.values(output).some((items) => !items.length)) return { valid: false, code: "CEO_REVIEW_SECTIONS_MUST_NOT_BE_EMPTY" };
   if (agentKey === "career_discovery_ai" && (!output.recommendations.length || !output.gaps.length)) return { valid: false, code: "CAREER_DISCOVERY_REVIEW_SECTIONS_MUST_NOT_BE_EMPTY" };
   return { valid: true };

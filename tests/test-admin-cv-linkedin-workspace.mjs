@@ -21,11 +21,15 @@ test('missing inputs and oversized source facts are rejected', () => {
   assert.throws(() => createCvLinkedInPreview({ ...fixture, skills: 'x'.repeat(1501) }), /1500 characters or fewer/i);
 });
 
-test('workspace stays local and its initiation control is Staff/Admin-gated', async () => {
+test('workspace keeps its local formatter separate from the registry-gated Groq action', async () => {
   const admin = await readFile(new URL('../app/admin/page.tsx', import.meta.url), 'utf8');
   const workspace = await readFile(new URL('../app/admin/cv-linkedin-workspace.tsx', import.meta.url), 'utf8');
   assert.match(admin, /a\.agent_key==='cv_linkedin_ai'&&\(userRole==='staff'\|\|isAdmin\)/);
-  assert.match(admin, /cvLinkedInOpen&&\(userRole==='staff'\|\|isAdmin\)/);
+  assert.match(admin, /cvLinkedInOpen&&\(userRole==='staff'\|\|isAdmin\)&&<CvLinkedInWorkspace/);
+  assert.match(admin, /agentStatus={adminAgents\.find\(\(agent:any\)=>agent\.agent_key==='cv_linkedin_ai'\)/);
   assert.match(workspace, /createCvLinkedInPreview\(input\)/);
-  assert.doesNotMatch(workspace, /\bfetch\s*\(|supabase\.(rpc|from|functions)\s*\(|careerdev-ai-agent-runtime|createOpenAI|createGroq/i);
+  assert.match(workspace, /operationalReady = agentStatus === 'live' && agentActive && humanApprovalRequired/);
+  assert.match(workspace, /Run CV & LinkedIn draft with Groq/);
+  assert.match(workspace, /deliverables: \['cv', 'linkedin'\]/);
+  assert.match(workspace, /human-review-gated|human review/i);
 });

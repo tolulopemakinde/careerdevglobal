@@ -33,6 +33,7 @@
     "test:admin-career-discovery": "node --test tests/test-admin-career-discovery-workspace.mjs",
     "test:admin-career-discovery-operational": "node --test tests/test-admin-career-discovery-operational.mjs",
     "test:admin-cv-linkedin": "node --test tests/test-admin-cv-linkedin-workspace.mjs",
+    "test:admin-cv-linkedin-operational": "node --test tests/test-admin-cv-linkedin-operational.mjs",
     "test:admin-career-discovery-entrypoint": "node --test tests/test-admin-career-discovery-entrypoint.mjs"
   },
   "dependencies": {

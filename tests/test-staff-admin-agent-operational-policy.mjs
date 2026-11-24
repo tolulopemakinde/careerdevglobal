@@ -25,6 +25,12 @@ function request(agentKey, overrides = {}) {
     input.outcomes = { completed: 12, target: 15 };
     input.performance_data = { reporting_period: "FY2026" };
   }
+  if (agentKey === "cv_linkedin_ai") {
+    input.blueprint = { source: "synthetic", target_role: "Programme Officer" };
+    input.documents = [{ source: "synthetic", document_type: "career_evidence", content: "Synthetic evidence for testing only." }];
+    input.career_profile = { source: "synthetic", summary: "Synthetic programme professional.", experience: ["Supported a synthetic youth programme."], skills: ["facilitation"] };
+    input.service_request = { source: "synthetic", deliverables: ["cv", "linkedin"], target_role: "Programme Officer" };
+  }
   return evaluateStaffAdminOperationalRequest({
     agent: { agent_key: agentKey, owner_role: policy.ownerRole, status: "live", active: true, human_approval_required: true },
     workflowKey: policy.workflowKey,
@@ -47,7 +53,7 @@ test("the fixed seven agent contracts have owner roles, workflows, and output sc
     assert.equal(policy.workflowKey, expected.workflowKey);
     assert.ok(policy.inputKeys.length > 0);
     assert.equal(policy.outputSchema.additionalProperties, false);
-    assert.equal(policy.operationallyImplemented, ["ceo_operations_ai", "career_discovery_ai"].includes(agentKey));
+    assert.equal(policy.operationallyImplemented, ["ceo_operations_ai", "career_discovery_ai", "cv_linkedin_ai"].includes(agentKey));
   }
 });
 
@@ -57,8 +63,8 @@ test("CEO Operations accepts only active Admin operational aggregate inputs", ()
   assert.equal(request("ceo_operations_ai", { agent: { ...requestAgent(), owner_role: "staff" } }).code, "AGENT_OWNER_ROLE_MISMATCH");
 });
 
-test("the remaining five operational workflows remain blocked until their individual rollout", () => {
-  for (const agentKey of Object.keys(cases).filter((key) => !["ceo_operations_ai", "career_discovery_ai"].includes(key))) {
+test("the remaining four operational workflows remain blocked until their individual rollout", () => {
+  for (const agentKey of Object.keys(cases).filter((key) => !["ceo_operations_ai", "career_discovery_ai", "cv_linkedin_ai"].includes(key))) {
     assert.equal(request(agentKey).code, "AGENT_WORKFLOW_NOT_RELEASED_IN_STAGED_ROLLOUT", agentKey);
   }
 });
@@ -78,6 +84,22 @@ test("Career Discovery accepts only bounded synthetic profile and request fields
 test("Career Discovery output requires meaningful recommendations and evidence gaps", () => {
   assert.equal(validateStaffAdminOperationalOutput("career_discovery_ai", { career_direction: "Explore programme roles", target_roles: [], recommendations: ["Compare supplied skills with role requirements."], gaps: ["Role evidence is unverified."] }).valid, true);
   assert.equal(validateStaffAdminOperationalOutput("career_discovery_ai", { career_direction: "Explore programme roles", target_roles: [], recommendations: [], gaps: ["Role evidence is unverified."] }).code, "CAREER_DISCOVERY_REVIEW_SECTIONS_MUST_NOT_BE_EMPTY");
+});
+
+test("CV & LinkedIn accepts only synthetic source evidence and matching requested deliverables", () => {
+  const policy = cases.cv_linkedin_ai;
+  const input = {
+    blueprint: { source: "synthetic", target_role: "Programme Officer" },
+    documents: [{ source: "synthetic", document_type: "career_evidence", content: "Synthetic evidence for testing only." }],
+    career_profile: { source: "synthetic", summary: "Synthetic programme professional.", experience: ["Supported a synthetic youth programme."], skills: ["facilitation"] },
+    service_request: { source: "synthetic", deliverables: ["cv", "linkedin"], target_role: "Programme Officer" },
+  };
+  assert.equal(request("cv_linkedin_ai", { input }).allowed, true);
+  assert.equal(request("cv_linkedin_ai", { input: { ...input, career_profile: { ...input.career_profile, email: "test@example.com" } } }).code, "CV_LINKEDIN_SYNTHETIC_INPUT_INVALID");
+  assert.equal(request("cv_linkedin_ai", { input: { ...input, service_request: { ...input.service_request, deliverables: ["cv"] } } }).code, "CV_LINKEDIN_SYNTHETIC_INPUT_INVALID");
+  assert.equal(request("cv_linkedin_ai", { input: { ...input, blueprint: { ...input.blueprint, target_role: "Different role" } } }).code, "CV_LINKEDIN_SYNTHETIC_INPUT_INVALID");
+  assert.equal(request("cv_linkedin_ai", { callerRole: "client", input }).code, "CALLER_ROLE_NOT_AUTHORIZED");
+  assert.equal(policy.inputKeys.length, 4);
 });
 
 function requestAgent() {
@@ -112,8 +134,10 @@ test("CEO output contract rejects missing or empty review sections", () => {
 });
 
 test("CV and LinkedIn output cannot remove its human review requirement", () => {
-  assert.equal(validateStaffAdminOperationalOutput("cv_linkedin_ai", { cv_draft: "Draft", quality_summary: "Grounded", review_required: true }).valid, true);
-  assert.equal(validateStaffAdminOperationalOutput("cv_linkedin_ai", { cv_draft: "Draft", quality_summary: "Grounded", review_required: false }).code, "HUMAN_REVIEW_FLAG_REQUIRED");
+  const output = { cv_draft: "CV DRAFT\nSynthetic draft\nLINKEDIN DRAFT\nSynthetic profile draft", quality_summary: "Grounded", review_required: true };
+  assert.equal(validateStaffAdminOperationalOutput("cv_linkedin_ai", output).valid, true);
+  assert.equal(validateStaffAdminOperationalOutput("cv_linkedin_ai", { ...output, review_required: false }).code, "HUMAN_REVIEW_FLAG_REQUIRED");
+  assert.equal(validateStaffAdminOperationalOutput("cv_linkedin_ai", { ...output, cv_draft: "Draft" }).code, "CV_LINKEDIN_SECTIONS_MISSING");
 });
 
 test("runtime keeps Staff/Admin requests on the bounded Groq path and awaiting human review", async () => {
@@ -144,4 +168,8 @@ test("database migration pins the staged request path and prevents review bypass
   assert.match(careerMigration, /Career Discovery accepts only bounded synthetic inputs without contact details/);
   assert.match(careerMigration, /linkedin\[\.\]com/);
   assert.match(careerMigration, /new\.human_review_required is not true/);
+  const cvMigration = await readFile(new URL("../supabase/migrations/20261124210000_staff_admin_cv_linkedin_guard.sql", import.meta.url), "utf8");
+  assert.match(cvMigration, /agent_row\.agent_key not in \('ceo_operations_ai', 'career_discovery_ai', 'cv_linkedin_ai'\)/);
+  assert.match(cvMigration, /CV & LinkedIn accepts only bounded synthetic career evidence/);
+  assert.match(cvMigration, /new\.human_review_required is not true/);
 });
