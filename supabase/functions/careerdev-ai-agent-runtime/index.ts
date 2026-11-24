@@ -120,7 +120,7 @@ Deno.serve(async(req)=>{
   const modelSnap=(snapshots||[]).find((s:any)=>s.config_type==='model');
   const model=staffAdminPolicy?staffGroqModel:String(modelSnap?.configuration?.model||'gpt-5.6-luna');
   let creditReservation:any=null;
-  if(dependencyMode!=='works_without_ai'){
+  if(!staffAdminPolicy&&dependencyMode!=='works_without_ai'){
     const {data:creditRows,error:creditErr}=await sb.rpc('reserve_ai_credits',{p_operation_key:agent.agent_key,p_execution_id:agentExec.id,p_request_id:reqRow.id,p_idempotency_key:`agent-runtime:${agentExec.id}`,p_metadata:{agent_key:agent.agent_key,workflow:'careerdev-ai-agent-runtime',trigger_source:reqRow.trigger_source}});
     if(creditErr) return reply({error:'AI credit authorization failed',detail:creditErr.message},500);
     const credit=Array.isArray(creditRows)?creditRows[0]:creditRows;

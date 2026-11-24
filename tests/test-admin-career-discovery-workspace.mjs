@@ -23,11 +23,16 @@ test('required inputs, empty skills, and oversized fields return actionable erro
   assert.throws(() => createCareerDiscoveryPreview({ ...fixture, education: 'x'.repeat(501) }), /500 characters or fewer/i);
 });
 
-test('Admin workspace is role-gated and its submit path has no provider, network, or database call', async () => {
+test('Admin workspace keeps the deterministic preview separate and gates the persisted Groq action on live review-safe state', async () => {
   const admin = await readFile(new URL('../app/admin/page.tsx', import.meta.url), 'utf8');
   const workspace = await readFile(new URL('../app/admin/career-discovery-workspace.tsx', import.meta.url), 'utf8');
   assert.match(admin, /a\.agent_key==='career_discovery_ai'&&\(userRole==='staff'\|\|isAdmin\)/);
-  assert.match(admin, /careerDiscoveryOpen&&\(userRole==='staff'\|\|isAdmin\)/);
+  assert.match(admin, /careerDiscoveryOpen&&\(userRole==='staff'\|\|isAdmin\)&&<CareerDiscoveryWorkspace/);
+  assert.match(admin, /agentStatus={adminAgents\.find\(\(agent:any\)=>agent\.agent_key==='career_discovery_ai'\)/);
   assert.match(workspace, /createCareerDiscoveryPreview\(input\)/);
-  assert.doesNotMatch(workspace, /\bfetch\s*\(|supabase\.(rpc|from|functions)\s*\(|careerdev-ai-agent-runtime|createOpenAI|createGroq/i);
+  assert.match(workspace, /operationalReady = agentStatus === 'live' && agentActive && humanApprovalRequired/);
+  assert.match(workspace, /Run Career Discovery draft with Groq/);
+  assert.match(workspace, /source: 'synthetic'/);
+  assert.match(workspace, /no more than 20 synthetic skills and 10 synthetic target roles/i);
+  assert.match(workspace, /awaiting human review/);
 });

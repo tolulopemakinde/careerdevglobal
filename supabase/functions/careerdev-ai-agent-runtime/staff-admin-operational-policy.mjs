@@ -46,7 +46,7 @@ const policies = {
     outputTypes: { risks: "string_array", actions: "string_array", insights: "string_array" },
   },
   career_discovery_ai: {
-    operationallyImplemented: false,
+    operationallyImplemented: true,
     ownerRole: "staff",
     workflowKey: "career_profile_analysis",
     inputKeys: ["career_profile", "service_request"],
@@ -126,8 +126,14 @@ const policies = {
 };
 
 const sensitiveCEOKey = /(?:^|_)(?:name|email|phone|staff_id|employee_id|person_id|user_id|linkedin_url|address)(?:$|_)/i;
+const personalIdentifierText = /(?:[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}|https?:\/\/|linkedin\.com\/|(?<!\w)\+?\d[\d ()-]{7,}\d(?!\w))/i;
 const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const hasExactKeys = (value, expected) => isObject(value) && Object.keys(value).length === expected.length && expected.every((key) => Object.prototype.hasOwnProperty.call(value, key));
+const containsPersonalIdentifierText = (value) => Array.isArray(value)
+  ? value.some(containsPersonalIdentifierText)
+  : isObject(value)
+    ? Object.values(value).some(containsPersonalIdentifierText)
+    : typeof value === "string" && personalIdentifierText.test(value);
 
 export function getStaffAdminOperationalPolicy(agentKey) {
   return policies[agentKey] || null;
@@ -165,6 +171,27 @@ export function evaluateStaffAdminOperationalRequest({ agent, workflowKey, workf
     if (!hasExactKeys(outcomes, ["completed", "target"]) || !Number.isInteger(outcomes.completed) || !Number.isInteger(outcomes.target) || outcomes.completed < 0 || outcomes.target < 1 || outcomes.completed > outcomes.target) return { allowed: false, code: "AGGREGATE_OUTCOME_INPUT_INVALID" };
     if (!hasExactKeys(input.performance_data, ["reporting_period"]) || typeof period !== "string" || !/^(?:FY)?20\d{2}(?:[-/ ]?(?:Q[1-4]|H[1-2]|M(?:0[1-9]|1[0-2])))?$/i.test(period.trim())) return { allowed: false, code: "REPORTING_PERIOD_INVALID" };
   }
+  if (agent.agent_key === "career_discovery_ai") {
+    const profile = input.career_profile;
+    const request = input.service_request;
+    const boundedText = (value) => typeof value === "string" && value.trim().length > 0 && value.length <= 1200;
+    const boundedTextList = (value, maximum) => Array.isArray(value) && value.length > 0 && value.length <= maximum && value.every(boundedText);
+    if (!hasExactKeys(input, policy.inputKeys)
+      || !hasExactKeys(profile, ["source", "education", "experience", "skills"])
+      || profile.source !== "synthetic"
+      || !boundedText(profile.education)
+      || !boundedText(profile.experience)
+      || !boundedTextList(profile.skills, 20)
+      || !hasExactKeys(request, ["source", "goal", "target_roles"])
+      || request.source !== "synthetic"
+      || !boundedText(request.goal)
+      || !Array.isArray(request.target_roles)
+      || request.target_roles.length > 10
+      || request.target_roles.some((role) => !boundedText(role))
+      || containsPersonalIdentifierText(input)) {
+      return { allowed: false, code: "CAREER_DISCOVERY_SYNTHETIC_INPUT_INVALID" };
+    }
+  }
   return { allowed: true, policy };
 }
 
@@ -185,5 +212,6 @@ export function validateStaffAdminOperationalOutput(agentKey, output) {
   }
   if (agentKey === "cv_linkedin_ai" && output.review_required !== true) return { valid: false, code: "HUMAN_REVIEW_FLAG_REQUIRED" };
   if (agentKey === "ceo_operations_ai" && Object.values(output).some((items) => !items.length)) return { valid: false, code: "CEO_REVIEW_SECTIONS_MUST_NOT_BE_EMPTY" };
+  if (agentKey === "career_discovery_ai" && (!output.recommendations.length || !output.gaps.length)) return { valid: false, code: "CAREER_DISCOVERY_REVIEW_SECTIONS_MUST_NOT_BE_EMPTY" };
   return { valid: true };
 }

@@ -163,3 +163,15 @@ The CEO agent remains **not active in production**: its verified registry row is
 - The new workspace accepts synthetic topic, audience, CTA, and optional brand guidance and generates a deterministic local template with one repurposed draft and Markdown download.
 - It does not call an AI provider, runtime, or database and cannot save, publish, or send content. Human review remains required. The registry agent stays `testing`, inactive, and human-review-gated.
 - Validation: focused Node tests cover output shape, input errors, Staff/Admin gating, and absence of provider/network/runtime/database calls.
+
+## Career Discovery AI — staged Groq workflow
+
+- Added a distinct Groq draft action inside the Career Discovery workspace. It uses only bounded synthetic education, experience, skills, goal, and target-role inputs and the existing `career_profile_analysis` workflow. Obvious contact details and profile URLs are rejected by the server policy and the database request guard.
+- Added a strict output contract for career direction, target roles, recommendations, and evidence gaps. Runtime results must report `awaiting_human_review`, `human_review_required = true`, `human_review_gate = true`, and `human_approved = false`; the UI offers a separate independent approval request and never completes the execution.
+- The action is available only when the registry reports `status = live`, `active = true`, and human approval enabled. It remains unavailable while Career Discovery is `testing` or otherwise inactive. Staff and Admin may access the Staff-owned workflow; the database checks active Staff/Admin role and exact owner/workflow state.
+- Staff/Admin operational runs bypass client AI-credit reservation. Provider usage and estimated cost are still logged through the existing runtime path. The local deterministic preview remains free and separate.
+- The additive database guard migration was applied only to the existing non-production test project. A rollback-only synthetic request/preparation transaction succeeded after temporarily matching the test registry owner/status fields; follow-up verification confirmed the original registry state and no operational requests persisted. No Groq inference was made.
+- Focused validation: Career Discovery workspace tests **3 passed**; entrypoint test **1 passed**; mocked operational handoff tests **3 passed**; shared CEO workflow tests **5 passed**; Staff/Admin policy and database guard tests **11 passed**; Groq transport tests **3 passed**; `git diff --check` passed.
+- The actual Supabase SDK typecheck remains unavailable because the package download stalled; the local Deno stub check does not certify SDK typings. Provider account spending limits and configured rates remain unverified. No production registry or deployment changes occurred.
+
+Career Discovery remains `testing` and inactive in production. Independent human review is required before using any model-generated guidance; reviewers must verify evidence and current role requirements. The other five operational workflows remain blocked pending their own agent-specific rollout passes.

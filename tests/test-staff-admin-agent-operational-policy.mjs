@@ -47,7 +47,7 @@ test("the fixed seven agent contracts have owner roles, workflows, and output sc
     assert.equal(policy.workflowKey, expected.workflowKey);
     assert.ok(policy.inputKeys.length > 0);
     assert.equal(policy.outputSchema.additionalProperties, false);
-    assert.equal(policy.operationallyImplemented, agentKey === "ceo_operations_ai");
+    assert.equal(policy.operationallyImplemented, ["ceo_operations_ai", "career_discovery_ai"].includes(agentKey));
   }
 });
 
@@ -57,10 +57,27 @@ test("CEO Operations accepts only active Admin operational aggregate inputs", ()
   assert.equal(request("ceo_operations_ai", { agent: { ...requestAgent(), owner_role: "staff" } }).code, "AGENT_OWNER_ROLE_MISMATCH");
 });
 
-test("the other six operational workflows remain blocked until their individual rollout", () => {
-  for (const agentKey of Object.keys(cases).filter((key) => key !== "ceo_operations_ai")) {
+test("the remaining five operational workflows remain blocked until their individual rollout", () => {
+  for (const agentKey of Object.keys(cases).filter((key) => !["ceo_operations_ai", "career_discovery_ai"].includes(key))) {
     assert.equal(request(agentKey).code, "AGENT_WORKFLOW_NOT_RELEASED_IN_STAGED_ROLLOUT", agentKey);
   }
+});
+
+test("Career Discovery accepts only bounded synthetic profile and request fields", () => {
+  const input = {
+    career_profile: { source: "synthetic", education: "BA Sociology", experience: "2 years programme support", skills: ["facilitation", "reporting"] },
+    service_request: { source: "synthetic", goal: "Explore programme coordination", target_roles: ["Programme Officer"] },
+  };
+  assert.equal(request("career_discovery_ai", { input }).allowed, true);
+  assert.equal(request("career_discovery_ai", { input: { ...input, career_profile: { ...input.career_profile, email: "person@example.com" } } }).code, "CAREER_DISCOVERY_SYNTHETIC_INPUT_INVALID");
+  assert.equal(request("career_discovery_ai", { input: { ...input, career_profile: { ...input.career_profile, experience: "Contact test@example.com" } } }).code, "CAREER_DISCOVERY_SYNTHETIC_INPUT_INVALID");
+  assert.equal(request("career_discovery_ai", { input: { ...input, career_profile: { ...input.career_profile, source: "account" } } }).code, "CAREER_DISCOVERY_SYNTHETIC_INPUT_INVALID");
+  assert.equal(request("career_discovery_ai", { callerRole: "client", input }).code, "CALLER_ROLE_NOT_AUTHORIZED");
+});
+
+test("Career Discovery output requires meaningful recommendations and evidence gaps", () => {
+  assert.equal(validateStaffAdminOperationalOutput("career_discovery_ai", { career_direction: "Explore programme roles", target_roles: [], recommendations: ["Compare supplied skills with role requirements."], gaps: ["Role evidence is unverified."] }).valid, true);
+  assert.equal(validateStaffAdminOperationalOutput("career_discovery_ai", { career_direction: "Explore programme roles", target_roles: [], recommendations: [], gaps: ["Role evidence is unverified."] }).code, "CAREER_DISCOVERY_REVIEW_SECTIONS_MUST_NOT_BE_EMPTY");
 });
 
 function requestAgent() {
@@ -103,6 +120,7 @@ test("runtime keeps Staff/Admin requests on the bounded Groq path and awaiting h
   const runtime = await readFile(new URL("../supabase/functions/careerdev-ai-agent-runtime/index.ts", import.meta.url), "utf8");
   assert.match(runtime, /evaluateStaffAdminOperationalRequest/);
   assert.match(runtime, /STAFF_ADMIN_GROQ_HARD_LIMIT_CONFIRMED/);
+  assert.match(runtime, /if\(!staffAdminPolicy&&dependencyMode!=='works_without_ai'\)/);
   assert.match(runtime, /staffAdminPolicy\?staffAdminPolicy\.outputSchema/);
   assert.match(runtime, /EXECUTION_CLAIM_FAILED/);
   assert.match(runtime, /human_review_required:requiresHumanReview,human_review_status:requiresHumanReview\?'pending':'not_required'/);
@@ -120,4 +138,10 @@ test("database migration pins the staged request path and prevents review bypass
   assert.match(migration, /new\.status = 'completed'/);
   assert.match(migration, /a\.approved_by <> request_row\.requested_by/);
   assert.match(migration, /revoke all on function public\.guard_staff_admin_agent_execution_review\(\) from public, anon/);
+  const careerMigration = await readFile(new URL("../supabase/migrations/20261124200000_staff_admin_career_discovery_guard.sql", import.meta.url), "utf8");
+  assert.match(careerMigration, /agent_row\.agent_key not in \('ceo_operations_ai', 'career_discovery_ai'\)/);
+  assert.match(careerMigration, /career_discovery_ai' then 'career_profile_analysis'/);
+  assert.match(careerMigration, /Career Discovery accepts only bounded synthetic inputs without contact details/);
+  assert.match(careerMigration, /linkedin\[\.\]com/);
+  assert.match(careerMigration, /new\.human_review_required is not true/);
 });
