@@ -131,22 +131,26 @@ On 2026-11-24, the testing-only migration `20261124170000_staff_admin_agents_tes
 
 ## CEO Operations AI — staged operational path
 
-The separate Admin initiation workspace now has two distinct actions: a deterministic local aggregate preview, and a Groq-backed operational draft action. The live action is available only when the registry reports this agent as `status = active`, `active = true`, and `human_approval_required = true`; it submits the fixed `executive_performance_review` workflow through request, preparation, and the governed runtime. CEO Operations is the only agent permitted by this staged implementation. The other six operational workflows remain blocked until their own agent-by-agent work is complete.
+The separate Admin initiation workspace now has two distinct actions: a deterministic local aggregate preview, and a Groq-backed operational draft action. The live action is available only when the registry reports this agent as `status = live`, `active = true`, and `human_approval_required = true`; it submits the fixed `executive_performance_review` workflow through request, preparation, and the governed runtime. `live` is the allowed operational registry status in the database check constraint; `active` is not a valid status value. CEO Operations is the only agent permitted by this staged implementation. The other six operational workflows remain blocked until their own agent-by-agent work is complete.
 
 The deployed Supabase Edge Function version 27 was retrieved read-only and added as tracked source. The new Staff/Admin path requires an active Admin for the Admin-owned CEO agent, an active matching workflow, the explicit operational trigger, fixed server-side output schema, aggregate-only inputs, Groq strict JSON output, and configured provider/model/price/spend-limit settings. It persists provider, model, token counts, estimated cost, output-contract status, and the human-review state. The run remains `awaiting_human_review`; completing it requires an independent approval record. It cannot identify or assess individual employees or recommend employment actions. No external action is available from this workflow.
 
-A proposed migration adds direct-RPC request guards and execution triggers. It requires operationally active registry state, enforces the CEO owner role, rejects other six agents during this rollout stage, limits CEO input to aggregate values and a reporting period, blocks client-supplied schema/routing overrides, and prevents the seven agents' execution review flag from being cleared or completed without independent approval. The migration has **not** been applied to any database.
+A migration adds direct-RPC request guards and execution triggers. It requires the operational registry state (`status = live`, `active = true`, and human review enabled), enforces the CEO owner role, rejects other six agents during this rollout stage, limits CEO input to aggregate values and a reporting period, blocks client-supplied schema/routing overrides, and prevents the seven agents' execution review flag from being cleared or completed without independent approval. It was applied to the existing non-production test project for DDL validation only; no production database was changed.
 
 ## Validation and release status
 
-- `npm run test:admin-ceo-operations`: 3 passed.
+- `npm run test:admin-ceo-operations`: 5 passed, including mocked request, preparation, runtime, and independent-review handoff.
 - `npm run test:staff-admin-agent-operational-policy`: 9 passed, including staged allowlist, Admin-only CEO access, invalid/individual inputs, output schema, human-review enforcement, and migration guard source checks.
+- `npm run test:staff-admin-groq-transport`: 3 passed using injected mock fetch responses; no network request or inference was made.
+- Mocked provider transport and RPC-flow tests cover strict JSON-schema request formatting, authorization, preparation, runtime review state, approval request, and failure paths; no network request or inference was used.
 - `git diff --check`: passed.
-- No provider/API/model calls, production database writes, migrations, function deployments, or paid services were used.
-- Deno, TypeScript, and PostgreSQL runtime validation could not be run in this checkout. The migration remains proposed and must be checked/applied in a non-production database before release.
+- No provider/API/model calls, production database writes, function deployments, or paid services were used.
+- PostgreSQL accepted the guard migration in the existing non-production test project. Anonymous request and review-flag-clear smoke checks were rejected by the database triggers. A request/preparation test using synthetic aggregate input completed inside a transaction and was rolled back; registry state and operational request/execution counts were verified unchanged afterward.
+- The database test exposed and corrected two migration defects: the registry uses `live` rather than `active` for operational status, and PostgreSQL has no `jsonb_object_length` function. JSON object key counts now use `jsonb_object_keys`.
+- Deno syntax/type checking with temporary local stubs for Supabase and edge-runtime imports passed. Normal JSR dependency resolution was blocked because the environment could not connect to `jsr.io`; the stub check does not validate actual Supabase SDK typings.
 - The local environment had no Groq provider configuration. Provider-side hard spend limits, alerts, price configuration, and secret availability remain unverified. No secret values were read or printed.
 
-The CEO agent remains **not active in production**: its verified registry row is still `testing`, inactive, and human-review-gated. The code path is guarded but cannot run until the required runtime deployment, non-production migration validation, and provider billing controls are completed. All seven agents remain testing/inactive in production. No production deployment occurred.
+The CEO agent remains **not active in production**: its verified registry row is still `testing`, inactive, and human-review-gated. The code path cannot run until the runtime is safely deployed and provider billing controls are verified. All seven agents remain testing/inactive in production. No production deployment occurred.
 
 ## Career Discovery initiation control follow-up
 

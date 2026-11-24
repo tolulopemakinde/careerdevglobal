@@ -147,7 +147,7 @@ export function evaluateStaffAdminOperationalRequest({ agent, workflowKey, workf
   if (policy.ownerRole === "admin" ? callerRole !== "admin" : !["admin", "staff"].includes(callerRole)) {
     return { allowed: false, code: "CALLER_ROLE_NOT_AUTHORIZED" };
   }
-  if (agent.status !== "active" || agent.active !== true) return { allowed: false, code: "AGENT_NOT_OPERATIONALLY_ACTIVE" };
+  if (agent.status !== "live" || agent.active !== true) return { allowed: false, code: "AGENT_NOT_OPERATIONALLY_ACTIVE" };
   if (agent.human_approval_required !== true) return { allowed: false, code: "HUMAN_APPROVAL_MUST_REMAIN_REQUIRED" };
   if (workflowKey !== policy.workflowKey || workflowActive !== true) return { allowed: false, code: "WORKFLOW_CONTRACT_MISMATCH" };
   if (triggerSource !== "staff_admin_operational") return { allowed: false, code: "NON_OPERATIONAL_TRIGGER_BLOCKED" };

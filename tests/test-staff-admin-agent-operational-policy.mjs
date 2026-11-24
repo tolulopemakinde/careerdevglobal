@@ -26,7 +26,7 @@ function request(agentKey, overrides = {}) {
     input.performance_data = { reporting_period: "FY2026" };
   }
   return evaluateStaffAdminOperationalRequest({
-    agent: { agent_key: agentKey, owner_role: policy.ownerRole, status: "active", active: true, human_approval_required: true },
+    agent: { agent_key: agentKey, owner_role: policy.ownerRole, status: "live", active: true, human_approval_required: true },
     workflowKey: policy.workflowKey,
     workflowActive: true,
     callerRole: policy.ownerRole === "admin" ? "admin" : "staff",
@@ -64,11 +64,12 @@ test("the other six operational workflows remain blocked until their individual 
 });
 
 function requestAgent() {
-  return { agent_key: "ceo_operations_ai", owner_role: "admin", status: "active", active: true, human_approval_required: true };
+  return { agent_key: "ceo_operations_ai", owner_role: "admin", status: "live", active: true, human_approval_required: true };
 }
 
 test("testing, inactive, review-disabled, wrong workflow, and test triggers are blocked", () => {
   assert.equal(request("ceo_operations_ai", { agent: { ...requestAgent(), status: "testing" } }).code, "AGENT_NOT_OPERATIONALLY_ACTIVE");
+  assert.equal(request("ceo_operations_ai", { agent: { ...requestAgent(), status: "active" } }).code, "AGENT_NOT_OPERATIONALLY_ACTIVE");
   assert.equal(request("ceo_operations_ai", { agent: { ...requestAgent(), active: false } }).code, "AGENT_NOT_OPERATIONALLY_ACTIVE");
   assert.equal(request("ceo_operations_ai", { agent: { ...requestAgent(), human_approval_required: false } }).code, "HUMAN_APPROVAL_MUST_REMAIN_REQUIRED");
   assert.equal(request("ceo_operations_ai", { workflowKey: "continuous_improvement_review" }).code, "WORKFLOW_CONTRACT_MISMATCH");
@@ -111,7 +112,7 @@ test("runtime keeps Staff/Admin requests on the bounded Groq path and awaiting h
 });
 
 test("database migration pins the staged request path and prevents review bypass", async () => {
-  const migration = await readFile(new URL("../supabase/migrations/20261124183620_staff_admin_agent_operational_authorization.sql", import.meta.url), "utf8");
+  const migration = await readFile(new URL("../supabase/migrations/20261124191002_staff_admin_agent_guards_postgres_compatibility.sql", import.meta.url), "utf8");
   assert.match(migration, /before insert on public\.ai_agent_execution_requests/);
   assert.match(migration, /agent_row\.agent_key <> 'ceo_operations_ai'/);
   assert.match(migration, /new\.trigger_source <> 'staff_admin_operational'/);

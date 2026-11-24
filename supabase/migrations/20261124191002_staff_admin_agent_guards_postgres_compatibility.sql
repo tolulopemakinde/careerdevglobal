@@ -17,6 +17,10 @@ declare
   quality_score numeric;
   completed_count numeric;
   target_count numeric;
+  input_key_count integer;
+  quality_key_count integer;
+  outcomes_key_count integer;
+  performance_key_count integer;
 begin
   select ar.id, ar.agent_key, ar.owner_role, ar.status, ar.active,
          ar.human_approval_required
@@ -53,7 +57,7 @@ begin
      or (agent_row.agent_key <> 'ceo_operations_ai' and agent_row.owner_role is distinct from 'staff') then
     raise exception 'Staff/Admin agent owner role does not match the approved agent contract';
   end if;
-  if agent_row.status <> 'active' or agent_row.active is not true then
+  if agent_row.status <> 'live' or agent_row.active is not true then
     raise exception 'Staff/Admin agent is not operationally active';
   end if;
   if agent_row.human_approval_required is not true then
@@ -81,13 +85,26 @@ begin
   if new.trigger_source <> 'staff_admin_operational' then
     raise exception 'Staff/Admin agents require the explicit operational trigger';
   end if;
-  if jsonb_typeof(new.input_payload) <> 'object'
+  if jsonb_typeof(new.input_payload) is distinct from 'object'
      or new.input_payload ? 'output_schema'
      or new.input_payload ? 'service_execution_id' then
     raise exception 'Staff/Admin input must be an object and cannot override execution routing or output schema';
   end if;
 
   if agent_row.agent_key = 'ceo_operations_ai' then
+    select count(*) into input_key_count from jsonb_object_keys(new.input_payload);
+    if jsonb_typeof(new.input_payload->'quality') = 'object' then
+      select count(*) into quality_key_count from jsonb_object_keys(new.input_payload->'quality');
+    else quality_key_count := -1;
+    end if;
+    if jsonb_typeof(new.input_payload->'outcomes') = 'object' then
+      select count(*) into outcomes_key_count from jsonb_object_keys(new.input_payload->'outcomes');
+    else outcomes_key_count := -1;
+    end if;
+    if jsonb_typeof(new.input_payload->'performance_data') = 'object' then
+      select count(*) into performance_key_count from jsonb_object_keys(new.input_payload->'performance_data');
+    else performance_key_count := -1;
+    end if;
     if jsonb_typeof(new.input_payload#>'{quality,delivery_score}') = 'number' then
       quality_score := (new.input_payload#>>'{quality,delivery_score}')::numeric;
     end if;
@@ -99,20 +116,20 @@ begin
        and (new.input_payload#>>'{outcomes,target}') ~ '^[1-9][0-9]*$' then
       target_count := (new.input_payload#>>'{outcomes,target}')::numeric;
     end if;
-    if (case when jsonb_typeof(new.input_payload) = 'object' then jsonb_object_length(new.input_payload) else -1 end) <> 3
+    if input_key_count <> 3
        or not (new.input_payload ?& array['quality', 'outcomes', 'performance_data'])
        or jsonb_typeof(new.input_payload->'quality') <> 'object'
-       or (case when jsonb_typeof(new.input_payload->'quality') = 'object' then jsonb_object_length(new.input_payload->'quality') else -1 end) <> 1
+       or quality_key_count <> 1
        or quality_score is null
        or quality_score < 0
        or quality_score > 1
        or jsonb_typeof(new.input_payload->'outcomes') <> 'object'
-       or (case when jsonb_typeof(new.input_payload->'outcomes') = 'object' then jsonb_object_length(new.input_payload->'outcomes') else -1 end) <> 2
+       or outcomes_key_count <> 2
        or completed_count is null
        or target_count is null
        or completed_count > target_count
        or jsonb_typeof(new.input_payload->'performance_data') <> 'object'
-       or (case when jsonb_typeof(new.input_payload->'performance_data') = 'object' then jsonb_object_length(new.input_payload->'performance_data') else -1 end) <> 1
+       or performance_key_count <> 1
        or coalesce(new.input_payload#>>'{performance_data,reporting_period}', '') !~ '^(FY)?20[0-9]{2}([-/ ]?(Q[1-4]|H[1-2]|M(0[1-9]|1[0-2])))?$' then
       raise exception 'CEO Operations accepts only validated aggregate period, delivery score, completed count and target';
     end if;
@@ -173,7 +190,7 @@ begin
        or (agent_key <> 'ceo_operations_ai' and (agent_row.owner_role is distinct from 'staff' or actor_role not in ('admin', 'staff'))) then
       raise exception 'Caller is not authorized for this Staff/Admin agent owner role';
     end if;
-    if agent_row.status <> 'active' or agent_row.active is not true
+    if agent_row.status <> 'live' or agent_row.active is not true
        or agent_row.human_approval_required is not true then
       raise exception 'Staff/Admin agent is not operationally ready';
     end if;

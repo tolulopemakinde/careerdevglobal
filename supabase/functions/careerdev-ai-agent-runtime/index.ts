@@ -1,6 +1,7 @@
 import "edge-runtime";
 import { createClient } from "@supabase/supabase-js";
 import { evaluateStaffAdminOperationalRequest, getStaffAdminOperationalPolicy, validateStaffAdminOperationalOutput } from "./staff-admin-operational-policy.mjs";
+import { sendStaffAdminGroqRequest } from "./staff-admin-groq-transport.mjs";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -187,7 +188,9 @@ Deno.serve(async(req)=>{
   const providerBody=staffAdminPolicy
     ? {model,messages:[{role:'system',content:systemPrompt},{role:'user',content:userPrompt}],max_tokens:1800,response_format:{type:'json_schema',json_schema:{name:'careerdev_staff_admin_agent_output',strict:true,schema}}}
     : {model,input:[{role:'system',content:[{type:'input_text',text:systemPrompt}]},{role:'user',content:[{type:'input_text',text:userPrompt}]}],tools:[{type:'web_search'}],text:{format:{type:'json_schema',name:'careerdev_agent_output',strict:true,schema}}};
-  const provider=await fetch(staffAdminPolicy?'https://api.groq.com/openai/v1/chat/completions':'https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${activeProviderKey}`,'Content-Type':'application/json'},body:JSON.stringify(providerBody),signal:AbortSignal.timeout(45000)});
+  const provider=staffAdminPolicy
+    ? await sendStaffAdminGroqRequest({apiKey:activeProviderKey,body:providerBody})
+    : await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${activeProviderKey}`,'Content-Type':'application/json'},body:JSON.stringify(providerBody),signal:AbortSignal.timeout(45000)});
   const raw=await provider.text();
   if(!provider.ok){
     if(creditReservation?.ledger_id) await sb.rpc('finalize_ai_credit_charge',{p_ledger_id:creditReservation.ledger_id,p_outcome:'released',p_metadata:{provider_status:provider.status,credit_release_reason:'provider_request_failed'}});

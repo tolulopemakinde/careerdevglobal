@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { createSupabaseBrowserClient } from '../../lib/supabase-browser';
-import { createExecutiveReview, executiveReviewToMarkdown } from '../../lib/admin/ceo-operations-workspace.mjs';
+import { createExecutiveReview, executiveReviewToMarkdown, requestCEOIndependentReview, runCEOOperationsDraft } from '../../lib/admin/ceo-operations-workspace.mjs';
 
 const fieldStyle = { width: '100%', padding: '10px 11px', border: '1px solid #c8d9e8', borderRadius: 8, boxSizing: 'border-box' as const };
 const labelStyle = { display: 'grid', gap: 5, fontSize: 12, fontWeight: 700 as const, color: '#36566f' };
@@ -15,7 +15,7 @@ export default function CEOOperationsWorkspace({ onMessage, agentStatus, agentAc
   const [operationalResult, setOperationalResult] = useState<any>(null);
   const [approvalBusy, setApprovalBusy] = useState(false);
   const [approvalMessage, setApprovalMessage] = useState('');
-  const operationalReady = agentStatus === 'active' && agentActive && humanApprovalRequired;
+  const operationalReady = agentStatus === 'live' && agentActive && humanApprovalRequired;
   function update(key: keyof typeof input, value: string) { setInput((current) => ({ ...current, [key]: value })); }
   function generate(event: React.FormEvent) {
     event.preventDefault();
@@ -42,17 +42,9 @@ export default function CEOOperationsWorkspace({ onMessage, agentStatus, agentAc
     setOperationalBusy(true); setOperationalResult(null); setApprovalMessage('');
     const payload = { quality: { delivery_score: qualityScore / 100 }, outcomes: { completed, target }, performance_data: { reporting_period: period } };
     try {
-      const requested = await supabase.rpc('request_ai_agent_execution', { p_agent_key: 'ceo_operations_ai', p_workflow_key: 'executive_performance_review', p_trigger_source: 'staff_admin_operational', p_input_payload: payload });
-      if (requested.error || !requested.data) throw new Error('The CEO Operations request could not be authorized. No provider call was made.');
-      const requestId = String(requested.data);
-      const prepared = await supabase.rpc('prepare_ai_agent_execution', { p_request_id: requestId });
-      if (prepared.error || !prepared.data?.execution_id) throw new Error('The CEO Operations request could not be prepared. No provider call was made.');
-      const executionId = String(prepared.data.execution_id);
-      const run = await supabase.functions.invoke('careerdev-ai-agent-runtime', { body: { request_id: requestId } });
-      if (run.error || !run.data) throw new Error('The governed runtime did not return an operational result. Check AI Governance for the recorded execution state.');
-      if (run.data.status !== 'awaiting_human_review' || run.data.human_review_required !== true) throw new Error('The runtime did not preserve the required human-review state. Do not use this result.');
-      setOperationalResult({ requestId, executionId, ...run.data });
-      onMessage(`CEO Operations draft is ready for independent human review. Estimated provider cost: $${Number(run.data.estimated_cost_usd || 0).toFixed(6)}.`);
+      const result = await runCEOOperationsDraft(supabase, payload);
+      setOperationalResult(result);
+      onMessage(`CEO Operations draft is ready for independent human review. Estimated provider cost: $${Number(result.estimated_cost_usd || 0).toFixed(6)}.`);
     } catch (error: any) {
       onMessage(error?.message || 'CEO Operations could not produce a governed draft.');
     } finally {
@@ -62,10 +54,12 @@ export default function CEOOperationsWorkspace({ onMessage, agentStatus, agentAc
   async function requestIndependentReview() {
     if (!operationalResult?.requestId || !operationalResult?.executionId || approvalBusy) return;
     setApprovalBusy(true); setApprovalMessage('');
-    const { data, error } = await supabase.rpc('request_ai_human_approval', { p_request_id: operationalResult.requestId, p_execution_id: operationalResult.executionId });
-    setApprovalMessage(error ? 'Independent review request could not be created. Open AI Governance and inspect the execution.' : 'Independent approval request created. Another authorized Administrator must review it.');
+    let approvalId: unknown = null;
+    try { approvalId = await requestCEOIndependentReview(supabase, operationalResult); }
+    catch { setApprovalMessage('Independent review request could not be created. Open AI Governance and inspect the execution.'); }
+    setApprovalMessage(approvalId === null ? 'Independent review request could not be created. Open AI Governance and inspect the execution.' : 'Independent approval request created. Another authorized Administrator must review it.');
     setApprovalBusy(false);
-    onMessage(error ? 'Independent review request could not be created.' : `Independent review request created: ${data}`);
+    onMessage(approvalId === null ? 'Independent review request could not be created.' : `Independent review request created: ${approvalId}`);
   }
   return <section style={{ marginTop: 18, background: '#fff', border: '1px solid #d8e6f1', borderRadius: 16, padding: 20 }}>
     <h2 style={{ margin: '0 0 8px', fontSize: 20 }}>CEO Operations workspace</h2>
