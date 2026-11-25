@@ -16,3 +16,12 @@ export function evaluateStaffAdminOperationalRequest(args: {
   input: unknown;
 }): { allowed: boolean; code?: string; policy?: StaffAdminOperationalPolicy };
 export function validateStaffAdminOperationalOutput(agentKey: string, output: unknown, input?: unknown): { valid: boolean; code?: string };
+
+type CEOAggregateReview = { priorities: string[]; risks: string[]; insights: string[] };
+export function createCEOAggregateReview(input: {
+  outcomes: { completed: number; target: number };
+  quality: { delivery_score: number };
+  performance_data: { reporting_period: string };
+}): CEOAggregateReview;
+export function finalizeCEOAggregateReview(review: CEOAggregateReview, selection: unknown):
+  { risks: string[]; insights: string[]; actions: string[] } | null;
