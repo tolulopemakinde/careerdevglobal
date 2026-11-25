@@ -12,7 +12,8 @@ export default function PricingPage(){
   const [plans,setPlans]=useState<Plan[]>([]);
   const [serviceEntitlements,setServiceEntitlements]=useState<ServiceEntitlement[]>([]);
   const [interval,setInterval]=useState<'monthly'|'annual'>('monthly');
-  const [currency,setCurrency]=useState<'USD'|'NGN'>('USD');
+  const [currency,setCurrency]=useState<'USD'|'NGN'>('NGN');
+  const [usdSubscriptionsEnabled,setUsdSubscriptionsEnabled]=useState(false);
   const [loading,setLoading]=useState(true);
   const [busy,setBusy]=useState<string|null>(null);
   const [message,setMessage]=useState('');
@@ -28,11 +29,15 @@ export default function PricingPage(){
       if(error||!data?.status){setMessage(data?.error||error?.message||'Payment verification is still pending. Please refresh shortly.');}
       else{setMessage('Payment verified. Your AI Agent subscription is now active.');window.history.replaceState({},'','/pricing');}
     }
-    const [{data:plansData},{data:serviceData},{data:subscription}]=await Promise.all([
+    const [{data:plansData},{data:serviceData},{data:subscription},{data:currencySettings}]=await Promise.all([
       supabase.from('ai_agent_subscription_plans').select('plan_key,name,description,monthly_price,annual_price,monthly_price_ngn,annual_price_ngn,currency,monthly_credits,included_agents').eq('active',true).order('sort_order'),
       supabase.from('ai_plan_service_entitlements').select('plan_key,feature_key,feature_name,description,enabled,monthly_quantity,availability_status').eq('enabled',true).eq('availability_status','available'),
-      supabase.rpc('get_my_ai_subscription')
+      supabase.rpc('get_my_ai_subscription'),
+      supabase.from('ai_subscription_currency_settings').select('enabled').eq('currency','USD').maybeSingle()
     ]);
+    const usdEnabled=currencySettings?.enabled===true;
+    setUsdSubscriptionsEnabled(usdEnabled);
+    if(!usdEnabled)setCurrency('NGN');
     setPlans(((plansData||[]) as Plan[]).sort((a,b)=>planOrder.indexOf(a.plan_key)-planOrder.indexOf(b.plan_key)));
     setServiceEntitlements((serviceData||[]) as ServiceEntitlement[]);
     setCurrentPlan(Array.isArray(subscription)&&subscription[0]?.plan_key?subscription[0].plan_key:null);
@@ -48,7 +53,7 @@ export default function PricingPage(){
         let detail='';
         try{detail=error.context?JSON.stringify(await error.context.json()):''}catch{}
         let parsed='';
-        try{const body=detail?JSON.parse(detail):null;parsed=body?.error||body?.detail||''}catch{}
+        try{const body=detail?JSON.parse(detail):null;parsed=body?.user_message||body?.detail||body?.error||''}catch{}
         throw new Error(parsed||error.message||'Could not start checkout.');
       }
       const url=data?.authorization_url||data?.checkout_url;
@@ -77,7 +82,7 @@ export default function PricingPage(){
       </header>
       <div style={{display:'flex',justifyContent:'center',gap:10,flexWrap:'wrap',marginBottom:12}}>
         <div style={{display:'inline-flex',padding:4,borderRadius:999,background:'#fff',border:'1px solid #c8d9e8'}}>
-          <button onClick={()=>setCurrency('USD')} style={{border:0,borderRadius:999,padding:'10px 18px',fontWeight:900,background:currency==='USD'?'#0b5d9b':'transparent',color:currency==='USD'?'#fff':'#173b59'}}>USD ($)</button>
+          {usdSubscriptionsEnabled&&<button onClick={()=>setCurrency('USD')} style={{border:0,borderRadius:999,padding:'10px 18px',fontWeight:900,background:currency==='USD'?'#0b5d9b':'transparent',color:currency==='USD'?'#fff':'#173b59'}}>USD ($)</button>}
           <button onClick={()=>setCurrency('NGN')} style={{border:0,borderRadius:999,padding:'10px 18px',fontWeight:900,background:currency==='NGN'?'#0b5d9b':'transparent',color:currency==='NGN'?'#fff':'#173b59'}}>NGN (₦)</button>
         </div>
         <div style={{display:'inline-flex',padding:4,borderRadius:999,background:'#fff',border:'1px solid #c8d9e8'}}>
@@ -85,6 +90,7 @@ export default function PricingPage(){
           <button onClick={()=>setInterval('annual')} style={{border:0,borderRadius:999,padding:'10px 18px',fontWeight:900,background:interval==='annual'?'#0b5d9b':'transparent',color:interval==='annual'?'#fff':'#173b59'}}>Annual</button>
         </div>
       </div>
+      {!usdSubscriptionsEnabled&&<p style={{textAlign:'center',fontSize:12,color:'#718394',margin:'0 0 20px'}}>USD checkout is temporarily unavailable while Paystack completes account currency enablement. NGN checkout remains available.</p>}
       {currency==='NGN'&&<p style={{textAlign:'center',fontSize:12,color:'#718394',margin:'0 0 20px'}}>NGN pricing is a rounded local-price schedule for Nigeria, not a live FX conversion.</p>}
       {message&&<div style={{marginBottom:18,padding:14,borderRadius:12,background:'#fff4e5',border:'1px solid #f0c36a',color:'#684b00'}}>{message}</div>}
       {loading?<p>Loading plans…</p>:<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:16}}>
@@ -113,6 +119,7 @@ export default function PricingPage(){
         <h2 style={{marginTop:0}}>How access works</h2>
         <p style={{color:'#527085',lineHeight:1.6}}>Your active subscription controls which of the 16 Client & Coach AI Agents can be opened in the AI Agent Workspace. Published plans can also include separately governed service entitlements, such as Advanced Career Intelligence and Human Coach Review, where shown on the plan card. The platform keeps the internal/admin agents separate from these customer plans.</p>
         <p style={{color:'#527085',lineHeight:1.6}}>Subscriptions are processed securely through Paystack. Payment status is verified server-side before AI Agent access is activated.</p>
+        <p style={{color:'#527085',lineHeight:1.6}}>If your bank or card provider declines a payment for insufficient funds, the subscription is not activated. Use a funded payment method and retry; the platform does not override bank declines.</p>
       </section>
     </div>
   </main>

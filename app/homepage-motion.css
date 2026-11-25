@@ -546,3 +546,22 @@ main:not(.homepage-motion) button:not(:disabled):hover,
     animation: none !important;
   }
 }
+
+/* Static signed-in experiences: no entrance, scroll, hover or decorative motion. */
+:is(.client-dash,.coach-dash,.cdg-account-page,.cdg-account-shell,.cdg-coach-account,.cdg-auth-shell) ,
+:is(.client-dash,.coach-dash,.cdg-account-page,.cdg-account-shell,.cdg-coach-account,.cdg-auth-shell) *,
+:is(.client-dash,.coach-dash,.cdg-account-page,.cdg-account-shell,.cdg-coach-account,.cdg-auth-shell) *::before,
+:is(.client-dash,.coach-dash,.cdg-account-page,.cdg-account-shell,.cdg-coach-account,.cdg-auth-shell) *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+:is(.client-dash,.coach-dash,.cdg-account-page,.cdg-account-shell,.cdg-coach-account,.cdg-auth-shell) .cdg-scroll-motion,
+:is(.client-dash,.coach-dash,.cdg-account-page,.cdg-account-shell,.cdg-coach-account,.cdg-auth-shell) .cdg-scroll-motion.cdg-scroll-visible {
+  opacity: 1 !important;
+  transform: none !important;
+}
+:is(.client-dash,.coach-dash,.cdg-account-page,.cdg-account-shell,.cdg-coach-account,.cdg-auth-shell) :is(.cdg-account-card,.dash-card,.card,.panel):hover,
+:is(.client-dash,.coach-dash,.cdg-account-page,.cdg-account-shell,.cdg-coach-account,.cdg-auth-shell) .cdg-scroll-motion:hover {
+  transform: none !important;
+}

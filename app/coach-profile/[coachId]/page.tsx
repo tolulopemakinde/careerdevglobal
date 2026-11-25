@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { createSupabaseBrowserClient } from '../../../lib/supabase-browser';
+import { dateInTimeZone, formatDualTimeZoneRange } from '../../../lib/marketplace/booking-time.mjs';
 import './styles.css';
 
 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -43,10 +44,6 @@ function wallTimeToUtc(date: string, time: string, tz: string) {
   return new Date(guess);
 }
 
-function localDateString(d: Date) {
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
 function safeExternalUrl(value: unknown) {
   if (typeof value !== 'string' || !value.trim()) return null;
   try {
@@ -71,19 +68,33 @@ export default function CoachProfilePage() {
   const [notes, setNotes] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const submissionInFlight = useRef(false);
+  const [clientTimezone, setClientTimezone] = useState('UTC');
   const [pendingLoginBooking, setPendingLoginBooking] = useState(false);
+
+  useEffect(() => {
+    setClientTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+  }, []);
 
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        const { data } = await supabase.rpc('get_public_coach_profile', { p_coach_id: params.coachId });
+        const [{ data }, { data: bookingLinks }] = await Promise.all([
+          supabase.rpc('get_public_coach_profile', { p_coach_id: params.coachId }),
+          supabase.rpc('get_public_calendly_booking_links', { p_coach_id: params.coachId }),
+        ]);
         if (!active) return;
         if (data?.coach_id) {
-          setProfile(data);
+          const linksByOffering = new Map(Array.isArray(bookingLinks) ? bookingLinks.map((x: any) => [x.offering_id, x.calendly_booking_url]) : []);
+          const profileWithBookingLinks = {
+            ...data,
+            offerings: (data.offerings || []).map((o: any) => ({ ...o, calendly_booking_url: linksByOffering.get(o.id) || null })),
+          };
+          setProfile(profileWithBookingLinks);
           const requestedOffering = searchParams.get('offering');
           if (requestedOffering) {
-            setSelectedOffering(data.offerings?.find((o: any) => o.id === requestedOffering) ?? null);
+            setSelectedOffering(profileWithBookingLinks.offerings?.find((o: any) => o.id === requestedOffering) ?? null);
           }
         }
       } finally {
@@ -93,7 +104,7 @@ export default function CoachProfilePage() {
     return () => { active = false; };
   }, [params.coachId, searchParams, supabase]);
 
-  const minDate = useMemo(() => localDateString(new Date()), []);
+  const minDate = useMemo(() => dateInTimeZone(new Date(), profile?.timezone || 'UTC'), [profile?.timezone]);
   const coachingOfferings = useMemo(() => profile?.offerings?.filter((o: any) => /session|coaching|coach/i.test(o.title || '')) || [], [profile]);
   const serviceOfferings = useMemo(() => profile?.offerings?.filter((o: any) => !/session|coaching|coach/i.test(o.title || '')) || [], [profile]);
   const modeOfferings = bookingMode === 'coaching' ? coachingOfferings : serviceOfferings;
@@ -156,14 +167,14 @@ export default function CoachProfilePage() {
             start,
             finish,
             tz,
-            label: `${new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit', timeZone: tz }).format(start)}–${new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit', timeZone: tz }).format(finish)} (${tz})`,
+            label: formatDualTimeZoneRange(start, finish, clientTimezone, tz),
           });
         }
         minutes += duration;
       }
     }
     return out;
-  }, [profile, date, selectedOffering]);
+  }, [profile, date, selectedOffering, clientTimezone]);
 
   useEffect(() => {
     if (!pendingLoginBooking || !profile || !date) return;
@@ -180,67 +191,75 @@ export default function CoachProfilePage() {
         start,
         finish,
         tz: pending.tz,
-        label: `${new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit', timeZone: pending.tz }).format(start)}–${new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit', timeZone: pending.tz }).format(finish)} (${pending.tz})`,
+        label: formatDualTimeZoneRange(start, finish, clientTimezone, pending.tz),
       });
     } catch {
       // Ignore invalid session state.
     }
-  }, [pendingLoginBooking, profile, date]);
+  }, [pendingLoginBooking, profile, date, clientTimezone]);
 
   async function requestBooking() {
     setMessage('');
+    if (submissionInFlight.current) return;
     if (!selectedOffering || !selectedSlot) {
       setMessage(`Choose a ${bookingMode === 'coaching' ? 'coaching session' : 'service'} and available time first.`);
       return;
     }
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      try {
-        const pending: PendingBooking = {
-          coachId: String(params.coachId),
-          offeringId: selectedOffering.id,
-          date,
-          startIso: selectedSlot.start.toISOString(),
-          finishIso: selectedSlot.finish.toISOString(),
-          tz: selectedSlot.tz,
-          notes,
-          mode: bookingMode,
-        };
-        window.sessionStorage.setItem('careerdev_pending_booking', JSON.stringify(pending));
-      } catch {
-        // Continue to login even if session storage is unavailable.
-      }
-      router.push(`/client/login?next=${encodeURIComponent(`/coach-profile/${params.coachId}?offering=${selectedOffering.id}&mode=${bookingMode}`)}`);
-      return;
-    }
-    const { data: client } = await supabase.from('clients').select('id').eq('profile_id', user.id).maybeSingle();
-    if (!client) {
-      setMessage('A client account is required before booking. Please complete client onboarding first.');
-      return;
-    }
+    submissionInFlight.current = true;
     setSubmitting(true);
-    const { error } = await supabase.rpc('create_marketplace_booking_request', {
-      p_client_id: client.id,
-      p_coach_id: params.coachId,
-      p_coach_service_offering_id: selectedOffering.id,
-      p_service_request_id: null,
-      p_start_at: selectedSlot.start.toISOString(),
-      p_end_at: selectedSlot.finish.toISOString(),
-      p_timezone: selectedSlot.tz,
-      p_client_notes: notes || null,
-    });
-    setSubmitting(false);
-    if (error) {
-      setMessage(error.message);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        try {
+          const pending: PendingBooking = {
+            coachId: String(params.coachId),
+            offeringId: selectedOffering.id,
+            date,
+            startIso: selectedSlot.start.toISOString(),
+            finishIso: selectedSlot.finish.toISOString(),
+            tz: selectedSlot.tz,
+            notes,
+            mode: bookingMode,
+          };
+          window.sessionStorage.setItem('careerdev_pending_booking', JSON.stringify(pending));
+        } catch {
+          // Continue to login even if session storage is unavailable.
+        }
+        router.push(`/client/login?next=${encodeURIComponent(`/coach-profile/${params.coachId}?offering=${selectedOffering.id}&mode=${bookingMode}`)}`);
+        return;
+      }
+      const { data: client } = await supabase.from('clients').select('id').eq('profile_id', user.id).maybeSingle();
+      if (!client) {
+        setMessage('A client account is required before booking. Please complete client onboarding first.');
+        return;
+      }
+      const { error } = await supabase.rpc('create_marketplace_booking_request', {
+        p_client_id: client.id,
+        p_coach_id: params.coachId,
+        p_coach_service_offering_id: selectedOffering.id,
+        p_service_request_id: null,
+        p_start_at: selectedSlot.start.toISOString(),
+        p_end_at: selectedSlot.finish.toISOString(),
+        p_timezone: selectedSlot.tz,
+        p_client_notes: notes || null,
+      });
+      if (error) {
+        setMessage(error.message);
+        await loadBooked();
+        return;
+      }
+      try { window.sessionStorage.removeItem('careerdev_pending_booking'); } catch { /* no-op */ }
+      setPendingLoginBooking(false);
+      setMessage(`${bookingMode === 'coaching' ? 'Coaching session' : 'Service'} request sent successfully. Your coach will review the requested time.`);
+      setSelectedSlot(null);
+      setNotes('');
       await loadBooked();
-      return;
+    } catch {
+      setMessage('We could not submit your request. Check your connection and try again.');
+    } finally {
+      submissionInFlight.current = false;
+      setSubmitting(false);
     }
-    try { window.sessionStorage.removeItem('careerdev_pending_booking'); } catch { /* no-op */ }
-    setPendingLoginBooking(false);
-    setMessage(`${bookingMode === 'coaching' ? 'Coaching session' : 'Service'} request sent successfully. Your coach will review the requested time.`);
-    setSelectedSlot(null);
-    setNotes('');
-    await loadBooked();
   }
 
   if (loading) return <main className="profile-page"><div className="profile-shell"><p>Loading coach profile…</p></div></main>;
@@ -289,9 +308,10 @@ export default function CoachProfilePage() {
             {modeOfferings.length ? (
               <>
                 <div className="booking-context"><span>{bookingMode === 'coaching' ? 'COACHING SESSION' : 'PROFESSIONAL SERVICE'}</span><strong>{bookingMode === 'coaching' ? 'Select your coaching session' : 'Select the service you need'}</strong></div>
+                {selectedOffering?.calendly_booking_url && <div className="calendly-direct-booking"><a href={selectedOffering.calendly_booking_url} target="_blank" rel="noopener noreferrer">Book directly on Calendly →</a><p>Booking completes on Calendly. It will not be recorded or paid through CareerDev’s marketplace flow. Choose one booking route to avoid duplicate requests.</p></div>}
                 <div className="booking-step"><span>1</span><div><strong>{bookingMode === 'coaching' ? 'Choose a coaching session' : 'Choose a service'}</strong><label><select value={selectedOffering?.id || ''} onChange={(e) => { setSelectedOffering(modeOfferings.find((o: any) => o.id === e.target.value) || null); setSelectedSlot(null); }}>{modeOfferings.map((o: any) => <option value={o.id} key={o.id}>{o.title} · {o.duration_minutes} min{o.price != null ? ` · ${o.currency} ${o.price}` : ''}</option>)}</select></label></div></div>
-                <div className="booking-step"><span>2</span><div><strong>Choose a date</strong><label><input type="date" min={minDate} value={date} onChange={(e) => { setDate(e.target.value); setSelectedSlot(null); }} /></label></div></div>
-                {date && <div className="booking-step"><span>3</span><div><strong>Choose an available time</strong><p className="booking-help">Times are shown in the coach’s timezone.</p><div className="availability-list">{slots.length ? slots.map((s: any) => <button type="button" className={selectedSlot === s ? 'booking-slot selected' : 'booking-slot'} key={s.start.toISOString()} onClick={() => setSelectedSlot(s)}>{s.label}</button>) : <p>No available times on this date. Try another date.</p>}</div></div></div>}
+                <div className="booking-step"><span>2</span><div><strong>Choose a date</strong><p className="booking-help">Choose the coach’s local calendar date ({profile.timezone || 'timezone not provided'}).</p><label><input type="date" min={minDate} value={date} onChange={(e) => { setDate(e.target.value); setSelectedSlot(null); }} /></label></div></div>
+                {date && <div className="booking-step"><span>3</span><div><strong>Choose a time to request</strong><p className="booking-help">Times are based on the coach’s published schedule and shown in both timezones. Calendly checks the slot when the coach confirms; the time is not held while you wait.</p><div className="availability-list">{slots.length ? slots.map((s: any) => <button type="button" aria-pressed={selectedSlot?.start?.getTime() === s.start.getTime()} className={selectedSlot?.start?.getTime() === s.start.getTime() ? 'booking-slot selected' : 'booking-slot'} key={s.start.toISOString()} onClick={() => setSelectedSlot(s)}>{s.label}</button>) : <p>No candidate times on this date based on the coach’s published schedule. Try another date.</p>}</div></div></div>}
                 <div className="booking-step"><span>4</span><div><strong>Tell the coach what you want to work on <em>(optional)</em></strong><textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={bookingMode === 'coaching' ? 'Example: I’d like support preparing for an upcoming career transition.' : 'Example: I need help improving my LinkedIn profile.'} /></div></div>
                 {selectedSlot && <div className="booking-summary"><strong>{bookingMode === 'coaching' ? 'Coaching session' : 'Service'} selected</strong><span>{selectedOffering.title} · {selectedSlot.label}</span></div>}
                 {message && <div className={message.includes('sent successfully') ? 'booking-success' : 'dash-message'}>{message}</div>}
