@@ -1,5 +1,6 @@
 "use client";
 
+import AgentReportActions from "../components/agent-report-actions";
 import { FormEvent, useMemo, useState } from "react";
 import { createSupabaseBrowserClient } from "../../lib/supabase-browser";
 
@@ -151,6 +152,13 @@ export default function InterviewCoachPage() {
             <h3>Strengths</h3><ul>{scorecard.strengths.map((x, i) => <li key={i}>{x}</li>)}</ul>
             <h3>Areas to improve</h3><ul>{scorecard.improvements.map((x, i) => <li key={i}>{x}</li>)}</ul>
             <h3>Next practice steps</h3><ul>{scorecard.practice_plan.map((x, i) => <li key={i}>{x}</li>)}</ul>
+            <AgentReportActions source="interview-coach" title="Interview Coach practice summary" sections={[
+              ["Overall feedback", scorecard.overall],
+              ["Role criteria", scorecard.criteria_assessments?.map(item => `${item.criterion} · ${item.assessment.replaceAll("_", " ")}\nEvidence: ${item.evidence}\nGap: ${item.gap}\nNext step: ${item.next_step}`)],
+              ["Strengths", scorecard.strengths],
+              ["Areas to improve", scorecard.improvements],
+              ["Next practice steps", scorecard.practice_plan],
+            ]} />
           </article>}
         </section>
       )}

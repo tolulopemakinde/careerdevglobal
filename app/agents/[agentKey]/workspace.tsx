@@ -1,5 +1,6 @@
 "use client";
 
+import AgentReportActions from "../../components/agent-report-actions";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { createSupabaseBrowserClient } from "../../../lib/supabase-browser";
 import {
@@ -119,6 +120,12 @@ export default function GuidedAgentWorkspace({ agentKey }: { agentKey: Structure
         <ol>{result.output.result.next_steps.map(item => <li key={item}>{item}</li>)}</ol>
         <p>{result.output.uncertainty_flags.join(" ")}</p>
         {result.output.human_review_required && <p>Awaiting human review.</p>}
+        <AgentReportActions source="agent-worksheet" title={result.output.result.title} sections={[
+          ["Findings", result.output.result.findings],
+          ["Next steps", result.output.result.next_steps],
+          ["Uncertainty", result.output.uncertainty_flags],
+          ["Review status", result.output.human_review_required ? "Awaiting human review" : undefined],
+        ]} />
         <small>Saved execution <code>{result.executionId}</code></small>
       </section>}
     </>

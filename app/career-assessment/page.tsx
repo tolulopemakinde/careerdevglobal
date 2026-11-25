@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import AgentReportActions from "../components/agent-report-actions";
+import "../career-intelligence/styles.css";
 import type { CSSProperties } from "react";
 import { createSupabaseBrowserClient } from "../../lib/supabase-browser";
 
@@ -284,6 +286,12 @@ export default function CareerAssessmentPage() {
                   <li>Discuss the result with a coach before making a major career decision.</li>
                 </ol>
                 <button type="button" onClick={() => void saveExplorationGoal()} disabled={goalSaved} style={{ ...blueButton, opacity: goalSaved ? .6 : 1 }}>{goalSaved ? "Exploration goal saved" : "Save this exploration as a career goal"}</button>
+                <AgentReportActions source="agent-worksheet" title="Career Direction Assessment" sections={[
+                  ["Self-reported work preferences", ranked.map(([category, count]) => `${categoryLabels[category] || category}: ${count} of ${questions.length} choices`)],
+                  ["Areas to research", topCategories.map(category => `${categoryLabels[category] || category}: ${(examples[category] || []).join(", ")}`)],
+                  ["Next steps", ["Review three role descriptions or project examples.", "Compare the recurring tasks with your preferences and collect evidence of your skills.", "Discuss the result with a coach before making a major career decision."]],
+                  ["How to interpret", "These scores summarize self-reported choices. They do not measure ability or predict job success."],
+                ]} />
                 {notice && <p role="status" style={{ color: "#385970", fontWeight: 700 }}>{notice}</p>}
                 <p style={{ marginTop: 18, color: "#718394", fontSize: 13, lineHeight: 1.6 }}>This is transparent, zero-cost structured guidance; no paid AI model is called. The categories are conversation prompts and have not been validated as a psychometric instrument. No current job-market research was performed.</p>
               </section>
