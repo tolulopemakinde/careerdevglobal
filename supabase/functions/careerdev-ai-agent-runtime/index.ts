@@ -1,4 +1,5 @@
 import "edge-runtime";
+import { buildStructuredResult, isStructuredAgent, supportsGuidedWorksheet, validateStructuredRequest } from "./client-coach-structured.ts";
 import { createClient } from "@supabase/supabase-js";
 import { evaluateStaffAdminOperationalRequest, getStaffAdminOperationalPolicy, validateStaffAdminOperationalOutput } from "./staff-admin-operational-policy.mjs";
 import { sendStaffAdminGroqRequest } from "./staff-admin-groq-transport.mjs";
@@ -112,6 +113,49 @@ Deno.serve(async(req)=>{
     if(accessErr) return reply({error:'AI agent subscription access could not be verified'},500);
     const access=Array.isArray(accessRows)?accessRows[0]:accessRows;
     if(!access?.allowed) return reply({error:'AI agent is not included in the active subscription for this account',agent_key:agent.agent_key},403);
+  }
+
+  if (reqRow.trigger_source === "client_coach_structured_workspace") {
+    if (agent.owner_role !== "client_coach" || !["client", "coach", "staff", "admin"].includes(profile.role) || reqRow.requested_by !== user.id) {
+      return reply({ error: "Only the account that started this workspace request may run it" }, 403);
+    }
+    if (["client", "coach"].includes(profile.role) && agent.status !== "live") {
+      return reply({ error: "This guided worksheet is still in testing" }, 403);
+    }
+    const key = String(agent.agent_key);
+    if (!isStructuredAgent(key) || !supportsGuidedWorksheet(agent.ai_dependency_mode)) {
+      return reply({ error: "This agent has no guided worksheet" }, 409);
+    }
+    const { data: workflow, error: workflowError } = await sb.from("ai_agent_workflows")
+      .select("workflow_key,active").eq("id", agentExec.workflow_id).eq("agent_id", agent.id).maybeSingle();
+    const input = validateStructuredRequest(key, reqRow.input_payload?.request);
+    if (workflowError || !workflow?.active || workflow.workflow_key !== `${key}_session` || !input) {
+      return reply({ error: "The guided request did not match this agent’s workflow" }, 422);
+    }
+    if (!serviceRoleKey) return reply({ error: "The guided workspace cannot currently save results" }, 503);
+    const { error: claimError } = await sb.rpc("transition_ai_agent_execution", {
+      p_request_id: reqRow.id, p_status: "running", p_event_data: { stage: "structured_workspace" },
+    });
+    if (claimError) return reply({ error: "This worksheet could not be started" }, 409);
+
+    const humanReviewRequired = agentExec.human_review_required === true;
+    const output = buildStructuredResult(key, input, humanReviewRequired);
+    const { data: persisted, error: persistError } = await createClient(supabaseUrl, serviceRoleKey)
+      .from("ai_agent_executions")
+      .update({ output_snapshot: output, quality_summary: { mode: "guided_worksheet", generated_by_ai: false }, updated_at: new Date().toISOString() })
+      .eq("id", agentExec.id).eq("status", "running").select("id").maybeSingle();
+    if (persistError || !persisted) {
+      await sb.rpc("transition_ai_agent_execution", {
+        p_request_id: reqRow.id, p_status: "failed", p_event_data: { stage: "structured_workspace_persist_error" },
+      });
+      return reply({ error: "The guided result could not be saved" }, 500);
+    }
+    const status = humanReviewRequired ? "awaiting_human_review" : "completed";
+    const { error: transitionError } = await sb.rpc("transition_ai_agent_execution", {
+      p_request_id: reqRow.id, p_status: status, p_event_data: { stage: "structured_workspace_saved" },
+    });
+    if (transitionError) return reply({ error: "The result was saved, but the request status could not be finalized" }, 500);
+    return reply({ status, execution_id: agentExec.id, output });
   }
 
   const {data:snapshots,error:ssErr}=await sb.from('ai_agent_configuration_snapshots').select('*').eq('execution_id',agentExec.id);
@@ -281,7 +325,7 @@ Deno.serve(async(req)=>{
     return reply({status:advance?.status||'completed',execution_id:agentExec.id,service_execution_id:serviceExecutionId,quality,advance,output},200);
   }
 
-  if(!serviceRoleKey) return reply({error:'SUPABASE_SERVICE_ROLE_KEY is not configured'},500);
+  if(!serviceRoleKey) return reply({error:'The agent runtime cannot currently save results'},500);
   const adminSb=createClient(supabaseUrl,serviceRoleKey);
   const requiresHumanReview=staffAdminPolicy?true:agent.human_approval_required===true;
   const finalStatus=requiresHumanReview?'awaiting_human_review':'completed';
