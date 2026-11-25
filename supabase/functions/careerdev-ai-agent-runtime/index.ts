@@ -1,7 +1,7 @@
 import "edge-runtime";
 import { buildStructuredResult, isStructuredAgent, supportsGuidedWorksheet, validateStructuredRequest } from "./client-coach-structured.ts";
 import { createClient } from "@supabase/supabase-js";
-import { evaluateStaffAdminOperationalRequest, getStaffAdminOperationalPolicy, validateStaffAdminOperationalOutput } from "./staff-admin-operational-policy.mjs";
+import { createCEOAggregateReview, evaluateStaffAdminOperationalRequest, finalizeCEOAggregateReview, getStaffAdminOperationalPolicy, validateStaffAdminOperationalOutput } from "./staff-admin-operational-policy.mjs";
 import { sendStaffAdminGroqRequest } from "./staff-admin-groq-transport.mjs";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -90,6 +90,9 @@ Deno.serve(async(req)=>{
   let staffGroqInputRate=NaN;
   let staffGroqOutputRate=NaN;
   if(staffAdminPolicy){
+    if(agent.agent_key==='ceo_operations_ai' && (profile.role!=='admin' || reqRow.requested_by!==user.id)) {
+      return reply({error:'Only the Administrator who requested this CEO Operations draft may run it',code:'CALLER_ROLE_NOT_AUTHORIZED'},403);
+    }
     const {data:workflowRow,error:workflowError}=await sb.from('ai_agent_workflows').select('workflow_key,active').eq('id',agentExec.workflow_id).maybeSingle();
     if(workflowError||!workflowRow) return reply({error:'Agent workflow could not be verified',code:'WORKFLOW_LOOKUP_FAILED'},500);
     const policyCheck=evaluateStaffAdminOperationalRequest({agent,workflowKey:workflowRow.workflow_key,workflowActive:workflowRow.active,callerRole:profile.role,triggerSource:reqRow.trigger_source,input:reqRow.input_payload});
@@ -222,11 +225,16 @@ Deno.serve(async(req)=>{
 
   const governedPrompt=promptSnap.configuration||{};
   const system=`You are a governed CareerDev Global AI agent. Role: ${governedPrompt.role||agent.name}. Rules: ${JSON.stringify(governedPrompt.rules||governedPrompt.operating_rules||[])}. Execute only the requested workflow. Use only supplied context. Never fabricate client facts, achievements, dates, employers, qualifications, metrics, outcomes, or evidence. Preserve provenance and flag uncertainty. Outputs are drafts, analyses, recommendations, or decision-support unless the requested task explicitly performs a consequential external action. Do not claim that human approval, external verification, or evidence verification has occurred unless it is explicitly present in the supplied context. NEVER guess, infer missing facts, fabricate details, or fill an information gap with a plausible assumption. Every material factual claim must be either (a) directly supported by supplied user/client evidence, or (b) supported by a current authoritative external source obtained through the web-search tool when current/external information is required. When current, changing, public, market, employer, job, academic, regulatory, immigration, licensing, salary, opportunity, policy, or other external information is requested, use web search and prefer authoritative primary sources; do not rely on memory. Record source URLs/titles in source_refs when external sources are used. If the web-search tool is unavailable, fails, or no sufficiently reliable source can be found, STOP the unsupported claim and ask the user for the missing information or state that verification is required before proceeding. Do not manufacture a substitute answer. If supplied evidence or source status is unverified, set verification_gate=false and explicitly flag the evidence as unverified. Never convert an unverified source into a verified result. Distinguish facts, user-provided claims, sourced findings, professional judgment, assumptions, and recommendations. For ordinary informational or drafting tasks, human_approved=false and human_review_gate=false. Human review remains recommended before a consequential external action, publication, submission, or client-facing professional use. Return ONLY JSON matching the supplied schema.`;
-  const schema=staffAdminPolicy?staffAdminPolicy.outputSchema:(step?.output_schema || reqRow.input_payload?.output_schema || {type:'object',additionalProperties:true});
-  const staffGuardrails=staffAdminPolicy?` Staff/Admin output is draft decision support and MUST require human review. Never claim approval or verification. For CEO Operations, use only aggregate organizational indicators; do not identify, rank, score, or recommend employment actions about an individual. For Career Discovery, use only the supplied synthetic profile and do not infer qualifications or verified fit. For CV & LinkedIn, use only supplied synthetic source evidence, add no achievements, dates, metrics, employers, credentials, or contact details, and include clearly labeled CV DRAFT and LINKEDIN DRAFT sections. For Lead Generation, qualify only the supplied synthetic organization-level need/service fit, do not infer a real person's characteristics or decision authority, never initiate outreach, require a human to confirm consent/permission, and explicitly prohibit contact when consent_status is do_not_contact. For Marketing Content, use only the supplied synthetic topic, audience, and brand guidance; do not invent statistics, testimonials, guarantees, or unsupported factual claims; produce draft copy only and never publish or send it.`:'';
+  const ceoReview=agent.agent_key==='ceo_operations_ai'?createCEOAggregateReview(reqRow.input_payload):null;
+  const schema=ceoReview
+    ? {type:'object',properties:{priorities:{type:'array',items:{type:'string',enum:ceoReview.priorities}}},required:['priorities'],additionalProperties:false}
+    : staffAdminPolicy?staffAdminPolicy.outputSchema:(step?.output_schema || reqRow.input_payload?.output_schema || {type:'object',additionalProperties:true});
+  const staffGuardrails=staffAdminPolicy?` Staff/Admin output is draft decision support and MUST require human review. Never claim approval or verification. For Career Discovery, use only the supplied synthetic profile and do not infer qualifications or verified fit. For CV & LinkedIn, use only supplied synthetic source evidence, add no achievements, dates, metrics, employers, credentials, or contact details, and include clearly labeled CV DRAFT and LINKEDIN DRAFT sections. For Lead Generation, qualify only the supplied synthetic organization-level need/service fit, do not infer a real person's characteristics or decision authority, never initiate outreach, require a human to confirm consent/permission, and explicitly prohibit contact when consent_status is do_not_contact. For Marketing Content, use only the supplied synthetic topic, audience, and brand guidance; do not invent statistics, testimonials, guarantees, or unsupported factual claims; produce draft copy only and never publish or send it.`:'';
   const researchEvidenceGuardrail=agent.agent_key==='research_opportunities_ai'?' For Research & Opportunities, use only the supplied synthetic excerpts; this Staff/Admin Groq path has no live search capability. Never invent an opportunity, source, eligibility requirement, or date. Use only synthetic://source-N identifiers from the supplied evidence, mark every source, opportunity, and deadline unverified, and omit any item whose supporting detail is absent.':'';
   const proposalGuardrail=agent.agent_key==='sales_proposal_ai'?' For Sales Proposal, use only the supplied synthetic scope and service inputs. Do not invent prices, payment terms, legal terms, client commitments, or guaranteed outcomes. State that pricing is pending authorized confirmation. Present a non-binding draft only; require a human to verify scope and approve before any sending or acceptance.':'';
-  const systemPrompt=system+staffGuardrails+researchEvidenceGuardrail+proposalGuardrail;
+  const systemPrompt=ceoReview
+    ? "Prioritize follow-up for an aggregate service-delivery review. Return only the allowed priority codes in recommended order, using each code exactly once. delivery checks incomplete outcomes, quality checks the quality measure and process, monitor continues the reporting cadence, and evidence checks the source report. Use only the supplied aggregate indicators. Return JSON matching the schema."
+    : system+staffGuardrails+researchEvidenceGuardrail+proposalGuardrail;
   const userPrompt=`Execute the authorized CareerDev Global AI task.\\n\\nCONTEXT:\\n${JSON.stringify(inputContext)}\\n\\nOUTPUT SCHEMA:\\n${JSON.stringify(schema)}\\n\\nQUALITY CRITERIA:\\n${JSON.stringify(step?.quality_gate_criteria||{})}`;
 
   const {error:runningTransitionError}=await sb.rpc('transition_ai_agent_execution',{p_request_id:reqRow.id,p_status:'running',p_event_data:{stage:'ai_processing',provider:staffAdminPolicy?'groq':'openai',model}});
@@ -234,10 +242,17 @@ Deno.serve(async(req)=>{
   const providerBody=staffAdminPolicy
     ? {model,messages:[{role:'system',content:systemPrompt},{role:'user',content:userPrompt}],max_tokens:1800,response_format:{type:'json_schema',json_schema:{name:'careerdev_staff_admin_agent_output',strict:true,schema}}}
     : {model,input:[{role:'system',content:[{type:'input_text',text:systemPrompt}]},{role:'user',content:[{type:'input_text',text:userPrompt}]}],tools:[{type:'web_search'}],text:{format:{type:'json_schema',name:'careerdev_agent_output',strict:true,schema}}};
-  const provider=staffAdminPolicy
-    ? await sendStaffAdminGroqRequest({apiKey:activeProviderKey,body:providerBody})
-    : await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${activeProviderKey}`,'Content-Type':'application/json'},body:JSON.stringify(providerBody),signal:AbortSignal.timeout(45000)});
-  const raw=await provider.text();
+  let provider: Response, raw: string;
+  try {
+    provider=staffAdminPolicy
+      ? await sendStaffAdminGroqRequest({apiKey:activeProviderKey,body:providerBody})
+      : await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:`Bearer ${activeProviderKey}`,'Content-Type':'application/json'},body:JSON.stringify(providerBody),signal:AbortSignal.timeout(45000)});
+    raw=await provider.text();
+  } catch (error) {
+    if (!ceoReview) throw error;
+    await sb.rpc('transition_ai_agent_execution',{p_request_id:reqRow.id,p_status:'failed',p_event_data:{stage:'provider_transport_error'}});
+    return reply({error:'Groq did not return a readable response',code:'CEO_PROVIDER_TRANSPORT_ERROR'},502);
+  }
   if(!provider.ok){
     if(creditReservation?.ledger_id) await sb.rpc('finalize_ai_credit_charge',{p_ledger_id:creditReservation.ledger_id,p_outcome:'released',p_metadata:{provider_status:provider.status,credit_release_reason:'provider_request_failed'}});
     let billingCode='';
@@ -254,7 +269,13 @@ Deno.serve(async(req)=>{
     await sb.rpc('transition_ai_agent_execution',{p_request_id:reqRow.id,p_status:'failed',p_event_data:{stage:'provider_error',provider_status:provider.status}});
     return reply({error:'AI provider request failed',provider_status:provider.status},502);
   }
-  const providerJson=JSON.parse(raw);
+  let providerJson;
+  try { providerJson=JSON.parse(raw); }
+  catch (error) {
+    if (!ceoReview) throw error;
+    await sb.rpc('transition_ai_agent_execution',{p_request_id:reqRow.id,p_status:'failed',p_event_data:{stage:'provider_response_parse_error'}});
+    return reply({error:'Groq returned an invalid response',code:'CEO_PROVIDER_RESPONSE_INVALID'},502);
+  }
   const usage=providerJson?.usage||{};
   const inputTokens=Number(staffAdminPolicy?usage?.prompt_tokens:usage?.input_tokens)||0, outputTokens=Number(staffAdminPolicy?usage?.completion_tokens:usage?.output_tokens)||0, totalTokens=Number(usage?.total_tokens||inputTokens+outputTokens);
   const estimatedCostUsd=staffAdminPolicy?((inputTokens*staffGroqInputRate+outputTokens*staffGroqOutputRate)/1000000):0;
@@ -292,6 +313,7 @@ Deno.serve(async(req)=>{
       output.human_review_required=true;
     }
     if(staffAdminPolicy){
+      if(ceoReview) output=finalizeCEOAggregateReview(ceoReview,output);
       const outputCheck=validateStaffAdminOperationalOutput(String(agent.agent_key),output,reqRow.input_payload);
       if(!outputCheck.valid){
         await sb.rpc('transition_ai_agent_execution',{p_request_id:reqRow.id,p_status:'failed',p_event_data:{stage:'staff_admin_output_contract',reason:outputCheck.code}});
