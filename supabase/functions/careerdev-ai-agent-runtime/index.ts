@@ -11,6 +11,21 @@ const openaiKey = Deno.env.get("OPENAI_API_KEY");
 const groqKey = Deno.env.get("GROQ_API_KEY");
 const GROQ_STRICT_JSON_MODELS = new Set(["openai/gpt-oss-20b", "openai/gpt-oss-120b"]);
 
+function readStaffGroqConfig() {
+  const model = Deno.env.get("STAFF_ADMIN_GROQ_MODEL") || "openai/gpt-oss-20b";
+  const inputRate = Number(Deno.env.get("STAFF_ADMIN_GROQ_INPUT_USD_PER_MILLION_TOKENS"));
+  const outputRate = Number(Deno.env.get("STAFF_ADMIN_GROQ_OUTPUT_USD_PER_MILLION_TOKENS"));
+  const monthlyLimit = Number(Deno.env.get("STAFF_ADMIN_GROQ_MONTHLY_SPEND_LIMIT_USD"));
+  const positive = (value: number) => Number.isFinite(value) && value > 0;
+  const checks = {
+    credentials_configured: Boolean(serviceRoleKey && groqKey),
+    approved_model: GROQ_STRICT_JSON_MODELS.has(model),
+    rates_configured: positive(inputRate) && positive(outputRate),
+    spend_limit_recorded: positive(monthlyLimit) && Deno.env.get("STAFF_ADMIN_GROQ_HARD_LIMIT_CONFIRMED") === "true",
+  };
+  return { model, inputRate, outputRate, checks, ready: Object.values(checks).every(Boolean) };
+}
+
 const cors = {"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Content-Type":"application/json"};
 const reply=(body:unknown,status=200)=>new Response(JSON.stringify(body),{status,headers:cors});
 const sentryDsn = Deno.env.get("SENTRY_DSN");
@@ -67,6 +82,11 @@ Deno.serve(async(req)=>{
   if(!profile||profile.status!=='active'||!['admin','staff','coach','client'].includes(profile.role)) return reply({error:'Authorized CareerDev Global access required'},403);
 
   const body=await req.json();
+  if (body?.action === "check_ceo_operations_readiness") {
+    if (profile.role !== "admin") return reply({ error: "Administrator access required" }, 403);
+    const { checks, ready } = readStaffGroqConfig();
+    return reply({ ready, checks });
+  }
   const requestId=body.request_id;
   observabilityRequestId=String(requestId);
   if(!requestId) return reply({error:'request_id is required'},400);
@@ -100,12 +120,11 @@ Deno.serve(async(req)=>{
       await sb.rpc('transition_ai_agent_execution',{p_request_id:reqRow.id,p_status:'blocked',p_event_data:{stage:'staff_admin_operational_policy',reason:policyCheck.code}});
       return reply({error:'Staff/Admin agent request did not meet its operational authorization or workflow contract',code:policyCheck.code},403);
     }
-    staffGroqModel=Deno.env.get('STAFF_ADMIN_GROQ_MODEL')||'openai/gpt-oss-20b';
-    staffGroqInputRate=Number(Deno.env.get('STAFF_ADMIN_GROQ_INPUT_USD_PER_MILLION_TOKENS'));
-    staffGroqOutputRate=Number(Deno.env.get('STAFF_ADMIN_GROQ_OUTPUT_USD_PER_MILLION_TOKENS'));
-    const monthlyLimit=Number(Deno.env.get('STAFF_ADMIN_GROQ_MONTHLY_SPEND_LIMIT_USD'));
-    const hardLimitConfirmed=Deno.env.get('STAFF_ADMIN_GROQ_HARD_LIMIT_CONFIRMED')==='true';
-    if(!serviceRoleKey||!groqKey||!GROQ_STRICT_JSON_MODELS.has(staffGroqModel)||!Number.isFinite(staffGroqInputRate)||staffGroqInputRate<=0||!Number.isFinite(staffGroqOutputRate)||staffGroqOutputRate<=0||!Number.isFinite(monthlyLimit)||monthlyLimit<=0||!hardLimitConfirmed){
+    const config = readStaffGroqConfig();
+    staffGroqModel = config.model;
+    staffGroqInputRate = config.inputRate;
+    staffGroqOutputRate = config.outputRate;
+    if (!config.ready) {
       await sb.rpc('transition_ai_agent_execution',{p_request_id:reqRow.id,p_status:'blocked',p_event_data:{stage:'staff_admin_provider_preflight',reason:'groq_key_model_price_or_hard_limit_not_configured'}});
       return reply({error:'Staff/Admin Groq execution is not configured with an approved model, usage rates, and a verified provider spend limit',code:'STAFF_ADMIN_PROVIDER_NOT_READY'},503);
     }
