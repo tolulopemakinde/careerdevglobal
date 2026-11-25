@@ -135,6 +135,53 @@ const containsPersonalIdentifierText = (value) => Array.isArray(value)
     ? Object.values(value).some(containsPersonalIdentifierText)
     : typeof value === "string" && personalIdentifierText.test(value);
 
+const ceoFollowUpActions = {
+  delivery: "Review the unfinished planned outcomes and agree on recovery actions with the delivery team.",
+  quality: "Check how the quality score was calculated and review process improvements with the delivery team.",
+  monitor: "Continue reporting delivery completion and quality using the same definitions.",
+  evidence: "Confirm the reporting scope, counts, and quality measure against the approved aggregate report.",
+};
+
+export function createCEOAggregateReview(input) {
+  const { completed, target } = input.outcomes;
+  const score = input.quality.delivery_score;
+  const completion = (completed / target * 100).toFixed(1);
+  const quality = Number((score * 100).toPrecision(15));
+  const risks = [];
+  const priorities = [];
+  if (completed < target) {
+    risks.push(`${target - completed} planned outcomes remained incomplete at the end of the period.`);
+    priorities.push("delivery");
+  }
+  if (score < 0.7) {
+    risks.push("The supplied aggregate quality score is below the 70% review threshold.");
+    priorities.push("quality");
+  }
+  if (!risks.length) {
+    risks.push("The supplied completion and quality indicators raised no threshold flags.");
+    priorities.push("monitor");
+  }
+  priorities.push("evidence");
+  return {
+    priorities,
+    risks,
+    insights: [
+      `${input.performance_data.reporting_period} covered ${target} planned service-delivery outcomes in the selected reporting scope. ${completed} were completed (${completion}% of the plan).`,
+      `The supplied aggregate quality score for the same scope and period was ${quality}%.`,
+      "The figures came from the Administrator’s aggregate inputs. An independent reviewer should confirm them against the source report and investigate any causes.",
+    ],
+  };
+}
+
+export function finalizeCEOAggregateReview(review, selection) {
+  const ordered = selection?.priorities;
+  if (!Array.isArray(ordered) || ordered.length !== review.priorities.length ||
+      new Set(ordered).size !== ordered.length || ordered.some((item) => !review.priorities.includes(item))) {
+    return null;
+  }
+  return { risks: review.risks, insights: review.insights, actions: ordered.map((item) => ceoFollowUpActions[item]) };
+}
+
 export function getStaffAdminOperationalPolicy(agentKey) {
   return policies[agentKey] || null;
 }
@@ -168,7 +215,7 @@ export function evaluateStaffAdminOperationalRequest({ agent, workflowKey, workf
     const period = input.performance_data?.reporting_period;
     const score = quality?.delivery_score;
     if (!hasExactKeys(input, policy.inputKeys) || !hasExactKeys(quality, ["delivery_score"]) || !Number.isFinite(score) || score < 0 || score > 1) return { allowed: false, code: "AGGREGATE_QUALITY_INPUT_INVALID" };
-    if (!hasExactKeys(outcomes, ["completed", "target"]) || !Number.isInteger(outcomes.completed) || !Number.isInteger(outcomes.target) || outcomes.completed < 0 || outcomes.target < 1 || outcomes.completed > outcomes.target) return { allowed: false, code: "AGGREGATE_OUTCOME_INPUT_INVALID" };
+    if (!hasExactKeys(outcomes, ["completed", "target"]) || !Number.isSafeInteger(outcomes.completed) || !Number.isSafeInteger(outcomes.target) || outcomes.completed < 0 || outcomes.target < 1 || outcomes.completed > outcomes.target) return { allowed: false, code: "AGGREGATE_OUTCOME_INPUT_INVALID" };
     if (!hasExactKeys(input.performance_data, ["reporting_period"]) || typeof period !== "string" || !/^(?:FY)?20\d{2}(?:[-/ ]?(?:Q[1-4]|H[1-2]|M(?:0[1-9]|1[0-2])))?$/i.test(period.trim())) return { allowed: false, code: "REPORTING_PERIOD_INVALID" };
   }
   if (agent.agent_key === "career_discovery_ai") {
