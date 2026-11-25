@@ -95,7 +95,7 @@ jobs:
       - name: Install local Supabase CLI
         run: |
           cli_dir="$(mktemp -d)"
-          curl -fsSL https://github.com/supabase/cli/releases/download/v3.4.0/supabase_linux_amd64.tar.gz -o "${cli_dir}/supabase.tgz"
+          curl -fsSL https://github.com/supabase/cli/releases/download/v2.89.0/supabase_linux_amd64.tar.gz -o "${cli_dir}/supabase.tgz"
           tar -xzf "${cli_dir}/supabase.tgz" -C "${cli_dir}" supabase
           echo "${cli_dir}" >> "${GITHUB_PATH}"
       - name: Verify signed-in create, reopen, and update
