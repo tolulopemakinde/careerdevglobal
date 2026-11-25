@@ -1,5 +1,6 @@
 "use client";
 
+import AgentReportActions from "../components/agent-report-actions";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { advanceCareerCoachSession, careerCoachAnswerLimit, type CareerCoachSession } from "../../lib/ai/career-coach-session";
 import { createSupabaseBrowserClient } from "../../lib/supabase-browser";
@@ -181,6 +182,7 @@ export default function CareerCoachPanel() {
               <dl style={{ display: "grid", gap: 12, margin: "18px 0" }}>
                 {prompts.map((prompt, index) => <div key={prompt.title} style={{ padding: 14, borderRadius: 12, background: "#f5f9fc" }}><dt style={{ fontWeight: 800, color: "#0b5d9b" }}>{prompt.title}</dt><dd style={{ margin: "5px 0 0", whiteSpace: "pre-wrap" }}>{answers[index]}</dd></div>)}
               </dl>
+              <AgentReportActions source="career-coach" title="Career Coach action plan" sections={prompts.map((prompt, index) => [prompt.title, answers[index]])} />
               {session?.saved_goal_id && <p><a href="/career-intelligence#profile">View the saved action in Career Intelligence</a></p>}
               {canPublish && !session?.saved_goal_id && <p>Saving to Career Goals adds only the action and progress evidence, with a seven-day target.</p>}
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>

@@ -1,5 +1,6 @@
 "use client";
 
+import AgentReportActions from "../components/agent-report-actions";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createSupabaseBrowserClient } from "../../lib/supabase-browser";
 
@@ -256,6 +257,20 @@ export default function CareerResearchWorkspace() {
         </div>
         <article className="ci-card" style={{ marginTop: 18 }}><h3>Research findings</h3>{report.key_findings?.map((item, i) => <div className="ci-result" key={i}><strong>{item.finding}</strong><p>{item.career_relevance}</p>{item.source_urls?.length > 0 && <small>Sources: {item.source_urls.map((url, j) => <a key={j} href={url} target="_blank" rel="noreferrer" style={{ marginRight: 10 }}>Source {j + 1} ↗</a>)}</small>}</div>)}</article>
         <article className="ci-card" style={{ marginTop: 18 }}><h3>Sources</h3>{report.sources?.length ? <ol>{report.sources.map((source, i) => <li key={i} style={{ marginBottom: 9 }}><a href={source.url} target="_blank" rel="noreferrer">{source.title} ↗</a><div>{source.relevance}</div></li>)}</ol> : <p>No machine-checkable source URLs were returned. Review citations in the research text and verify important findings independently.</p>}{report.uncertainty_flags?.map((flag, i) => <p key={i} className="ci-helper">⚠ {flag}</p>)}</article>
+
+        <AgentReportActions source="career-research" title={report.title || "Career research report"} sections={[
+          ["Summary", report.executive_summary],
+          ["Role expectations", report.role_expectations],
+          ["Industry signals", report.industry_signals],
+          ["Company signals", report.company_signals],
+          ["Relevant strengths", report.profile_alignment?.relevant_strengths],
+          ["Development areas", report.profile_alignment?.development_areas],
+          ["Suggested positioning", report.profile_alignment?.suggested_positioning],
+          ["Findings", report.key_findings?.map(item => [item.finding, item.career_relevance, ...(item.source_urls ?? [])].filter(Boolean).join("\n"))],
+          ["Sources", report.sources?.map(source => [source.title, source.url, source.relevance].filter(Boolean).join("\n"))],
+          ["Uncertainty", report.uncertainty_flags],
+          ["Report date", report.generated_at],
+        ]} />
 
         <article className="ci-card" style={{ marginTop: 18 }}><div className="ci-section-heading"><span>03</span><div><div className="ci-overline">REFINE THE REPORT</div><h3>Answer a few targeted questions</h3><p>Your answers can help tailor the report to your experience, location, and priorities.</p></div></div>
           {round < 2 && report.questions_for_user?.length > 0 ? <form onSubmit={e => void runResearch("refine", e)}>

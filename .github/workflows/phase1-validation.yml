@@ -44,7 +44,7 @@ jobs:
         run: npm run test:ai-pilot
 
       - name: Test Client/Coach guided workflows without provider calls
-        run: node --test tests/test-career-coach-session.mjs tests/test-client-coach-guided-agents.mjs
+        run: node --test tests/test-career-coach-session.mjs tests/test-client-coach-guided-agents.mjs tests/test-agent-report-text.mjs
 
       - name: Run source-secret audit
         run: npm run audit:source
