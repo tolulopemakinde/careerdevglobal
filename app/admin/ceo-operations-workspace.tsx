@@ -7,7 +7,15 @@ import { createExecutiveReview, executiveReviewToMarkdown, requestCEOIndependent
 const fieldStyle = { width: '100%', padding: '10px 11px', border: '1px solid #c8d9e8', borderRadius: 8, boxSizing: 'border-box' as const };
 const labelStyle = { display: 'grid', gap: 5, fontSize: 12, fontWeight: 700 as const, color: '#36566f' };
 
-export default function CEOOperationsWorkspace({ onMessage, agentStatus, agentActive, humanApprovalRequired }: { onMessage: (message: string) => void; agentStatus: string; agentActive: boolean; humanApprovalRequired: boolean }) {
+type ReleaseState = { status: 'testing' | 'live'; active: boolean; human_approval_required: boolean };
+
+export default function CEOOperationsWorkspace({ onMessage, onReleaseChanged, agentStatus, agentActive, humanApprovalRequired }: {
+  onMessage: (message: string) => void;
+  onReleaseChanged: (state: ReleaseState) => void;
+  agentStatus: string;
+  agentActive: boolean;
+  humanApprovalRequired: boolean;
+}) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [input, setInput] = useState({ period: '', target: '', completed: '', qualityScore: '' });
   const [review, setReview] = useState<any>(null);
@@ -15,11 +23,17 @@ export default function CEOOperationsWorkspace({ onMessage, agentStatus, agentAc
   const [preflightBusy, setPreflightBusy] = useState(false);
   const [preflight, setPreflight] = useState<{ ready: boolean; checks: Record<string, boolean> } | null>(null);
   const [preflightError, setPreflightError] = useState('');
+  const [releaseBusy, setReleaseBusy] = useState(false);
+  const [releaseMessage, setReleaseMessage] = useState('');
+  const [verificationReference, setVerificationReference] = useState('');
+  const [verificationConfirmed, setVerificationConfirmed] = useState(false);
   const [operationalBusy, setOperationalBusy] = useState(false);
   const [operationalResult, setOperationalResult] = useState<any>(null);
   const [approvalBusy, setApprovalBusy] = useState(false);
   const [approvalMessage, setApprovalMessage] = useState('');
   const operationalReady = agentStatus === 'live' && agentActive && humanApprovalRequired;
+  const canOfferActivation = agentStatus === 'testing' && !agentActive && humanApprovalRequired;
+  const canDeactivate = agentActive || agentStatus === 'live';
   function update(key: keyof typeof input, value: string) {
     setInput((current) => ({ ...current, [key]: value }));
     setAggregateConfirmed(false);
@@ -50,6 +64,42 @@ export default function CEOOperationsWorkspace({ onMessage, agentStatus, agentAc
       setPreflightError(error instanceof Error ? error.message : 'Could not load provider readiness.');
     } finally {
       setPreflightBusy(false);
+    }
+  }
+  async function changeRelease(action: 'activate' | 'deactivate') {
+    setReleaseBusy(true);
+    setReleaseMessage('');
+    try {
+      const { data, error } = await supabase.functions.invoke('careerdev-ai-agent-runtime', {
+        body: {
+          action: 'set_ceo_operations_release',
+          release_action: action,
+          expected_status: agentStatus,
+          expected_active: agentActive,
+          verification_confirmed: action === 'activate' && verificationConfirmed,
+          verification_reference: action === 'activate' ? verificationReference.trim() : null,
+        },
+      });
+      if (error) {
+        const response = error.context instanceof Response ? await error.context.json().catch(() => null) : null;
+        throw new Error(response?.error || 'The release change could not be confirmed. Refresh the Admin dashboard.');
+      }
+      if (data?.status !== (action === 'activate' ? 'live' : 'testing') ||
+          data?.active !== (action === 'activate') || typeof data?.human_approval_required !== 'boolean') {
+        throw new Error('The release change could not be confirmed. Refresh the Admin dashboard.');
+      }
+      onReleaseChanged({
+        status: data.status, active: data.active, human_approval_required: data.human_approval_required,
+      });
+      setVerificationReference('');
+      setVerificationConfirmed(false);
+      setAggregateConfirmed(false);
+      const state = data.active ? 'CEO Operations is live.' : 'CEO Operations is inactive in testing.';
+      setReleaseMessage(data.event_id ? `${state} Release event ${data.event_id}.` : state);
+    } catch (error) {
+      setReleaseMessage(error instanceof Error ? error.message : 'The release change could not be confirmed.');
+    } finally {
+      setReleaseBusy(false);
     }
   }
   async function runOperationalDraft() {
@@ -97,6 +147,32 @@ export default function CEOOperationsWorkspace({ onMessage, agentStatus, agentAc
       <label style={labelStyle}>Aggregate quality score (%) *<input required type="number" min="0" max="100" step="any" value={input.qualityScore} onChange={(e) => update('qualityScore', e.target.value)} style={fieldStyle} /></label>
     </div><button type="submit" style={{ marginTop: 10, border: 0, borderRadius: 9, padding: '10px 14px', background: '#0b5d9b', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>Create aggregate review preview</button></form>
     {review && <article aria-label="Executive review preview" style={{ marginTop: 18, padding: 16, border: '1px solid #c8d9e8', borderRadius: 12, background: '#f8fcff' }}><strong>Executive review — {review.period}</strong><p>Delivery: {review.completed}/{review.target} ({review.completionRate}%). Quality: {review.qualityScore}%.</p><p><b>Risks:</b> {review.risks.join(' ')}</p><p><b>Suggested actions:</b> {review.actions.join(' ')}</p><p>{review.evidenceBoundary}</p><p><b>Human review required:</b> Yes. Testing preview only.</p><button type="button" onClick={download} style={{ border: '1px solid #c8d9e8', borderRadius: 9, padding: '10px 14px', background: '#fff', color: '#173b59', fontWeight: 800, cursor: 'pointer' }}>Download Markdown preview</button></article>}
+    <section aria-labelledby="ceo-release-heading" style={{ marginTop: 18, padding: 16, border: '1px solid #d8e6f1', borderRadius: 12 }}>
+      <h3 id="ceo-release-heading" style={{ marginTop: 0 }}>Production release</h3>
+      {canOfferActivation && <form onSubmit={(event) => { event.preventDefault(); void changeRelease('activate'); }}>
+        <p>Check Groq readiness below. Record the workflow test and provider-side spend-limit verification before activating. Drafts still require independent review.</p>
+        <label style={labelStyle}>Verification reference
+          <input value={verificationReference} onChange={(event) => setVerificationReference(event.target.value)}
+            disabled={releaseBusy} required minLength={3} maxLength={200} placeholder="Release ticket or verification record" style={fieldStyle} />
+        </label>
+        <label style={{ display: 'block', margin: '10px 0' }}>
+          <input type="checkbox" checked={verificationConfirmed} onChange={(event) => setVerificationConfirmed(event.target.checked)} disabled={releaseBusy} required />
+          I verified the operational workflow checks and confirmed the actual spending limit in the Groq account.
+        </label>
+        <button type="submit" className="ci-primary"
+          disabled={releaseBusy || preflightBusy || preflight?.ready !== true || !verificationConfirmed || verificationReference.trim().length < 3}>
+          {releaseBusy ? 'Updating release…' : 'Activate CEO Operations'}
+        </button>
+      </form>}
+      {canDeactivate && <>
+        <p>Deactivation blocks new runs. Existing drafts retain their review state.</p>
+        <button type="button" className="ci-secondary" disabled={releaseBusy} onClick={() => void changeRelease('deactivate')}>
+          {releaseBusy ? 'Updating release…' : 'Deactivate CEO Operations'}
+        </button>
+      </>}
+      {!canOfferActivation && !canDeactivate && <p>The inactive testing state and independent review gate are required for activation.</p>}
+      {releaseMessage && <p role="status">{releaseMessage}</p>}
+    </section>
     <article aria-label="CEO Operations operational run" style={{ marginTop: 18, padding: 16, border: '1px solid #d8e6f1', borderRadius: 12, background: '#f8fcff' }}>
       <strong>Groq operational draft</strong>
       <p style={{ fontSize: 12, lineHeight: 1.6, color: '#527085' }}>The runtime calculates completion and flags from these figures. Groq prioritizes follow-up actions. An independent reviewer must verify the source report and approve the draft before finalization.</p>

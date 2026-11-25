@@ -87,6 +87,40 @@ Deno.serve(async(req)=>{
     const { checks, ready } = readStaffGroqConfig();
     return reply({ ready, checks });
   }
+  if (body?.action === "set_ceo_operations_release") {
+    if (req.method !== "POST") return reply({ error: "Method not allowed" }, 405);
+    if (profile.role !== "admin") return reply({ error: "Administrator access required" }, 403);
+    const action = body.release_action;
+    if (!["activate", "deactivate"].includes(action) || typeof body.expected_status !== "string" ||
+        typeof body.expected_active !== "boolean") {
+      return reply({ error: "Refresh the registry state before changing the release" }, 400);
+    }
+    if (!serviceRoleKey) return reply({ error: "Release controls are unavailable" }, 503);
+
+    const ready = action === "activate" && readStaffGroqConfig().ready;
+    const reference = typeof body.verification_reference === "string" ? body.verification_reference.trim() : "";
+    if (action === "activate") {
+      if (!ready) return reply({ error: "Groq readiness checks did not pass" }, 409);
+      if (body.verification_confirmed !== true || reference.length < 3 || reference.length > 200) {
+        return reply({ error: "Confirm workflow validation and provider spend-limit verification, then enter its reference" }, 400);
+      }
+    }
+
+    const { data, error } = await createClient(supabaseUrl, serviceRoleKey).rpc("set_ceo_operations_release", {
+      p_actor_id: user.id,
+      p_action: action,
+      p_expected_status: body.expected_status,
+      p_expected_active: body.expected_active,
+      p_readiness_passed: ready,
+      p_verification_confirmed: action === "activate" && body.verification_confirmed === true,
+      p_verification_reference: action === "activate" ? reference : null,
+    });
+    if (error?.code === "40001") return reply({ error: "Registry state changed. Refresh the Admin dashboard and retry." }, 409);
+    if (error?.code === "42501") return reply({ error: "Active Administrator required" }, 403);
+    if (error?.code === "P0001" || error?.code === "22023") return reply({ error: "Registry or verification requirements did not pass" }, 409);
+    if (error || !data) return reply({ error: "The release transaction could not be confirmed" }, 500);
+    return reply(data);
+  }
   const requestId=body.request_id;
   observabilityRequestId=String(requestId);
   if(!requestId) return reply({error:'request_id is required'},400);
