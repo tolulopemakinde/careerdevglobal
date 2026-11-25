@@ -162,6 +162,9 @@ test('operational client reaches the Edge handler, records the Groq draft, and d
       if (name === 'request_ai_agent_execution') return { data: request.id };
       if (name === 'prepare_ai_agent_execution') return { data: { execution_id: request.execution_id } };
       if (name === 'transition_ai_agent_execution') return { data: { status: args.p_status } };
+      if (name === 'set_ceo_operations_release') return {
+        data: { status: args.p_action === 'activate' ? 'live' : 'testing', active: args.p_action === 'activate', human_approval_required: true, changed: true, event_id: 'release-event-1' },
+      };
       throw new Error(`Unexpected RPC ${name}`);
     },
     functions: {
@@ -229,6 +232,38 @@ test('operational client reaches the Edge handler, records the Groq draft, and d
   assert.equal(uncheckedLimit.data.checks.spend_limit_recorded, false);
   env.STAFF_ADMIN_GROQ_HARD_LIMIT_CONFIRMED = 'true';
   assert.deepEqual(operations, []);
+
+  const api = (body) => database.functions.invoke('', { body });
+  const release = {
+    action: 'set_ceo_operations_release',
+    release_action: 'activate',
+    expected_status: 'testing',
+    expected_active: false,
+    verification_confirmed: true,
+    verification_reference: 'synthetic-check-42',
+    actor_id: 'untrusted-override',
+  };
+  role = 'staff';
+  assert.equal((await api(release)).error.context.status, 403);
+  role = 'admin';
+  assert.equal((await api({ ...release, verification_confirmed: false })).error.context.status, 400);
+  env.STAFF_ADMIN_GROQ_HARD_LIMIT_CONFIRMED = 'false';
+  assert.equal((await api(release)).error.context.status, 409);
+  assert.deepEqual(operations, []);
+  const disabled = await api({ ...release, release_action: 'deactivate', expected_status: 'live', expected_active: true });
+  assert.equal(disabled.data.active, false);
+  assert.equal(operations[0].args.p_readiness_passed, false);
+  assert.equal(operations[0].args.p_verification_reference, null);
+  env.STAFF_ADMIN_GROQ_HARD_LIMIT_CONFIRMED = 'true';
+  const enabled = await api(release);
+  assert.equal(enabled.data.event_id, 'release-event-1');
+  assert.equal(enabled.data.human_approval_required, true);
+  assert.deepEqual(operations[1], { name: 'set_ceo_operations_release', args: {
+    p_actor_id: 'synthetic-user', p_action: 'activate', p_expected_status: 'testing', p_expected_active: false,
+    p_readiness_passed: true, p_verification_confirmed: true, p_verification_reference: 'synthetic-check-42',
+  } });
+  assert.equal(operations.some(operation => operation.providerRequest), false);
+  operations.length = 0;
 
   const result = await runCEOOperationsDraft(database, payload);
   assert.equal(result.usage_event_persisted, true);

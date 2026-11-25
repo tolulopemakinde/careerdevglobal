@@ -46,6 +46,9 @@ jobs:
       - name: Test Client/Coach guided workflows without provider calls
         run: node --test tests/test-career-coach-session.mjs tests/test-client-coach-guided-agents.mjs tests/test-agent-report-text.mjs tests/test-linkedin-intake.mjs
 
+      - name: Test the CEO Operations release and runtime guards
+        run: node --test tests/test-admin-ceo-operations-workspace.mjs tests/test-staff-admin-agent-operational-policy.mjs
+
       - name: Run source-secret audit
         run: npm run audit:source
 
