@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { isStructuredAgent } from '../../supabase/functions/careerdev-ai-agent-runtime/client-coach-structured';
 import { createSupabaseBrowserClient } from '../../lib/supabase-browser';
 
 type Agent = {
@@ -196,27 +197,29 @@ export default function AgentsPage() {
                 <h2 style={{ fontSize: 22 }}>{groups[category] || category}</h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 14 }}>
                   {list.map(agent => {
-                    const allowed = staffTestingAccess || included.has(agent.agent_key);
-                    const destination = agent.agent_key === 'interview_coach_agent' ? '/interview-coach' : agent.agent_key === 'career_coach_agent' ? '/career-coach' : agent.agent_key === 'career_research_agent' ? '/career-research' : '/career-intelligence';
-                    const actionLabel = agent.agent_key === 'interview_coach_agent' ? 'Start mock interview →' : agent.agent_key === 'career_coach_agent' ? 'Open Career Coach →' : agent.agent_key === 'career_research_agent' ? 'Research roles and companies →' : 'Start in Career Intelligence →';
+                    const guided = isStructuredAgent(agent.agent_key);
+                    const testing = guided && agent.status !== 'live' && !staffTestingAccess;
+                    const allowed = (staffTestingAccess || included.has(agent.agent_key)) && !testing;
+                    const destination = agent.agent_key === 'interview_coach_agent' ? '/interview-coach' : agent.agent_key === 'career_coach_agent' ? '/career-coach' : agent.agent_key === 'career_research_agent' ? '/career-research' : guided ? `/agents/${agent.agent_key}` : '/career-intelligence';
+                    const actionLabel = agent.agent_key === 'interview_coach_agent' ? 'Start mock interview →' : agent.agent_key === 'career_coach_agent' ? 'Open Career Coach →' : agent.agent_key === 'career_research_agent' ? 'Research roles and companies →' : guided ? 'Open guided worksheet →' : 'Start in Career Intelligence →';
                     return (
                       <article key={agent.id} data-cdg-motion="agent-card" style={{ background: '#fff', border: '1px solid ' + (allowed ? '#d8e6f1' : '#e3e8ed'), borderRadius: 16, boxShadow: '0 8px 25px rgba(0,60,100,.05)', opacity: allowed ? 1 : .86 }}>
                         <a
-                          href={allowed ? destination : '/pricing'}
-                          aria-label={allowed ? `Open ${agent.name} in ${agent.agent_key === 'interview_coach_agent' ? 'Interview Coach' : agent.agent_key === 'career_coach_agent' ? 'Career Coach' : agent.agent_key === 'career_research_agent' ? 'Career Research' : 'Career Intelligence'}` : `View plans for ${agent.name}`}
+                          href={allowed || testing ? destination : '/pricing'}
+                          aria-label={testing ? `${agent.name} is in testing` : allowed ? `Open ${agent.name} in ${agent.agent_key === 'interview_coach_agent' ? 'Interview Coach' : agent.agent_key === 'career_coach_agent' ? 'Career Coach' : agent.agent_key === 'career_research_agent' ? 'Career Research' : guided ? 'its guided workspace' : 'Career Intelligence'}` : `View plans for ${agent.name}`}
                           style={{ display: 'block', height: '100%', padding: 18, borderRadius: 16, color: 'inherit', textDecoration: 'none', cursor: 'pointer', outlineOffset: 4 }}
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'start' }}>
                             <h3 style={{ margin: 0 }}>{agent.name}</h3>
                             <span style={{ fontSize: 11, fontWeight: 900, padding: '4px 7px', borderRadius: 999, background: staffTestingAccess ? '#e9f5ef' : allowed ? '#eaf6ef' : '#f1f3f5', whiteSpace: 'nowrap' }}>
-                              {staffTestingAccess ? 'Staff/Admin Test Access' : allowed ? 'Included' : 'Locked'}
+                              {staffTestingAccess ? 'Staff/Admin Test Access' : testing ? 'Testing' : allowed ? 'Included' : 'Locked'}
                             </span>
                           </div>
                           <p style={{ color: '#527085', lineHeight: 1.55, minHeight: 66 }}>{agent.description}</p>
                           <span style={{ display: 'block', width: '100%', boxSizing: 'border-box', padding: '11px 14px', borderRadius: 9, background: allowed ? '#0b5d9b' : '#dfe6ec', color: allowed ? '#fff' : '#527085', fontWeight: 900, textAlign: 'center' }}>
-                            {allowed ? actionLabel : 'Upgrade to Access'}
+                            {allowed ? actionLabel : testing ? 'In testing' : 'Upgrade to Access'}
                           </span>
-                          {!allowed && <span style={{ display: 'block', textAlign: 'center', marginTop: 9, color: '#0b5d9b', fontWeight: 800, fontSize: 12 }}>View plans</span>}
+                          {!allowed && !testing && <span style={{ display: 'block', textAlign: 'center', marginTop: 9, color: '#0b5d9b', fontWeight: 800, fontSize: 12 }}>View plans</span>}
                           <small style={{ display: 'block', marginTop: 9, color: '#718394' }}>AI output: decision-support · Coach validation recommended for clients</small>
                         </a>
                       </article>

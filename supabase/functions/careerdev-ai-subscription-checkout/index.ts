@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     const missing: string[] = [];
     if (!supabaseUrl) missing.push("SUPABASE_URL");
     if (!anonKey) missing.push("SUPABASE_PUBLISHABLE_KEYS/ANON_KEY");
-    if (!serviceKey) missing.push("SUPABASE_SECRET_KEYS/SERVICE_ROLE_KEY");
+    if (!serviceKey) missing.push("SUPABASE_SERVER_CREDENTIAL");
     if (!paystackSecret) missing.push("PAYSTACK_SECRET_KEY");
     if (missing.length) return reply({ error: "Payment provider credentials are not configured", missing }, 503);
 

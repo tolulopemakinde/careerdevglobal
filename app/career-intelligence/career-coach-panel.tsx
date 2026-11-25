@@ -1,74 +1,97 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import AgentReportActions from "../components/agent-report-actions";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { advanceCareerCoachSession, careerCoachAnswerLimit, type CareerCoachSession } from "../../lib/ai/career-coach-session";
 import { createSupabaseBrowserClient } from "../../lib/supabase-browser";
 
-type Goal = { id: string; goal: string; priority: number; target_date: string | null; created_at: string };
-type CareerContext = { professional_summary: string | null; career_stage: string | null; current_job_title: string | null; current_industry: string | null; target_role: string | null; target_industry: string | null; strengths_summary: string | null; development_gaps_summary: string | null; achievements: string | null };
-
+const sessionFields = "revision,next_step,answers,saved_goal_id";
 const prompts = [
-  { title: "Choose the outcome", label: "What career outcome do you want to move toward?", hint: "Make it concrete: a role, transition, promotion, or milestone." },
-  { title: "Name the barrier", label: "What is the main thing making this outcome difficult right now?", hint: "Focus on the one barrier that would be most useful to address first." },
-  { title: "Pick one action", label: "What specific action can you complete in the next seven days?", hint: "Choose something within your control, with a clear finish point." },
-  { title: "Define progress", label: "What evidence will show that you completed the action or made progress?", hint: "For example: a draft CV, three applications, a conversation booked, or a skills exercise completed." },
+  { title: "Career goal", label: "What career outcome are you working toward?", hint: "Choose a role, transition, promotion, or milestone you can describe in one sentence." },
+  { title: "Main barrier", label: "What is getting in the way?", hint: "Think about the first obstacle you can influence, such as time, feedback, practice, or access to information." },
+  { title: "Seven-day action", label: "What can you do about that barrier in the next seven days?", hint: "Pick one action within your control. For example, ask a colleague for feedback on a work sample by Friday." },
+  { title: "Progress evidence", label: "How will you know you did it?", hint: "Name something you can check, such as a sent request, a revised draft, or a practice exercise you completed." },
 ];
+
+type Goal = { id: string; goal: string };
+type Access = "loading" | "sign_in" | "locked" | "error" | "allowed";
 
 export default function CareerCoachPanel() {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [allowed, setAllowed] = useState(false);
-  const [canSave, setCanSave] = useState(false);
+  const [access, setAccess] = useState<Access>("loading");
+  const [userId, setUserId] = useState("");
+  const [canPublish, setCanPublish] = useState(false);
   const [goals, setGoals] = useState<Goal[]>([]);
-  const [careerContext, setCareerContext] = useState<CareerContext | null>(null);
+  const [targetRole, setTargetRole] = useState("");
+  const [session, setSession] = useState<CareerCoachSession | null>(null);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState(["", "", "", ""]);
+  const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
-  const [complete, setComplete] = useState(false);
+  const operation = useRef(false);
+  const heading = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     let live = true;
+
     async function load() {
-      setLoading(true);
-      const { data: auth } = await supabase.auth.getUser();
-      const user = auth.user;
-      if (!user) {
-        if (live) { setMessage("Sign in to start a guided career coaching session."); setLoading(false); }
-        return;
-      }
-      const { data: profile } = await supabase.from("profiles").select("role,status").eq("id", user.id).maybeSingle();
-      if (!profile || profile.status !== "active" || !["client", "coach", "staff", "admin"].includes(profile.role)) {
-        if (live) { setMessage("This guided coaching workspace is available to active CareerDev users."); setLoading(false); }
-        return;
-      }
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        const user = auth.user;
+        if (!live) return;
+        if (!user) { setAccess("sign_in"); return; }
 
-      const staffAccess = profile.role === "staff" || profile.role === "admin";
-      let hasAccess = staffAccess;
-      if (!staffAccess) {
-        const { data: subscription } = await supabase.rpc("get_my_ai_subscription");
-        const row = Array.isArray(subscription) ? subscription[0] : subscription;
-        hasAccess = (row?.included_agents || []).includes("career_coach_agent");
-      }
-      if (!live) return;
-      setAllowed(hasAccess);
-      if (!hasAccess) { setLoading(false); return; }
-
-      const { data: client } = await supabase.from("clients").select("id").eq("profile_id", user.id).maybeSingle();
-      if (client?.id) {
-        setCanSave(true);
-        const [{ data: savedGoals }, { data: savedProfile }] = await Promise.all([
-          supabase.from("career_goals").select("id,goal,priority,target_date,created_at").eq("client_id", client.id).eq("status", "active").order("priority", { ascending: true }).order("created_at", { ascending: false }).limit(10),
-          supabase.from("career_profiles").select("professional_summary,career_stage,current_job_title,current_industry,target_role,target_industry,strengths_summary,development_gaps_summary,achievements").eq("client_id", client.id).eq("is_current", true).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+        const [profile, entitlement, registry] = await Promise.all([
+          supabase.from("profiles").select("role,status").eq("id", user.id).maybeSingle(),
+          supabase.rpc("get_my_ai_agent_access", { p_agent_key: "career_coach_agent" }),
+          supabase.from("ai_agent_registry").select("active").eq("agent_key", "career_coach_agent").eq("owner_role", "client_coach").maybeSingle(),
         ]);
-        if (live && savedProfile) setCareerContext(savedProfile as CareerContext);
-        if (live && savedGoals) {
-          setGoals(savedGoals as Goal[]);
-          const savedOutcome = savedGoals[0]?.goal || savedProfile?.target_role || "";
-          if (savedOutcome) setAnswers(current => [current[0] || savedOutcome, current[1], current[2], current[3]]);
+        if (!live) return;
+        if (profile.error || entitlement.error || registry.error) throw new Error("Access lookup failed");
+        const permission = Array.isArray(entitlement.data) ? entitlement.data[0] : entitlement.data;
+        if (profile.data?.status !== "active" || !["client", "coach", "staff", "admin"].includes(profile.data.role) || permission?.allowed !== true || registry.data?.active !== true) {
+          setAccess("locked");
+          return;
         }
+
+        const [draft, client] = await Promise.all([
+          supabase.from("career_coach_sessions").select(sessionFields).eq("user_id", user.id).maybeSingle(),
+          supabase.from("clients").select("id").eq("profile_id", user.id).eq("status", "active").maybeSingle(),
+        ]);
+        if (!live) return;
+        if (draft.error || client.error) throw new Error("Session lookup failed");
+        setUserId(user.id);
+        setCanPublish(Boolean(client.data?.id));
+
+        let foundGoals: Goal[] = [];
+        let foundTargetRole = "";
+        if (client.data?.id) {
+          const clientId = client.data.id;
+          const [savedGoals, careerProfile] = await Promise.all([
+            supabase.from("career_goals").select("id,goal").eq("client_id", clientId).eq("status", "active").not("goal", "like", "Career Coach action:%").order("priority").order("created_at", { ascending: false }).limit(10),
+            supabase.from("career_profiles").select("target_role").eq("client_id", clientId).eq("is_current", true).order("updated_at", { ascending: false }).limit(1).maybeSingle(),
+          ]);
+          if (!live) return;
+          foundGoals = savedGoals.data ?? [];
+          foundTargetRole = careerProfile.data?.target_role ?? "";
+          if (savedGoals.error || careerProfile.error) setMessage("Some saved career context could not be loaded. You can still enter an outcome.");
+          setGoals(foundGoals);
+          setTargetRole(foundTargetRole);
+        }
+
+        if (draft.data) {
+          setSession(draft.data);
+          setStep(draft.data.next_step);
+          setAnswers(draft.data.answers);
+        } else {
+          setAnswers([(foundGoals[0]?.goal || foundTargetRole).slice(0, careerCoachAnswerLimit), "", "", ""]);
+        }
+        setAccess("allowed");
+      } catch {
+        if (live) setAccess("error");
       }
-      if (live) setLoading(false);
     }
+
     void load();
     return () => { live = false; };
   }, [supabase]);
@@ -78,100 +101,112 @@ export default function CareerCoachPanel() {
     setMessage("");
   }
 
-  function continueSession() {
-    if (!answers[step]?.trim()) { setMessage("Add a short answer before continuing."); return; }
-    if (step < prompts.length - 1) setStep(step + 1);
-    else setComplete(true);
+  async function runOperation(action: () => Promise<void>, fallback: string) {
+    if (operation.current) return;
+    operation.current = true;
+    setBusy(true);
     setMessage("");
+    try {
+      await action();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : fallback);
+    } finally {
+      operation.current = false;
+      setBusy(false);
+    }
   }
 
-  async function saveAction() {
-    if (!canSave) {
-      setMessage("Your session is ready. Sign in with a client profile to save this action to Career Goals.");
-      return;
-    }
-    setSaving(true);
-    setMessage("");
-    const { data: auth } = await supabase.auth.getUser();
-    const user = auth.user;
-    if (!user) { setSaving(false); setMessage("Your session ended. Sign in again to save this action."); return; }
-    const { data: client, error: clientError } = await supabase.from("clients").select("id").eq("profile_id", user.id).maybeSingle();
-    if (clientError || !client?.id) { setSaving(false); setMessage("Could not find your client profile, so the action was not saved."); return; }
-    const target = new Date();
-    target.setDate(target.getDate() + 7);
-    const { error } = await supabase.from("career_goals").insert({
-      client_id: client.id,
-      goal: `Career Coach action: ${answers[2].trim()} | Progress evidence: ${answers[3].trim()}`,
-      priority: 1,
-      target_date: target.toISOString().slice(0, 10),
-      status: "active",
-    });
-    setSaving(false);
-    if (error) { setMessage("The action could not be saved. You can copy it from this review and try again later."); return; }
-    setMessage("Your action and progress evidence were saved to Career Goals with a seven-day target.");
+  function continueSession(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void runOperation(async () => {
+      const progress = advanceCareerCoachSession(step, answers);
+      const record = { ...progress, revision: crypto.randomUUID() };
+      const table = supabase.from("career_coach_sessions");
+      const write = session
+        ? table.update({ ...record, updated_at: new Date().toISOString() }).eq("user_id", userId).eq("revision", session.revision)
+        : table.insert({ ...record, user_id: userId });
+
+      const { data, error } = await write.select(sessionFields).maybeSingle();
+      if (error?.code === "23505" || (!error && !data)) throw new Error("This plan changed in another tab. Reload to resume the latest saved step.");
+      if (error || !data) throw new Error("Could not save this step. Your answer is still here. Try again.");
+
+      setSession(data);
+      setAnswers(data.answers);
+      setStep(data.next_step);
+      requestAnimationFrame(() => heading.current?.focus());
+    }, "Could not save this coaching step. Try again.");
+  }
+
+  function saveAction() {
+    if (!session || session.next_step !== prompts.length || session.saved_goal_id || !canPublish) return;
+
+    void runOperation(async () => {
+      const { data, error } = await supabase.rpc("save_my_career_coach_action", { p_revision: session.revision });
+      if (error?.code === "40001") throw new Error("The plan changed in another tab. Reload before saving the action.");
+      if (error || typeof data !== "string") throw new Error("Could not add the action to Career Goals. Your coaching plan is still saved.");
+      setSession({ ...session, saved_goal_id: data });
+      setMessage("Your action and progress evidence are in Career Goals with a seven-day target.");
+    }, "Could not add the action to Career Goals. Try again.");
   }
 
   function startAgain() {
-    setAnswers([goals[0]?.goal || careerContext?.target_role || "", "", "", ""]);
-    setStep(0);
-    setComplete(false);
-    setMessage("");
+    if (!session) return;
+    void runOperation(async () => {
+      const { data, error } = await supabase.from("career_coach_sessions").delete()
+        .eq("user_id", userId).eq("revision", session.revision).select("revision").maybeSingle();
+      if (error || !data) throw new Error("Could not clear this plan. Reload to see the latest saved session.");
+      setSession(null);
+      setAnswers([(goals[0]?.goal || targetRole).slice(0, careerCoachAnswerLimit), "", "", ""]);
+      setStep(0);
+      requestAnimationFrame(() => heading.current?.focus());
+    }, "Could not clear the saved session. Try again.");
   }
 
-  const savedContextItems: { label: string; value: string }[] = [
-    { label: "Current role", value: careerContext?.current_job_title || "" },
-    { label: "Career stage", value: careerContext?.career_stage || "" },
-    { label: "Current industry", value: careerContext?.current_industry || "" },
-    { label: "Target role", value: careerContext?.target_role || "" },
-    { label: "Target industry", value: careerContext?.target_industry || "" },
-    { label: "Strengths", value: careerContext?.strengths_summary || "" },
-    { label: "Development focus", value: careerContext?.development_gaps_summary || "" },
-  ].filter(item => item.value.trim());
-
+  const currentPrompt = prompts[step];
   return (
     <section className="ci-section" id="career-coach">
       <div className="ci-container">
-        <div className="ci-section-heading"><span>COACH</span><div><div className="ci-overline">CAREER COACH</div><h2>Turn a career goal into one clear next step.</h2><p>A short guided session uses your saved career goals when available, then helps you identify a barrier, a realistic action, and evidence of progress.</p></div></div>
-        <div style={{ maxWidth: 820, margin: "0 auto 18px", padding: "clamp(16px,3vw,24px)", borderRadius: 16, background: "#f2f8fc", border: "1px solid #d8e6f1" }}>
-          <h3 style={{ marginTop: 0 }}>Career Intelligence context</h3>
-          {savedContextItems.length > 0 ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 12 }}>
-            {careerContext?.professional_summary && <p style={{ gridColumn: "1 / -1", margin: 0, color: "#38566c" }}>{careerContext.professional_summary}</p>}
-            {savedContextItems.map(item => <div key={item.label}><strong>{item.label}</strong><p style={{ margin: "4px 0 0", color: "#527085" }}>{item.value}</p></div>)}
-            {careerContext?.achievements && <div style={{ gridColumn: "1 / -1" }}><strong>Saved achievements</strong><p style={{ margin: "4px 0 0", color: "#527085" }}>{careerContext.achievements}</p></div>}
-          </div> : <p style={{ margin: 0, color: "#527085" }}>No saved career profile details were found yet. You can still complete a guided session; saved career goals will appear here when available.</p>}
-          {goals.length > 0 && <p style={{ marginBottom: 0, color: "#527085" }}><strong>Saved goals:</strong> {goals.length} active goal{goals.length === 1 ? "" : "s"} available to this session.</p>}
-          <a href="/career-intelligence#profile" style={{ display: "inline-block", marginTop: 10, color: "#0b5d9b", fontWeight: 800 }}>Review Career Intelligence Profile →</a>
+        <div className="ci-section-heading">
+          <div><h2>Turn a career goal into one clear next step.</h2><p>Choose a goal, identify a barrier, pick a seven-day action, and decide how to track it.</p></div>
         </div>
-        <div style={{ maxWidth: 820, margin: "0 auto", padding: "clamp(20px,4vw,34px)", borderRadius: 18, background: "#fff", border: "1px solid #d8e6f1", boxShadow: "0 12px 36px rgba(0,45,90,.08)" }}>
-          {loading ? <p role="status">Loading your Career Coach workspace…</p> : !allowed ? (
-            <div><h3>Career Coach access</h3><p>{message || "Career Coach is included with eligible AI Agent access. Staff and Admin can use this workspace for testing."}</p><a className="ci-primary" href={message.includes("Sign in") ? "/account" : "/pricing"}>{message.includes("Sign in") ? "Sign in →" : "View access options →"}</a></div>
-          ) : complete ? (
+        <div style={{ maxWidth: 820, margin: "0 auto", padding: "clamp(20px,4vw,34px)", borderRadius: 18, background: "#fff", border: "1px solid #d8e6f1", boxShadow: "0 12px 36px rgba(0,45,90,.08)" }} aria-busy={busy}>
+          {access === "loading" ? <p role="status">Loading your coaching session…</p> : access === "sign_in" ? (
+            <div><p>Sign in to start or resume your coaching session.</p><a className="ci-primary" href="/account">Sign in</a></div>
+          ) : access === "locked" ? (
+            <div><p>Career Coach is available to eligible CareerDev accounts.</p><a className="ci-secondary" href="/agents">View agent access</a></div>
+          ) : access === "error" ? (
+            <div><p role="alert">Career Coach could not load your account or saved session.</p><button className="ci-secondary" onClick={() => window.location.reload()}>Try again</button></div>
+          ) : !currentPrompt ? (
             <div>
-              <div className="ci-overline">YOUR COACHING PLAN</div><h3 style={{ marginTop: 8 }}>A focused next step</h3>
+              <h3 ref={heading} tabIndex={-1}>Your coaching plan</h3>
               <dl style={{ display: "grid", gap: 12, margin: "18px 0" }}>
                 {prompts.map((prompt, index) => <div key={prompt.title} style={{ padding: 14, borderRadius: 12, background: "#f5f9fc" }}><dt style={{ fontWeight: 800, color: "#0b5d9b" }}>{prompt.title}</dt><dd style={{ margin: "5px 0 0", whiteSpace: "pre-wrap" }}>{answers[index]}</dd></div>)}
               </dl>
-              <p style={{ color: "#527085" }}>Only the action and its progress evidence are saved to your Career Goals. Your reflection answers stay in this page session.</p>
+              <AgentReportActions source="career-coach" title="Career Coach action plan" sections={prompts.map((prompt, index) => [prompt.title, answers[index]])} />
+              {session?.saved_goal_id && <p><a href="/career-intelligence#profile">View the saved action in Career Intelligence</a></p>}
+              {canPublish && !session?.saved_goal_id && <p>Saving to Career Goals adds only the action and progress evidence, with a seven-day target.</p>}
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                {canSave && <button type="button" onClick={() => void saveAction()} disabled={saving} className="ci-primary">{saving ? "Saving…" : "Save action to Career Goals"}</button>}
-                <button type="button" onClick={startAgain} className="ci-secondary">Start another session</button>
+                {canPublish && !session?.saved_goal_id && <button type="button" onClick={saveAction} disabled={busy} className="ci-primary">Save action to Career Goals</button>}
+                {!session?.saved_goal_id && <button type="button" onClick={() => { setStep(3); setMessage(""); }} disabled={busy} className="ci-secondary">Edit plan</button>}
+                <button type="button" onClick={startAgain} disabled={busy} className="ci-secondary">{session?.saved_goal_id ? "Start another session" : "Discard plan and start over"}</button>
               </div>
             </div>
           ) : (
-            <div>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap" }}><span className="ci-overline">STEP {step + 1} OF {prompts.length}</span><span style={{ color: "#607487", fontSize: 13 }}>Guided coaching · no AI credits used</span></div>
-              <div role="progressbar" aria-label="Coaching session progress" aria-valuemin={1} aria-valuemax={prompts.length} aria-valuenow={step + 1} style={{ height: 7, borderRadius: 99, background: "#e5eef5", margin: "12px 0 22px" }}><div style={{ width: `${((step + 1) / prompts.length) * 100}%`, height: "100%", borderRadius: 99, background: "#1671b9" }} /></div>
-              <h3 style={{ margin: "0 0 8px" }}>{prompts[step].label}</h3><p style={{ color: "#607487", marginTop: 0 }}>{prompts[step].hint}</p>
-              {step === 0 && goals.length > 0 && <label style={{ display: "block", margin: "12px 0", fontWeight: 700 }}>Use a saved career goal<select value={goals.some(goal => goal.goal === answers[0]) ? answers[0] : ""} onChange={event => updateAnswer(event.target.value)} style={{ display: "block", width: "100%", marginTop: 6, padding: 11, borderRadius: 9, border: "1px solid #bed1df", background: "#fff" }}><option value="">Choose a saved goal or write your own below</option>{goals.map(goal => <option key={goal.id} value={goal.goal}>{goal.goal}</option>)}</select></label>}
-              <textarea value={answers[step]} onChange={event => updateAnswer(event.target.value)} rows={4} maxLength={2000} aria-label={prompts[step].label} style={{ display: "block", boxSizing: "border-box", width: "100%", padding: 13, borderRadius: 10, border: "1px solid #bed1df", resize: "vertical", font: "inherit" }} />
+            <form onSubmit={continueSession}>
+              <span className="ci-overline">Step {step + 1} of {prompts.length}</span>
+              <h3 ref={heading} tabIndex={-1} style={{ margin: "12px 0 8px" }}><label htmlFor="coach-answer">{currentPrompt.label}</label></h3>
+              <p id="coach-answer-hint" style={{ color: "#607487", marginTop: 0 }}>{currentPrompt.hint}</p>
+              {step > 0 && <p style={{ color: "#527085" }}><strong>{prompts[step - 1].title}</strong> {answers[step - 1]}</p>}
+              {step === 0 && goals.length > 0 && <label style={{ display: "block", margin: "12px 0", fontWeight: 700 }}>Use a saved career goal<select value={goals.find(goal => goal.goal.slice(0, careerCoachAnswerLimit) === answers[0])?.id || ""} onChange={event => updateAnswer((goals.find(goal => goal.id === event.target.value)?.goal || "").slice(0, careerCoachAnswerLimit))} disabled={busy} style={{ display: "block", width: "100%", marginTop: 6, padding: 11, borderRadius: 9, border: "1px solid #bed1df", background: "#fff" }}><option value="">Write your own goal</option>{goals.map(goal => <option key={goal.id} value={goal.id}>{goal.goal}</option>)}</select></label>}
+              <textarea id="coach-answer" value={answers[step]} onChange={event => updateAnswer(event.target.value)} rows={4} maxLength={careerCoachAnswerLimit} required disabled={busy} aria-describedby="coach-answer-hint" style={{ display: "block", boxSizing: "border-box", width: "100%", padding: 13, borderRadius: 10, border: "1px solid #bed1df", resize: "vertical", font: "inherit" }} />
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 14, flexWrap: "wrap" }}>
-                <button type="button" onClick={() => { setStep(Math.max(0, step - 1)); setMessage(""); }} disabled={step === 0} className="ci-secondary">Back</button>
-                <button type="button" onClick={continueSession} className="ci-primary">{step === prompts.length - 1 ? "Review my plan →" : "Continue →"}</button>
+                <button type="button" onClick={() => { setStep(step - 1); setMessage(""); }} disabled={step === 0 || busy} className="ci-secondary">Back</button>
+                <button type="submit" disabled={busy} className="ci-primary">{busy ? "Saving…" : step === prompts.length - 1 ? "Save and review plan" : "Save and continue"}</button>
               </div>
-            </div>
+              <p style={{ color: "#527085", marginBottom: 0 }}>Each completed step is saved to your account so you can resume later. This guided session uses no AI credits.</p>
+            </form>
           )}
           {message && <p role="status" style={{ marginBottom: 0, marginTop: 16, padding: 12, borderRadius: 10, background: "#f4f8fb", color: "#26445b" }}>{message}</p>}
-          <p style={{ margin: "18px 0 0", fontSize: 12, color: "#718394" }}>This is structured career reflection and planning, not therapy or a promise of employment. You can connect with a professional CareerDev Coach for human support.</p>
         </div>
       </div>
     </section>
