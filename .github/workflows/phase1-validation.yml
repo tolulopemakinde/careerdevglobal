@@ -44,7 +44,7 @@ jobs:
         run: npm run test:ai-pilot
 
       - name: Test Client/Coach guided workflows without provider calls
-        run: node --test tests/test-career-coach-session.mjs tests/test-client-coach-guided-agents.mjs tests/test-agent-report-text.mjs
+        run: node --test tests/test-career-coach-session.mjs tests/test-client-coach-guided-agents.mjs tests/test-agent-report-text.mjs tests/test-linkedin-intake.mjs
 
       - name: Run source-secret audit
         run: npm run audit:source
@@ -72,3 +72,31 @@ jobs:
 
       - name: Build application
         run: npm run build
+
+  linkedin-browser:
+    name: Signed-in LinkedIn intake
+    if: github.event_name == 'pull_request' && github.head_ref == 'feature/linkedin-optimization-adaptive-intake'
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      SENTRY_SILENT: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install app and browser dependencies
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          python -m pip install playwright==1.62.0
+          python -m playwright install --with-deps chromium
+      - name: Install local Supabase CLI
+        run: |
+          cli_dir="$(mktemp -d)"
+          curl -fsSL https://github.com/supabase/cli/releases/download/v2.89.0/supabase_linux_amd64.tar.gz -o "${cli_dir}/supabase.tgz"
+          tar -xzf "${cli_dir}/supabase.tgz" -C "${cli_dir}" supabase
+          echo "${cli_dir}" >> "${GITHUB_PATH}"
+      - name: Verify signed-in create, reopen, and update
+        run: bash scripts/run-linkedin-intake-browser.sh
