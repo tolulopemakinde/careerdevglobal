@@ -43,6 +43,9 @@ jobs:
       - name: Run isolated AI provider pilot tests (no credentials or network calls)
         run: npm run test:ai-pilot
 
+      - name: Test Client/Coach guided workflows without provider calls
+        run: node --test tests/test-career-coach-session.mjs tests/test-client-coach-guided-agents.mjs
+
       - name: Run source-secret audit
         run: npm run audit:source
 
