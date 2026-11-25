@@ -12,6 +12,9 @@ export default function CEOOperationsWorkspace({ onMessage, agentStatus, agentAc
   const [input, setInput] = useState({ period: '', target: '', completed: '', qualityScore: '' });
   const [review, setReview] = useState<any>(null);
   const [aggregateConfirmed, setAggregateConfirmed] = useState(false);
+  const [preflightBusy, setPreflightBusy] = useState(false);
+  const [preflight, setPreflight] = useState<{ ready: boolean; checks: Record<string, boolean> } | null>(null);
+  const [preflightError, setPreflightError] = useState('');
   const [operationalBusy, setOperationalBusy] = useState(false);
   const [operationalResult, setOperationalResult] = useState<any>(null);
   const [approvalBusy, setApprovalBusy] = useState(false);
@@ -30,6 +33,24 @@ export default function CEOOperationsWorkspace({ onMessage, agentStatus, agentAc
     if (!review) return;
     const url = URL.createObjectURL(new Blob([executiveReviewToMarkdown(review)], { type: 'text/markdown;charset=utf-8' }));
     const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'careerdev-executive-review-preview.md'; anchor.click(); URL.revokeObjectURL(url);
+  }
+  async function checkProviderReadiness() {
+    setPreflightBusy(true);
+    setPreflight(null);
+    setPreflightError('');
+    try {
+      const { data, error } = await supabase.functions.invoke('careerdev-ai-agent-runtime', {
+        body: { action: 'check_ceo_operations_readiness' },
+      });
+      if (error || typeof data?.ready !== 'boolean' || !data?.checks) {
+        throw new Error('Could not load provider readiness. Check your Administrator session and try again.');
+      }
+      setPreflight(data);
+    } catch (error) {
+      setPreflightError(error instanceof Error ? error.message : 'Could not load provider readiness.');
+    } finally {
+      setPreflightBusy(false);
+    }
   }
   async function runOperationalDraft() {
     if (!operationalReady || operationalBusy || !aggregateConfirmed) return;
@@ -79,6 +100,21 @@ export default function CEOOperationsWorkspace({ onMessage, agentStatus, agentAc
     <article aria-label="CEO Operations operational run" style={{ marginTop: 18, padding: 16, border: '1px solid #d8e6f1', borderRadius: 12, background: '#f8fcff' }}>
       <strong>Groq operational draft</strong>
       <p style={{ fontSize: 12, lineHeight: 1.6, color: '#527085' }}>The runtime calculates completion and flags from these figures. Groq prioritizes follow-up actions. An independent reviewer must verify the source report and approve the draft before finalization.</p>
+      <div style={{ margin: '12px 0' }}>
+        <button type="button" className="ci-secondary" disabled={preflightBusy} onClick={() => void checkProviderReadiness()}>
+          {preflightBusy ? 'Checking…' : 'Check Groq readiness'}
+        </button>
+        {preflightError && <p role="alert">{preflightError}</p>}
+        {preflight && <div role="status">
+          <p>{preflight.ready ? 'Runtime configuration checks passed.' : 'Runtime configuration needs attention.'} This check uses no inference or credits.</p>
+          <ul>
+            <li>Credentials {preflight.checks.credentials_configured ? 'configured' : 'missing'}</li>
+            <li>Approved model {preflight.checks.approved_model ? 'selected' : 'required'}</li>
+            <li>Input and output rates {preflight.checks.rates_configured ? 'configured' : 'missing or invalid'}</li>
+            <li>Provider spend limit {preflight.checks.spend_limit_recorded ? 'recorded as confirmed' : 'needs confirmation'}</li>
+          </ul>
+        </div>}
+      </div>
       {operationalReady && <label style={{ display: 'block', marginBottom: 12, fontSize: 13 }}>
         <input type="checkbox" checked={aggregateConfirmed} onChange={(event) => setAggregateConfirmed(event.target.checked)} />
         I confirm these figures come from an approved aggregate report and share the same scope and period.

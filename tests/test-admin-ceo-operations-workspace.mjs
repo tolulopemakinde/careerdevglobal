@@ -214,6 +214,22 @@ test('operational client reaches the Edge handler, records the Groq draft, and d
   });
   await import(runtimeUrl);
 
+  const readiness = await database.functions.invoke('', { body: { action: 'check_ceo_operations_readiness' } });
+  assert.deepEqual(readiness.data, { ready: true, checks: {
+    credentials_configured: true, approved_model: true, rates_configured: true, spend_limit_recorded: true,
+  } });
+  assert.deepEqual(operations, []);
+  role = 'staff';
+  const deniedReadiness = await database.functions.invoke('', { body: { action: 'check_ceo_operations_readiness' } });
+  assert.equal(deniedReadiness.error.context.status, 403);
+  role = 'admin';
+  env.STAFF_ADMIN_GROQ_HARD_LIMIT_CONFIRMED = 'false';
+  const uncheckedLimit = await database.functions.invoke('', { body: { action: 'check_ceo_operations_readiness' } });
+  assert.equal(uncheckedLimit.data.ready, false);
+  assert.equal(uncheckedLimit.data.checks.spend_limit_recorded, false);
+  env.STAFF_ADMIN_GROQ_HARD_LIMIT_CONFIRMED = 'true';
+  assert.deepEqual(operations, []);
+
   const result = await runCEOOperationsDraft(database, payload);
   assert.equal(result.usage_event_persisted, true);
   assert.equal(result.estimated_cost_usd, 0.000015);
